@@ -1,5 +1,5 @@
 {
-  "name": "xpell-js",
+  "name": "xpell-ui",
   "version": "1.4.9",
   "description": "Xpell UI JS Framework",
   "files": [
@@ -9,12 +9,12 @@
     "docs"
   ],
   "types": "./dist/index.d.ts",
-  "module": "./dist/xpell-js.es.js",
-  "main": "./dist/xpell-js.cjs.js",
+  "module": "./dist/xpell-ui.es.js",
+  "main": "./dist/xpell-ui.cjs.js",
   "exports": {
     ".": {
-      "import": "./dist/xpell-js.es.js",
-      "require": "./dist/xpell-js.umd.js"
+      "import": "./dist/xpell-ui.es.js",
+      "require": "./dist/xpell-ui.umd.js"
     }
   },
   "scripts": {

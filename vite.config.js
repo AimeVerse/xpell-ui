@@ -11,7 +11,7 @@ export default defineConfig({
       entry: "./src/index.ts", // Entry file for your library
       name: 'Xpell',         // Name of the global variable for UMD builds
       formats: ['es', 'umd', 'cjs'], // Output formats
-      fileName: format => `xpell-js.${format}.js` // File name format for different builds
+      fileName: format => `xpell-ui.${format}.js` // File name format for different builds
     },
     target: 'modules',
     minify: true, // Minify the output
@@ -25,7 +25,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      'xpell': resolve(__dirname, 'node_modules/xpell-js') // Alias for internal use
+      'xpell': resolve(__dirname, 'node_modules/xpell-ui') // Alias for internal use
     }
   },
   plugins: [
