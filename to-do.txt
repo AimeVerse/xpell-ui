@@ -1,0 +1,6 @@
+XUI:
+
+- add _text getter/setter for XUIObject
+- add _parent attribute to XObject
+- add checkbox, radio, table support
+- "on" fire events for all items ->check box->on change
