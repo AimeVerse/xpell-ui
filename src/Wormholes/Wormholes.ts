@@ -17,7 +17,8 @@ import {
     XData as _xd,
     XLogger as _xlog,
     _xem,
-    XUtils as _xu
+    XUtils as _xu,
+    XModule
 } from "../Core/Xpell"
 
 export const WormholeEvents = {
@@ -46,24 +47,27 @@ interface WormholeMessage {
     data: string
 }
 
-export class WormholeInstance {
+export class WormholeInstance extends XModule {
     _ws: null | WebSocket
     _ready: boolean
     _data_waiters: WaitersPack
-    _log_rules: { [key:string]: boolean}
+    _wh_log_rules: { [key: string]: boolean }
     _on_open?: CallableFunction
+    _data_queue: any = {}
 
     constructor() {
+        super({ _name: "wormholes" })
         this._ws = null;
         this._ready = false
         this._data_waiters = {}
-        this._log_rules = {
+        this._wh_log_rules = {
             _open: false,
             _connect: false,
             _disconnect: false,
             _send: false,
             _receive: false
         }
+
     }
 
 
@@ -71,8 +75,8 @@ export class WormholeInstance {
      * Set the log rules for the wormhole
      */
     set verbose(val: boolean) {
-            
-        this._log_rules ={
+
+        this._wh_log_rules = {
             _open: val,
             _connect: val,
             _disconnect: val,
@@ -110,23 +114,40 @@ export class WormholeInstance {
         //     const edata = JSON.parse(e.detail)
         //     sthis.dataWaiters[edata.data["eid"]]?.(edata.data)
         // })
-        if(this._log_rules._open) _xlog.log("Wormhole is opening...");
+        if (this._wh_log_rules._open) _xlog.log("Wormhole is opening...");
 
-        _xem.on(WormholeEvents.ResponseDataArrived, (e:any) => {
+        _xem.on(WormholeEvents.ResponseDataArrived, (e: any) => {
             const edata = e.sed
             sthis._data_waiters[edata["waiterID"]]?.(edata.data)
+
+            if (edata.data._msg_action && edata.data._msg_action === "datasource") {
+                
+                const dsName = edata.data._params._data_source
+                const dsData = edata.data._params._data
+
+                if (!this._data_queue[dsName]) {
+                    this._data_queue[dsName] = []
+                }
+
+                this._data_queue[dsName].push(dsData)                
+            } else if (edata.data._msg_action && edata.data._msg_action === "xem") {
+                const eventName = edata.data._params._event
+                const eventData = edata.data._params._data
+                _xem.fire(eventName, eventData)
+            }
+
+
         })
 
         if (this._ws) {
             this._ws.onopen = async () => {
                 this._ready = true
-                if(this._log_rules._open) _xlog.log("Wormhole has been created");
+                if (this._wh_log_rules._open) _xlog.log("Wormhole has been created");
                 _xd._o[WormholeEvents.WormholeOpen] = true
                 // let event = new CustomEvent("wormhole-open")
                 // document.dispatchEvent(event)
                 _xem.fire(WormholeEvents.WormholeOpen, {})
-                if (this._on_open)
-                {
+                if (this._on_open) {
                     try {
                         this._on_open()
                     } catch (e) {
@@ -149,7 +170,7 @@ export class WormholeInstance {
                         data: ddata
                     }
                     _xem.fire(WormholeEvents.ResponseDataArrived, { sed: sed })
-                    if(this._log_rules._receive) _xlog.log("Wormhole received message", ddata)
+                    if (this._wh_log_rules._receive) _xlog.log("Wormhole received message", ddata)
 
                 } catch (e) {
                     _xlog.error(e);
@@ -159,9 +180,9 @@ export class WormholeInstance {
 
             this._ws.onclose = async () => {
                 this._ready = false
-                if(this._log_rules._open) _xlog.log("Wormholer is closed...");
+                if (this._wh_log_rules._open) _xlog.log("Wormholer is closed...");
                 _xd._o[WormholeEvents.WormholeOpen] = false
-                _xem.fire(WormholeEvents.WormholeClose,{},true)
+                _xem.fire(WormholeEvents.WormholeClose, {}, true)
             };
         }
     }
@@ -179,7 +200,7 @@ export class WormholeInstance {
     send(message: any, cb: CallableFunction, type = MessageType.JSON) {
         if (this._ws) {
             let wormholeMessage = this.createMessage(message, type)
-            
+
 
             if (!cb) {
                 cb = (data: string) => {
@@ -189,7 +210,7 @@ export class WormholeInstance {
             this._data_waiters[wormholeMessage.id] = cb
             try {
                 this._ws.send(JSON.stringify(wormholeMessage))
-                if(this._log_rules._send) _xlog.log("Wormhole sent message", wormholeMessage)
+                if (this._wh_log_rules._send) _xlog.log("Wormhole sent message", wormholeMessage)
             } catch (ex) {
                 _xlog.log("ERROR" + ex);
 
@@ -204,7 +225,7 @@ export class WormholeInstance {
      */
     sendSync(message: any, checkXProtocol = true): Promise<WormholeMessage | any> {
         return new Promise((resolve, reject) => {
-            Wormholes.send(message, (data:any) => {
+            Wormholes.send(message, (data: any) => {
                 //new addition for xprotocol
                 // data = data.data
                 let res
@@ -234,7 +255,7 @@ export class WormholeInstance {
 
 
     onOpen(cb: CallableFunction) {
-        if(cb && typeof cb === "function") {
+        if (cb && typeof cb === "function") {
             this._on_open = cb
         }
     }
@@ -264,6 +285,20 @@ export class WormholeInstance {
     //         }
     //     }
     //   }
+
+    async onFrame(frameNumber: number): Promise<void> {
+        return new Promise((resolve, reject) => {
+            const keys = Object.keys(this._data_queue)
+
+            keys.forEach((key) => {
+                if (this._data_queue[key].length === 0) return
+                const currentdata = this._data_queue[key].shift()
+                _xd._o[key] = currentdata
+            })
+
+            resolve()
+        })
+    }
 
 }
 

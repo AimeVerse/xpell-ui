@@ -1,4 +1,4 @@
-import { _x, _xd, _xem, _xlog, _xu, XUIAnimate, XUI, XUIObjects } from "./src/index"
+import { _x, _xd, _xem, _xlog, _xu, XUIAnimate, XUI, XUIObjects, Wormholes } from "./src/index"
 
 
 
@@ -64,7 +64,10 @@ async function main() {
     _x.verbose = true
     _x.start()
     _x.loadModule(XUI)
+    _x.loadModule(Wormholes)
     XUI.createPlayer()
+    const wormholeUrl = "ws://127.0.0.1:3030"
+    Wormholes.open(wormholeUrl)
 
 
     _xd._o["main-view-status"] = "Not Mounted"
@@ -74,19 +77,32 @@ async function main() {
         {
             _id: "main-view",
             _type: "view",
-            style: "flex-direction:column; justify-content:center;align-items:center;width:100%;height:100%;pointer-events:all;",
+            style: "flex-direction:column; justify-content:center;align-items:center;width:100%;height:100%;pointer-events:all;background-color:black",
             _children:
                 [
                     {
                         _type: "button",
                         _id: "upgrad-btn",
-                        _text: "Upgrade",
+                        _text: "Wormhole Test",
                         style: "font-size:12px; padding:5px; border-radius:5px; background-color:#c5c5c5; color:#000; border:none; outline:none; width:90px; height:30px; display:flex;",
-
+                        _data_source: "test",
+                        _on_data: async (xobj,data) => {
+                            console.log("data from ds",data)                      
+                            xobj._text = data
+                            xobj.emptyDataSource()                            
+                        },
+                        _on_mount: async (xobj) => {
+                            _xem.on("test_firesync", (data) => {
+                                console.log("text_firesync from server: \n", data)
+                            })
+                        },
                         _on_click: async (xobj) => {
-                            const result = await confirmDialog("sure, i would like that, it will be great")
+                            await Wormholes.sendSync({ _module: "xenvironment", _op: "firesync_test",_params:{} })
+
+
+                            // const result = await confirmDialog("sure, i would like that, it will be great")
                             
-                            console.log("result", result);
+                            // console.log("result", result);
 
                         }
 
