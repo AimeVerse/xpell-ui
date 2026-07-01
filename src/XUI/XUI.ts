@@ -166,12 +166,14 @@ export class XUIModule extends XModule {
     super({ _name: XUIModule._module_name });
 
     // Register default objects
+    _xlog.log("[XUI] Registering default XUI object pack...");
     this.importObjectPack(XUIObjectPack);
 
   }
 
 
   loadSVGPack() {
+    _xlog.log("[XUI] Registering XUI SVG object pack...");
     this.importObjectPack(XUISVGObjectPack);
   }
 

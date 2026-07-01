@@ -68,7 +68,32 @@ export class XVMView extends XUIObject {
           trend: "+3 today"
         }
       }
-    ]
+    ],
+
+    _design: {
+      _inspector: {
+        _fields: [
+          { _key: "_view_id", _label: "View ID", _input: "text", _required: true },
+          { _key: "_params", _label: "Params", _input: "json" },
+          { _key: "_id", _label: "Wrapper ID", _input: "text" },
+          { _key: "class", _label: "Class", _input: "text" },
+          { _key: "_xvm_view_stack", _label: "View Stack", _input: "json", _advanced: true, _readonly: true }
+        ]
+      },
+      _children: {
+        _allowed: false,
+        _insert_modes: ["before", "after"]
+      },
+      _palette: {
+        _title: "XVM View",
+        _category: "Advanced",
+        _icon: "component",
+        _default_object: {
+          _type: "xvm-view",
+          _view_id: "view-id"
+        }
+      }
+    }
   };
 
   static setViewResolver(resolver: XVMViewResolver | null) {

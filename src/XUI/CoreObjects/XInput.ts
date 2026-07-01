@@ -57,7 +57,39 @@ export class XInput extends XUIObject {
                 _text: "",
                 _data_output: "user.name"
             }
-        ]
+        ],
+
+        _design: {
+            _inspector: {
+                _fields: [
+                    { _key: "_text", _label: "Text", _input: "textarea" },
+                    { _key: "value", _label: "Value", _input: "text" },
+                    { _key: "_input_type", _label: "Input Type", _input: "text" },
+                    { _key: "placeholder", _label: "Placeholder", _input: "text" },
+                    { _key: "name", _label: "Name", _input: "text" },
+                    { _key: "autocomplete", _label: "Autocomplete", _input: "text" },
+                    { _key: "required", _label: "Required", _input: "checkbox" },
+                    { _key: "disabled", _label: "Disabled", _input: "checkbox" },
+                    { _key: "readonly", _label: "Readonly", _input: "checkbox" },
+                    { _key: "_data_source", _label: "Data Source", _input: "text" },
+                    { _key: "_data_output", _label: "Data Output", _input: "text" },
+                    { _key: "_update_data_source_event", _label: "Update Event", _input: "text" }
+                ]
+            },
+            _children: {
+                _allowed: false,
+                _insert_modes: ["before", "after"]
+            },
+            _palette: {
+                _title: "Input",
+                _category: "Input",
+                _icon: "text-cursor-input",
+                _default_object: {
+                    _type: "input",
+                    placeholder: "Input"
+                }
+            }
+        }
     };
 
     type: string = "text";
@@ -281,7 +313,39 @@ export class XTextField extends XInput {
                 _text: "",
                 _data_output: "user.name"
             }
-        ]
+        ],
+
+        _design: {
+            _inspector: {
+                _fields: [
+                    { _key: "_text", _label: "Text", _input: "textarea" },
+                    { _key: "value", _label: "Value", _input: "text" },
+                    { _key: "placeholder", _label: "Placeholder", _input: "text" },
+                    { _key: "name", _label: "Name", _input: "text" },
+                    { _key: "type", _label: "Type", _input: "text" },
+                    { _key: "autocomplete", _label: "Autocomplete", _input: "text" },
+                    { _key: "required", _label: "Required", _input: "checkbox" },
+                    { _key: "disabled", _label: "Disabled", _input: "checkbox" },
+                    { _key: "readonly", _label: "Readonly", _input: "checkbox" },
+                    { _key: "_data_source", _label: "Data Source", _input: "text" },
+                    { _key: "_data_output", _label: "Data Output", _input: "text" },
+                    { _key: "_update_data_source_event", _label: "Update Event", _input: "text" }
+                ]
+            },
+            _children: {
+                _allowed: false,
+                _insert_modes: ["before", "after"]
+            },
+            _palette: {
+                _title: "Text Field",
+                _category: "Input",
+                _icon: "text-cursor-input",
+                _default_object: {
+                    _type: "text",
+                    placeholder: "Text"
+                }
+            }
+        }
     };
 
     type: string = "text" //default type is text for DOM input element, can be changed to "email", "number", etc. via _input_type field
@@ -342,7 +406,37 @@ export class XPassword extends XInput {
                 autocomplete: "current-password",
                 _data_output: "login.password",
             }
-        ]
+        ],
+
+        _design: {
+            _inspector: {
+                _fields: [
+                    { _key: "_text", _label: "Text", _input: "textarea" },
+                    { _key: "value", _label: "Value", _input: "text" },
+                    { _key: "placeholder", _label: "Placeholder", _input: "text" },
+                    { _key: "name", _label: "Name", _input: "text" },
+                    { _key: "autocomplete", _label: "Autocomplete", _input: "text" },
+                    { _key: "required", _label: "Required", _input: "checkbox" },
+                    { _key: "disabled", _label: "Disabled", _input: "checkbox" },
+                    { _key: "readonly", _label: "Readonly", _input: "checkbox" },
+                    { _key: "_data_output", _label: "Data Output", _input: "text" }
+                ]
+            },
+            _children: {
+                _allowed: false,
+                _insert_modes: ["before", "after"]
+            },
+            _palette: {
+                _title: "Password",
+                _category: "Input",
+                _icon: "lock-keyhole",
+                _default_object: {
+                    _type: "password",
+                    placeholder: "Password",
+                    autocomplete: "current-password"
+                }
+            }
+        }
     };
     type: string = "password" //default type is password
     constructor(data: XObjectData) {
@@ -406,7 +500,34 @@ export class XTextArea extends XInput {
                 cols: 50,
                 _data_output: "form.description",
             }
-        ]
+        ],
+
+        _design: {
+            _inspector: {
+                _fields: [
+                    { _key: "rows", _label: "Rows", _input: "number" },
+                    { _key: "cols", _label: "Columns", _input: "number" },
+                    { _key: "placeholder", _label: "Placeholder", _input: "text" },
+                    { _key: "maxlength", _label: "Max Length", _input: "number" },
+                    { _key: "_data_source", _label: "Data Source", _input: "text" },
+                    { _key: "_data_output", _label: "Data Output", _input: "text" },
+                    { _key: "_update_data_source_event", _label: "Update Event", _input: "text" }
+                ]
+            },
+            _children: {
+                _allowed: false,
+                _insert_modes: ["before", "after"]
+            },
+            _palette: {
+                _title: "Text Area",
+                _category: "Input",
+                _icon: "rows-3",
+                _default_object: {
+                    _type: "textarea",
+                    placeholder: "Text area"
+                }
+            }
+        }
     };
 
     constructor(data: XObjectData) {
@@ -501,7 +622,38 @@ export class XSelect extends XInput {
                     { label: "User", value: "user" }
                 ]
             }
-        ]
+        ],
+
+        _design: {
+            _inspector: {
+                _fields: [
+                    { _key: "_options", _label: "Options", _input: "json" },
+                    { _key: "_multiple", _label: "Multiple", _input: "checkbox" },
+                    { _key: "value", _label: "Value", _input: "text" },
+                    { _key: "name", _label: "Name", _input: "text" },
+                    { _key: "disabled", _label: "Disabled", _input: "checkbox" },
+                    { _key: "required", _label: "Required", _input: "checkbox" },
+                    { _key: "_data_source", _label: "Data Source", _input: "text" },
+                    { _key: "_data_output", _label: "Data Output", _input: "text" },
+                    { _key: "_update_data_source_event", _label: "Update Event", _input: "text" }
+                ]
+            },
+            _children: {
+                _allowed: false,
+                _insert_modes: ["before", "after"]
+            },
+            _palette: {
+                _title: "Select",
+                _category: "Input",
+                _icon: "list-filter",
+                _default_object: {
+                    _type: "select",
+                    _options: [
+                        { label: "Option", value: "option" }
+                    ]
+                }
+            }
+        }
     };
 
     _options: XSelectOption[] = [];

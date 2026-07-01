@@ -4,142 +4,6 @@
   "class": "xstudio-left-inspector-stack xstudio-selected-object-panel",
   "_children": [
     {
-      "_id": "xstudio-selected-object-summary-portlet",
-      "_type": "view",
-      "class": "xstudio-portlet xstudio-explorer-section xstudio-explorer-section-collapsed xstudio-selected-object-summary-portlet",
-      "_children": [
-        {
-          "_type": "view",
-          "class": "xstudio-portlet-header xstudio-explorer-section-header",
-          "_children": [
-            {
-              "_id": "xstudio-selected-object-section-toggle",
-              "_type": "button",
-              "type": "button",
-              "class": "xstudio-explorer-section-toggle",
-              "_text": "▸ Selected Object",
-              "title": "Expand Selected Object",
-              "aria-expanded": "false",
-              "_on": {
-                "click": {
-                  "_module": "xem",
-                  "_op": "fire",
-                  "_params": {
-                    "event": "studio:explorer-section:toggle",
-                    "data": {
-                      "_section": "selected_object"
-                    }
-                  }
-                }
-              }
-            },
-            {
-              "_type": "view",
-              "class": "xstudio-explorer-section-actions",
-              "_children": [
-                {
-                  "_id": "xstudio-selected-object-details-toggle",
-                  "_type": "button",
-                  "type": "button",
-                  "class": "xstudio-explorer-section-action xstudio-selected-object-details-toggle",
-                  "_text": "Details ▼",
-                  "_on": {
-                    "click": {
-                      "_module": "xem",
-                      "_op": "fire",
-                      "_params": {
-                        "event": "studio:selected-object:toggle-details"
-                      }
-                    }
-                  }
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "_id": "xstudio-selected-object-summary-body",
-          "_type": "view",
-          "class": "xstudio-portlet-body xstudio-selected-object-body xstudio-portlet-hidden",
-          "_visible": false,
-          "aria-hidden": "true",
-          "style": "display: none;",
-          "_children": [
-            {
-              "_id": "xstudio-selected-object-compact-summary",
-              "_type": "view",
-              "class": "xstudio-selected-object-compact-summary",
-              "_children": [
-                {
-                  "_id": "xstudio-selected-object-summary-line",
-                  "_type": "label",
-                  "class": "xstudio-selected-object-summary-line",
-                  "_text": "No object selected"
-                },
-                {
-                  "_id": "xstudio-selected-object-summary-text",
-                  "_type": "label",
-                  "class": "xstudio-selected-object-summary-text",
-                  "_visible": false,
-                  "_text": ""
-                }
-              ]
-            },
-            {
-              "_id": "xstudio-selected-object-details",
-              "_type": "view",
-              "class": "xstudio-selected-object-fields xstudio-selected-object-details",
-              "_visible": false,
-              "_children": [
-                {
-                  "_id": "xstudio-selected-object-type",
-                  "_type": "label",
-                  "class": "xstudio-selected-object-field",
-                  "_text": "Type: -"
-                },
-                {
-                  "_id": "xstudio-selected-object-id",
-                  "_type": "label",
-                  "class": "xstudio-selected-object-field",
-                  "_text": "ID: -"
-                },
-                {
-                  "_id": "xstudio-selected-object-text",
-                  "_type": "label",
-                  "class": "xstudio-selected-object-field",
-                  "_text": "Text: -"
-                },
-                {
-                  "_id": "xstudio-selected-object-source",
-                  "_type": "label",
-                  "class": "xstudio-selected-object-field",
-                  "_text": "Source View: -"
-                },
-                {
-                  "_id": "xstudio-selected-object-path",
-                  "_type": "label",
-                  "class": "xstudio-selected-object-field",
-                  "_text": "Path: -"
-                },
-                {
-                  "_id": "xstudio-selected-object-dom",
-                  "_type": "label",
-                  "class": "xstudio-selected-object-field",
-                  "_text": "DOM: -"
-                },
-                {
-                  "_id": "xstudio-selected-object-metadata",
-                  "_type": "label",
-                  "class": "xstudio-selected-object-field",
-                  "_text": "Metadata: -"
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    },
-    {
       "_id": "xstudio-selected-object-properties-portlet",
       "_type": "view",
       "class": "xstudio-portlet xstudio-explorer-section xstudio-selected-object-properties-portlet",
@@ -182,136 +46,6 @@
           "_children": [
             {
               "_type": "view",
-              "class": "xstudio-selected-object-properties-section xstudio-selected-object-hierarchy-section",
-              "_children": [
-                {
-                  "_type": "label",
-                  "class": "xstudio-selected-object-section-title",
-                  "_text": "Hierarchy"
-                },
-                {
-                  "_type": "view",
-                  "class": "xstudio-selected-object-hierarchy-actions",
-                  "_children": [
-                    {
-                      "_id": "xstudio-selected-object-move-up",
-                      "_type": "button",
-                      "type": "button",
-                      "class": "xstudio-selected-object-editor-button xstudio-selected-object-move-button",
-                      "_text": "Move Up",
-                      "disabled": true,
-                      "_on": {
-                        "click": {
-                          "_module": "xem",
-                          "_op": "fire",
-                          "_params": {
-                            "event": "studio:selected-object:move-up"
-                          }
-                        }
-                      }
-                    },
-                    {
-                      "_id": "xstudio-selected-object-move-down",
-                      "_type": "button",
-                      "type": "button",
-                      "class": "xstudio-selected-object-editor-button xstudio-selected-object-move-button",
-                      "_text": "Move Down",
-                      "disabled": true,
-                      "_on": {
-                        "click": {
-                          "_module": "xem",
-                          "_op": "fire",
-                          "_params": {
-                            "event": "studio:selected-object:move-down"
-                          }
-                        }
-                      }
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "_type": "view",
-              "class": "xstudio-selected-object-properties-section xstudio-selected-object-visibility-section",
-              "_children": [
-                {
-                  "_type": "label",
-                  "class": "xstudio-selected-object-section-title",
-                  "_text": "Visibility"
-                },
-                {
-                  "_type": "view",
-                  "class": "xstudio-selected-object-visibility-actions",
-                  "_children": [
-                    {
-                      "_id": "xstudio-selected-object-hide",
-                      "_type": "button",
-                      "type": "button",
-                      "class": "xstudio-selected-object-editor-button xstudio-selected-object-visibility-button",
-                      "_text": "Hide",
-                      "disabled": true,
-                      "_on": {
-                        "click": {
-                          "_module": "xem",
-                          "_op": "fire",
-                          "_params": {
-                            "event": "studio:selected-object:hide"
-                          }
-                        }
-                      }
-                    },
-                    {
-                      "_id": "xstudio-selected-object-show",
-                      "_type": "button",
-                      "type": "button",
-                      "class": "xstudio-selected-object-editor-button xstudio-selected-object-visibility-button",
-                      "_text": "Show",
-                      "disabled": true,
-                      "_on": {
-                        "click": {
-                          "_module": "xem",
-                          "_op": "fire",
-                          "_params": {
-                            "event": "studio:selected-object:show"
-                          }
-                        }
-                      }
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "_type": "view",
-              "class": "xstudio-selected-object-properties-section xstudio-selected-object-duplicate-section",
-              "_children": [
-                {
-                  "_type": "label",
-                  "class": "xstudio-selected-object-section-title",
-                  "_text": "Duplicate"
-                },
-                {
-                  "_id": "xstudio-selected-object-duplicate",
-                  "_type": "button",
-                  "type": "button",
-                  "class": "xstudio-selected-object-editor-button xstudio-selected-object-duplicate-button",
-                  "_text": "Duplicate",
-                  "disabled": true,
-                  "_on": {
-                    "click": {
-                      "_module": "xem",
-                      "_op": "fire",
-                      "_params": {
-                        "event": "studio:selected-object:duplicate"
-                      }
-                    }
-                  }
-                }
-              ]
-            },
-            {
-              "_type": "view",
               "class": "xstudio-selected-object-properties-section xstudio-selected-object-fields-section",
               "_children": [
                 {
@@ -324,213 +58,52 @@
                   "class": "xstudio-selected-object-editor",
                   "_children": [
                     {
+                      "_id": "xstudio-selected-object-fields-container",
                       "_type": "view",
-                      "class": "xstudio-selected-object-editor-row",
+                      "class": "xstudio-selected-object-fields-container",
                       "_children": [
                         {
+                          "_id": "xstudio-selected-object-fields-empty",
                           "_type": "label",
-                          "class": "xstudio-selected-object-editor-label",
-                          "_text": "_text"
-                        },
-                        {
-                          "_id": "xstudio-selected-object-edit-text",
-                          "_type": "text",
-                          "class": "xstudio-selected-object-editor-input",
-                          "placeholder": "Text",
-                          "disabled": true,
-                          "_data_source": "studio:selected_object_inspector:_text",
-                          "_data_output": "studio:selected_object_inspector:_text",
-                          "_update_data_source_event": "input"
-                        },
-                        {
-                          "_id": "xstudio-selected-object-apply-text",
-                          "_type": "button",
-                          "type": "button",
-                          "class": "xstudio-selected-object-editor-button",
-                          "_text": "Apply Text",
-                          "disabled": true,
-                          "_on": {
-                            "click": {
-                              "_module": "xem",
-                              "_op": "fire",
-                              "_params": {
-                                "event": "studio:selected-object:apply-text"
-                              }
-                            }
-                          }
+                          "class": "xstudio-selected-object-editor-empty",
+                          "_text": "Select an object"
                         }
                       ]
                     },
                     {
                       "_type": "view",
-                      "class": "xstudio-selected-object-editor-row",
+                      "class": "xstudio-selected-object-editor-actions",
                       "_children": [
                         {
-                          "_type": "label",
-                          "class": "xstudio-selected-object-editor-label",
-                          "_text": "class"
-                        },
-                        {
-                          "_id": "xstudio-selected-object-edit-class",
-                          "_type": "text",
-                          "class": "xstudio-selected-object-editor-input",
-                          "placeholder": "class / _class",
-                          "disabled": true,
-                          "_data_source": "studio:selected_object_inspector:_class",
-                          "_data_output": "studio:selected_object_inspector:_class",
-                          "_update_data_source_event": "input"
-                        },
-                        {
-                          "_id": "xstudio-selected-object-apply-class",
+                          "_id": "xstudio-selected-object-save-fields",
                           "_type": "button",
                           "type": "button",
-                          "class": "xstudio-selected-object-editor-button",
-                          "_text": "Apply Class",
+                          "class": "xstudio-selected-object-editor-button xstudio-selected-object-save-button",
+                          "_text": "Save",
                           "disabled": true,
                           "_on": {
                             "click": {
                               "_module": "xem",
                               "_op": "fire",
                               "_params": {
-                                "event": "studio:selected-object:apply-class"
+                                "event": "studio:selected-object:save-fields"
                               }
                             }
                           }
-                        }
-                      ]
-                    },
-                    {
-                      "_type": "view",
-                      "class": "xstudio-selected-object-editor-row xstudio-selected-object-style-row",
-                      "_children": [
-                        {
-                          "_type": "label",
-                          "class": "xstudio-selected-object-editor-label",
-                          "_text": "_style"
                         },
                         {
-                          "_id": "xstudio-selected-object-edit-style-property",
-                          "_type": "text",
-                          "class": "xstudio-selected-object-editor-input",
-                          "placeholder": "property",
-                          "disabled": true,
-                          "_data_source": "studio:selected_object_inspector:_style_property",
-                          "_data_output": "studio:selected_object_inspector:_style_property",
-                          "_update_data_source_event": "input"
-                        },
-                        {
-                          "_id": "xstudio-selected-object-edit-style-value",
-                          "_type": "text",
-                          "class": "xstudio-selected-object-editor-input",
-                          "placeholder": "value",
-                          "disabled": true,
-                          "_data_source": "studio:selected_object_inspector:_style_value",
-                          "_data_output": "studio:selected_object_inspector:_style_value",
-                          "_update_data_source_event": "input"
-                        },
-                        {
-                          "_id": "xstudio-selected-object-apply-style",
+                          "_id": "xstudio-selected-object-cancel-fields",
                           "_type": "button",
                           "type": "button",
-                          "class": "xstudio-selected-object-editor-button",
-                          "_text": "Apply Style",
+                          "class": "xstudio-selected-object-editor-button xstudio-selected-object-cancel-button",
+                          "_text": "Cancel",
                           "disabled": true,
                           "_on": {
                             "click": {
                               "_module": "xem",
                               "_op": "fire",
                               "_params": {
-                                "event": "studio:selected-object:apply-style"
-                              }
-                            }
-                          }
-                        }
-                      ]
-                    },
-                    {
-                      "_type": "view",
-                      "class": "xstudio-selected-object-editor-row",
-                      "_children": [
-                        {
-                          "_type": "label",
-                          "class": "xstudio-selected-object-editor-label",
-                          "_text": "disabled"
-                        },
-                        {
-                          "_id": "xstudio-selected-object-edit-disabled",
-                          "_type": "select",
-                          "class": "xstudio-selected-object-editor-input",
-                          "disabled": true,
-                          "_data_source": "studio:selected_object_inspector:disabled",
-                          "_data_output": "studio:selected_object_inspector:disabled",
-                          "_update_data_source_event": "change",
-                          "_options": [
-                            {
-                              "label": "Unset",
-                              "value": "",
-                              "selected": true
-                            },
-                            {
-                              "label": "true",
-                              "value": "true"
-                            },
-                            {
-                              "label": "false",
-                              "value": "false"
-                            }
-                          ]
-                        },
-                        {
-                          "_id": "xstudio-selected-object-apply-disabled",
-                          "_type": "button",
-                          "type": "button",
-                          "class": "xstudio-selected-object-editor-button",
-                          "_text": "Apply Disabled",
-                          "disabled": true,
-                          "_on": {
-                            "click": {
-                              "_module": "xem",
-                              "_op": "fire",
-                              "_params": {
-                                "event": "studio:selected-object:apply-disabled"
-                              }
-                            }
-                          }
-                        }
-                      ]
-                    },
-                    {
-                      "_type": "view",
-                      "class": "xstudio-selected-object-editor-row",
-                      "_children": [
-                        {
-                          "_type": "label",
-                          "class": "xstudio-selected-object-editor-label",
-                          "_text": "placeholder"
-                        },
-                        {
-                          "_id": "xstudio-selected-object-edit-placeholder",
-                          "_type": "text",
-                          "class": "xstudio-selected-object-editor-input",
-                          "placeholder": "placeholder",
-                          "disabled": true,
-                          "_data_source": "studio:selected_object_inspector:placeholder",
-                          "_data_output": "studio:selected_object_inspector:placeholder",
-                          "_update_data_source_event": "input"
-                        },
-                        {
-                          "_id": "xstudio-selected-object-apply-placeholder",
-                          "_type": "button",
-                          "type": "button",
-                          "class": "xstudio-selected-object-editor-button",
-                          "_text": "Apply Placeholder",
-                          "disabled": true,
-                          "_on": {
-                            "click": {
-                              "_module": "xem",
-                              "_op": "fire",
-                              "_params": {
-                                "event": "studio:selected-object:apply-placeholder"
+                                "event": "studio:selected-object:cancel-fields"
                               }
                             }
                           }
@@ -545,11 +118,6 @@
               "_type": "view",
               "class": "xstudio-selected-object-properties-section xstudio-selected-object-delete-section",
               "_children": [
-                {
-                  "_type": "label",
-                  "class": "xstudio-selected-object-section-title",
-                  "_text": "Delete"
-                },
                 {
                   "_id": "xstudio-selected-object-delete-request",
                   "_type": "button",
@@ -608,7 +176,7 @@
                 {
                   "_id": "xstudio-selected-object-raw-body",
                   "_type": "view",
-                  "class": "xstudio-selected-object-raw-body xstudio-portlet-hidden",
+                  "class": "xstudio-selected-object-raw-body",
                   "_visible": false,
                   "aria-hidden": "true",
                   "style": "display: none;",
@@ -738,6 +306,89 @@
                       "_op": "fire",
                       "_params": {
                         "event": "studio:selected-object:delete-confirm"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "_id": "xstudio-object-tree-duplicate-dialog",
+      "_type": "view",
+      "class": "xstudio-selected-object-delete-dialog xstudio-object-tree-duplicate-dialog",
+      "_visible": false,
+      "role": "dialog",
+      "aria-modal": "true",
+      "_children": [
+        {
+          "_type": "view",
+          "class": "xstudio-selected-object-delete-card xstudio-object-tree-duplicate-card",
+          "_children": [
+            {
+              "_id": "xstudio-object-tree-duplicate-title",
+              "_type": "label",
+              "class": "xstudio-selected-object-delete-title",
+              "_text": "Duplicate object?"
+            },
+            {
+              "_type": "label",
+              "class": "xstudio-selected-object-delete-kicker",
+              "_text": "Object Tree target:"
+            },
+            {
+              "_id": "xstudio-object-tree-duplicate-label",
+              "_type": "label",
+              "class": "xstudio-selected-object-delete-value xstudio-object-tree-duplicate-value",
+              "_text": "Label: -"
+            },
+            {
+              "_id": "xstudio-object-tree-duplicate-type",
+              "_type": "label",
+              "class": "xstudio-selected-object-delete-value xstudio-object-tree-duplicate-value",
+              "_text": "Type: -"
+            },
+            {
+              "_id": "xstudio-object-tree-duplicate-json-id",
+              "_type": "label",
+              "class": "xstudio-selected-object-delete-value xstudio-object-tree-duplicate-value",
+              "_text": "ID: -"
+            },
+            {
+              "_type": "view",
+              "class": "xstudio-selected-object-delete-actions",
+              "_children": [
+                {
+                  "_id": "xstudio-object-tree-duplicate-cancel",
+                  "_type": "button",
+                  "type": "button",
+                  "class": "xstudio-selected-object-editor-button",
+                  "_text": "Cancel",
+                  "_on": {
+                    "click": {
+                      "_module": "xem",
+                      "_op": "fire",
+                      "_params": {
+                        "event": "studio:object-tree:duplicate-cancel"
+                      }
+                    }
+                  }
+                },
+                {
+                  "_id": "xstudio-object-tree-duplicate-confirm",
+                  "_type": "button",
+                  "type": "button",
+                  "class": "xstudio-selected-object-editor-button xstudio-object-tree-duplicate-confirm",
+                  "_text": "Duplicate",
+                  "_on": {
+                    "click": {
+                      "_module": "xem",
+                      "_op": "fire",
+                      "_params": {
+                        "event": "studio:object-tree:duplicate-confirm"
                       }
                     }
                   }

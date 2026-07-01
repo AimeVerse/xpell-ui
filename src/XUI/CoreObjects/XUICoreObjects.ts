@@ -132,7 +132,32 @@ export class XForm extends XUIObject {
                 _flow_event: "submit",
                 _children: []
             }
-        ]
+        ],
+
+        _design: {
+            _inspector: {
+                _fields: [
+                    { _key: "action", _label: "Action", _input: "text" },
+                    { _key: "method", _label: "Method", _input: "text" },
+                    { _key: "name", _label: "Name", _input: "text" },
+                    { _key: "autocomplete", _label: "Autocomplete", _input: "text" },
+                    { _key: "novalidate", _label: "No Validate", _input: "checkbox" }
+                ]
+            },
+            _children: {
+                _allowed: true,
+                _insert_modes: ["inside", "before", "after"]
+            },
+            _palette: {
+                _title: "Form",
+                _category: "Input",
+                _icon: "clipboard-list",
+                _default_object: {
+                    _type: "form",
+                    _children: []
+                }
+            }
+        }
     };
 
     static override getArtifactStrategy() {
@@ -232,7 +257,34 @@ export class XImage extends XUIObject {
                 src: "/logo.png",
                 alt: "Logo"
             }
-        ]
+        ],
+
+        _design: {
+            _inspector: {
+                _fields: [
+                    { _key: "src", _label: "Source", _input: "text" },
+                    { _key: "alt", _label: "Alt Text", _input: "text" },
+                    { _key: "width", _label: "Width", _input: "number" },
+                    { _key: "height", _label: "Height", _input: "number" },
+                    { _key: "loading", _label: "Loading", _input: "text" },
+                    { _key: "decoding", _label: "Decoding", _input: "text" }
+                ]
+            },
+            _children: {
+                _allowed: false,
+                _insert_modes: ["before", "after"]
+            },
+            _palette: {
+                _title: "Image",
+                _category: "Media",
+                _icon: "image",
+                _default_object: {
+                    _type: "image",
+                    src: "/image.png",
+                    alt: "Image"
+                }
+            }
+        }
     };
 
     constructor(data: XUIObjectData) {
@@ -289,7 +341,36 @@ export class XVideo extends XUIObject {
                 controls: true,
                 poster: "/intro-poster.jpg"
             }
-        ]
+        ],
+
+        _design: {
+            _inspector: {
+                _fields: [
+                    { _key: "src", _label: "Source", _input: "text" },
+                    { _key: "controls", _label: "Controls", _input: "checkbox" },
+                    { _key: "autoplay", _label: "Autoplay", _input: "checkbox" },
+                    { _key: "muted", _label: "Muted", _input: "checkbox" },
+                    { _key: "loop", _label: "Loop", _input: "checkbox" },
+                    { _key: "poster", _label: "Poster", _input: "text" },
+                    { _key: "width", _label: "Width", _input: "number" },
+                    { _key: "height", _label: "Height", _input: "number" },
+                    { _key: "preload", _label: "Preload", _input: "text" }
+                ]
+            },
+            _children: {
+                _allowed: false,
+                _insert_modes: ["before", "after"]
+            },
+            _palette: {
+                _title: "Video",
+                _category: "Media",
+                _icon: "video",
+                _default_object: {
+                    _type: "video",
+                    controls: true
+                }
+            }
+        }
     };
 
     constructor(data: XObjectData) {
@@ -334,7 +415,32 @@ export class XWebcam extends XUIObject {
                 muted: true,
                 _video_constraints: { video: true, width: 320, height: 280 }
             }
-        ]
+        ],
+
+        _design: {
+            _inspector: {
+                _fields: [
+                    { _key: "autoplay", _label: "Autoplay", _input: "checkbox" },
+                    { _key: "muted", _label: "Muted", _input: "checkbox" },
+                    { _key: "_video_constraints", _label: "Video Constraints", _input: "json" }
+                ]
+            },
+            _children: {
+                _allowed: false,
+                _insert_modes: ["before", "after"]
+            },
+            _palette: {
+                _title: "Webcam",
+                _category: "Media",
+                _icon: "camera",
+                _default_object: {
+                    _type: "webcam",
+                    autoplay: true,
+                    muted: true,
+                    _video_constraints: { video: true, width: 320, height: 280 }
+                }
+            }
+        }
     };
 
     autoplay: boolean;
@@ -503,7 +609,33 @@ export class XLink extends XUIObject {
                 "target": "_blank",
                 "rel": "noopener noreferrer"
             }
-        ]
+        ],
+
+        _design: {
+            _inspector: {
+                _fields: [
+                    { _key: "href", _label: "Href", _input: "text" },
+                    { _key: "target", _label: "Target", _input: "text" },
+                    { _key: "rel", _label: "Rel", _input: "text" },
+                    { _key: "download", _label: "Download", _input: "checkbox" },
+                    { _key: "_text", _label: "Text", _input: "textarea" }
+                ]
+            },
+            _children: {
+                _allowed: false,
+                _insert_modes: ["before", "after"]
+            },
+            _palette: {
+                _title: "Link",
+                _category: "Basic",
+                _icon: "link",
+                _default_object: {
+                    _type: "link",
+                    _text: "Link",
+                    href: "#"
+                }
+            }
+        }
     };
 
     constructor(data: XObjectData) {
@@ -547,7 +679,29 @@ export class XLabel extends XUIObject {
                 _text: "Username",
                 class: "form-label"
             }
-        ]
+        ],
+
+        _design: {
+            _inspector: {
+                _fields: [
+                    { _key: "_text", _label: "Text", _input: "textarea" },
+                    { _key: "for", _label: "For", _input: "text" }
+                ]
+            },
+            _children: {
+                _allowed: false,
+                _insert_modes: ["before", "after"]
+            },
+            _palette: {
+                _title: "Label",
+                _category: "Basic",
+                _icon: "tag",
+                _default_object: {
+                    _type: "label",
+                    _text: "Label"
+                }
+            }
+        }
     };
     constructor(data: XObjectData) {
         const defaults = {
@@ -608,7 +762,33 @@ export class XButton extends XUIObject {
                     }
                 }
             }
-        ]
+        ],
+
+        _design: {
+            _inspector: {
+                _fields: [
+                    { _key: "_text", _label: "Text", _input: "textarea" },
+                    { _key: "type", _label: "Type", _input: "text" },
+                    { _key: "disabled", _label: "Disabled", _input: "checkbox" },
+                    { _key: "_on", _label: "Events", _input: "json" },
+                    { _key: "_flow", _label: "Flow", _input: "json" },
+                    { _key: "_flow_event", _label: "Flow Event", _input: "text" }
+                ]
+            },
+            _children: {
+                _allowed: false,
+                _insert_modes: ["before", "after"]
+            },
+            _palette: {
+                _title: "Button",
+                _category: "Basic",
+                _icon: "square-mouse-pointer",
+                _default_object: {
+                    _type: "button",
+                    _text: "Button"
+                }
+            }
+        }
     };
 
     static getArtifactStrategy() {
@@ -668,7 +848,30 @@ export class XHTML extends XUIObject {
                 _text: "This is a paragraph of text wrapped in an XHTML object.",
                 _children: []
             }
-        ]
+        ],
+
+        _design: {
+            _inspector: {
+                _fields: [
+                    { _key: "_html_tag", _label: "HTML Tag", _input: "text" },
+                    { _key: "_text", _label: "Text", _input: "textarea" }
+                ]
+            },
+            _children: {
+                _allowed: true,
+                _insert_modes: ["inside", "before", "after"]
+            },
+            _palette: {
+                _title: "HTML",
+                _category: "Advanced",
+                _icon: "code-xml",
+                _default_object: {
+                    _type: "xhtml",
+                    _html_tag: "div",
+                    _children: []
+                }
+            }
+        }
     };
 
 
@@ -744,5 +947,4 @@ export class XUISVGObjectPack extends XObjectPack {
     }
 }
 export default XUIObjectPack
-
 

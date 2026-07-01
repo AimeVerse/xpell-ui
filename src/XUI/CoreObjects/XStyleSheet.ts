@@ -83,7 +83,32 @@ export class XStyleSheet extends XUIObject {
                     }
                 }
             }
-        ]
+        ],
+
+        _design: {
+            _inspector: {
+                _fields: [
+                    { _key: "_href", _label: "Href", _input: "json" },
+                    { _key: "_classes", _label: "Classes", _input: "json" },
+                    { _key: "_vars", _label: "Variables", _input: "json" },
+                    { _key: "_media", _label: "Media Rules", _input: "json" },
+                    { _key: "class", _label: "Element Class", _input: "text" }
+                ]
+            },
+            _children: {
+                _allowed: false,
+                _insert_modes: ["before", "after"]
+            },
+            _palette: {
+                _title: "Style Sheet",
+                _category: "Advanced",
+                _icon: "file-css",
+                _default_object: {
+                    _type: "style-sheet",
+                    _classes: {}
+                }
+            }
+        }
     };
 
     _href?: string | string[];

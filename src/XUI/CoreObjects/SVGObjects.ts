@@ -62,7 +62,39 @@ export class XSVG extends XUIObject {
                     }
                 ]
             }
-        ]
+        ],
+
+        _design: {
+            _inspector: {
+                _fields: [
+                    { _key: "_url", _label: "URL", _input: "text" },
+                    { _key: "src", _label: "Source", _input: "text" },
+                    { _key: "_svg_data", _label: "SVG Data", _input: "textarea" },
+                    { _key: "viewBox", _label: "View Box", _input: "text" },
+                    { _key: "width", _label: "Width", _input: "number" },
+                    { _key: "height", _label: "Height", _input: "number" },
+                    { _key: "fill", _label: "Fill", _input: "text" },
+                    { _key: "stroke", _label: "Stroke", _input: "text" },
+                    { _key: "xmlns", _label: "XMLNS", _input: "text" }
+                ]
+            },
+            _children: {
+                _allowed: true,
+                _insert_modes: ["inside", "before", "after"]
+            },
+            _palette: {
+                _title: "SVG",
+                _category: "SVG",
+                _icon: "shapes",
+                _default_object: {
+                    _type: "svg",
+                    viewBox: "0 0 24 24",
+                    width: 24,
+                    height: 24,
+                    _children: []
+                }
+            }
+        }
     };
 
     private _svg_data!: string;
@@ -348,7 +380,35 @@ export class XSVGCircle extends XSVGShape {
                 r: 40,
                 fill: "currentColor"
             }
-        ]
+        ],
+
+        _design: {
+            _inspector: {
+                _fields: [
+                    { _key: "cx", _label: "Center X", _input: "number" },
+                    { _key: "cy", _label: "Center Y", _input: "number" },
+                    { _key: "r", _label: "Radius", _input: "number" },
+                    { _key: "fill", _label: "Fill", _input: "text" },
+                    { _key: "stroke", _label: "Stroke", _input: "text" }
+                ]
+            },
+            _children: {
+                _allowed: false,
+                _insert_modes: ["before", "after"]
+            },
+            _palette: {
+                _title: "Circle",
+                _category: "SVG",
+                _icon: "circle",
+                _default_object: {
+                    _type: "circle",
+                    cx: 12,
+                    cy: 12,
+                    r: 10,
+                    fill: "currentColor"
+                }
+            }
+        }
     }
 
     constructor(data: XObjectData) {
@@ -398,7 +458,38 @@ export class XSVGEllipse extends XSVGShape {
                 fill: "none",
                 stroke: "currentColor"
             }
-        ]
+        ],
+
+        _design: {
+            _inspector: {
+                _fields: [
+                    { _key: "cx", _label: "Center X", _input: "number" },
+                    { _key: "cy", _label: "Center Y", _input: "number" },
+                    { _key: "rx", _label: "Radius X", _input: "number" },
+                    { _key: "ry", _label: "Radius Y", _input: "number" },
+                    { _key: "fill", _label: "Fill", _input: "text" },
+                    { _key: "stroke", _label: "Stroke", _input: "text" }
+                ]
+            },
+            _children: {
+                _allowed: false,
+                _insert_modes: ["before", "after"]
+            },
+            _palette: {
+                _title: "Ellipse",
+                _category: "SVG",
+                _icon: "circle-dot",
+                _default_object: {
+                    _type: "ellipse",
+                    cx: 12,
+                    cy: 12,
+                    rx: 10,
+                    ry: 6,
+                    fill: "none",
+                    stroke: "currentColor"
+                }
+            }
+        }
     };
 
     constructor(data: XObjectData) {
@@ -447,7 +538,39 @@ export class XSVGRect extends XSVGShape {
                 rx: 8,
                 fill: "currentColor"
             }
-        ]
+        ],
+
+        _design: {
+            _inspector: {
+                _fields: [
+                    { _key: "x", _label: "X", _input: "number" },
+                    { _key: "y", _label: "Y", _input: "number" },
+                    { _key: "width", _label: "Width", _input: "number" },
+                    { _key: "height", _label: "Height", _input: "number" },
+                    { _key: "rx", _label: "Radius X", _input: "number" },
+                    { _key: "ry", _label: "Radius Y", _input: "number" },
+                    { _key: "fill", _label: "Fill", _input: "text" },
+                    { _key: "stroke", _label: "Stroke", _input: "text" }
+                ]
+            },
+            _children: {
+                _allowed: false,
+                _insert_modes: ["before", "after"]
+            },
+            _palette: {
+                _title: "Rectangle",
+                _category: "SVG",
+                _icon: "square",
+                _default_object: {
+                    _type: "rect",
+                    x: 2,
+                    y: 2,
+                    width: 20,
+                    height: 20,
+                    fill: "currentColor"
+                }
+            }
+        }
     };
     constructor(data: XObjectData) {
         const defaults = {
@@ -492,7 +615,37 @@ export class XSVGLine extends XSVGShape {
                 stroke: "currentColor",
                 "stroke-width": 2
             }
-        ]
+        ],
+
+        _design: {
+            _inspector: {
+                _fields: [
+                    { _key: "x1", _label: "X1", _input: "number" },
+                    { _key: "y1", _label: "Y1", _input: "number" },
+                    { _key: "x2", _label: "X2", _input: "number" },
+                    { _key: "y2", _label: "Y2", _input: "number" },
+                    { _key: "stroke", _label: "Stroke", _input: "text" },
+                    { _key: "stroke-width", _label: "Stroke Width", _input: "number" }
+                ]
+            },
+            _children: {
+                _allowed: false,
+                _insert_modes: ["before", "after"]
+            },
+            _palette: {
+                _title: "Line",
+                _category: "SVG",
+                _icon: "slash",
+                _default_object: {
+                    _type: "line",
+                    x1: 0,
+                    y1: 0,
+                    x2: 24,
+                    y2: 24,
+                    stroke: "currentColor"
+                }
+            }
+        }
     };
     constructor(data: XObjectData) {
         const defaults = {
@@ -530,7 +683,32 @@ export class XSVGPolyline extends XSVGShape {
                 fill: "none",
                 stroke: "currentColor"
             }
-        ]
+        ],
+
+        _design: {
+            _inspector: {
+                _fields: [
+                    { _key: "points", _label: "Points", _input: "textarea" },
+                    { _key: "fill", _label: "Fill", _input: "text" },
+                    { _key: "stroke", _label: "Stroke", _input: "text" }
+                ]
+            },
+            _children: {
+                _allowed: false,
+                _insert_modes: ["before", "after"]
+            },
+            _palette: {
+                _title: "Polyline",
+                _category: "SVG",
+                _icon: "chart-no-axes-column-increasing",
+                _default_object: {
+                    _type: "polyline",
+                    points: "2,12 8,6 14,12 22,4",
+                    fill: "none",
+                    stroke: "currentColor"
+                }
+            }
+        }
     };
 
     constructor(data: XObjectData) {
@@ -570,7 +748,31 @@ export class XSVGPolygon extends XSVGShape {
                 fill: "none",
                 stroke: "currentColor"
             }
-        ]
+        ],
+
+        _design: {
+            _inspector: {
+                _fields: [
+                    { _key: "points", _label: "Points", _input: "textarea" },
+                    { _key: "fill", _label: "Fill", _input: "text" },
+                    { _key: "stroke", _label: "Stroke", _input: "text" }
+                ]
+            },
+            _children: {
+                _allowed: false,
+                _insert_modes: ["before", "after"]
+            },
+            _palette: {
+                _title: "Polygon",
+                _category: "SVG",
+                _icon: "pentagon",
+                _default_object: {
+                    _type: "polygon",
+                    points: "12,2 22,22 2,22",
+                    fill: "currentColor"
+                }
+            }
+        }
     };
 
     constructor(data: XObjectData) {
@@ -610,7 +812,32 @@ export class XSVGPath extends XSVGShape {
                 fill: "none",
                 stroke: "currentColor"
             }
-        ]
+        ],
+
+        _design: {
+            _inspector: {
+                _fields: [
+                    { _key: "d", _label: "Path Data", _input: "textarea" },
+                    { _key: "fill", _label: "Fill", _input: "text" },
+                    { _key: "stroke", _label: "Stroke", _input: "text" }
+                ]
+            },
+            _children: {
+                _allowed: false,
+                _insert_modes: ["before", "after"]
+            },
+            _palette: {
+                _title: "Path",
+                _category: "SVG",
+                _icon: "pen-line",
+                _default_object: {
+                    _type: "path",
+                    d: "M4,20 L20,4",
+                    fill: "none",
+                    stroke: "currentColor"
+                }
+            }
+        }
     };
 
     constructor(data: XObjectData) {

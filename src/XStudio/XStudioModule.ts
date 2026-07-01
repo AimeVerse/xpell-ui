@@ -46,36 +46,12 @@ const STUDIO_OBJECT_TREE_RESULTS_ID = "xstudio-object-tree-results";
 const STUDIO_OBJECT_TREE_SEARCH_ID = "xstudio-object-tree-search";
 const STUDIO_OBJECT_TREE_SECTION_TOGGLE_ID = "xstudio-object-tree-section-toggle";
 const STUDIO_SELECTED_OBJECT_PANEL_ID = "xstudio-selected-object-panel";
-const STUDIO_SELECTED_OBJECT_SUMMARY_PORTLET_ID = "xstudio-selected-object-summary-portlet";
-const STUDIO_SELECTED_OBJECT_SUMMARY_BODY_ID = "xstudio-selected-object-summary-body";
-const STUDIO_SELECTED_OBJECT_SECTION_TOGGLE_ID = "xstudio-selected-object-section-toggle";
-const STUDIO_SELECTED_OBJECT_SUMMARY_LINE_ID = "xstudio-selected-object-summary-line";
-const STUDIO_SELECTED_OBJECT_SUMMARY_TEXT_ID = "xstudio-selected-object-summary-text";
-const STUDIO_SELECTED_OBJECT_TYPE_ID = "xstudio-selected-object-type";
-const STUDIO_SELECTED_OBJECT_ID_ID = "xstudio-selected-object-id";
-const STUDIO_SELECTED_OBJECT_TEXT_ID = "xstudio-selected-object-text";
-const STUDIO_SELECTED_OBJECT_SOURCE_ID = "xstudio-selected-object-source";
-const STUDIO_SELECTED_OBJECT_PATH_ID = "xstudio-selected-object-path";
-const STUDIO_SELECTED_OBJECT_DOM_ID = "xstudio-selected-object-dom";
-const STUDIO_SELECTED_OBJECT_METADATA_ID = "xstudio-selected-object-metadata";
-const STUDIO_SELECTED_OBJECT_DETAILS_ID = "xstudio-selected-object-details";
-const STUDIO_SELECTED_OBJECT_DETAILS_TOGGLE_ID = "xstudio-selected-object-details-toggle";
 const STUDIO_SELECTED_OBJECT_JSON_ID = "xstudio-selected-object-json";
-const STUDIO_SELECTED_OBJECT_EDIT_TEXT_ID = "xstudio-selected-object-edit-text";
-const STUDIO_SELECTED_OBJECT_EDIT_CLASS_ID = "xstudio-selected-object-edit-class";
-const STUDIO_SELECTED_OBJECT_EDIT_STYLE_PROPERTY_ID = "xstudio-selected-object-edit-style-property";
-const STUDIO_SELECTED_OBJECT_EDIT_STYLE_VALUE_ID = "xstudio-selected-object-edit-style-value";
-const STUDIO_SELECTED_OBJECT_EDIT_DISABLED_ID = "xstudio-selected-object-edit-disabled";
-const STUDIO_SELECTED_OBJECT_EDIT_PLACEHOLDER_ID = "xstudio-selected-object-edit-placeholder";
-const STUDIO_SELECTED_OBJECT_APPLY_TEXT_ID = "xstudio-selected-object-apply-text";
-const STUDIO_SELECTED_OBJECT_APPLY_CLASS_ID = "xstudio-selected-object-apply-class";
-const STUDIO_SELECTED_OBJECT_APPLY_STYLE_ID = "xstudio-selected-object-apply-style";
-const STUDIO_SELECTED_OBJECT_APPLY_DISABLED_ID = "xstudio-selected-object-apply-disabled";
-const STUDIO_SELECTED_OBJECT_APPLY_PLACEHOLDER_ID = "xstudio-selected-object-apply-placeholder";
+const STUDIO_SELECTED_OBJECT_FIELDS_CONTAINER_ID = "xstudio-selected-object-fields-container";
+const STUDIO_SELECTED_OBJECT_SAVE_FIELDS_ID = "xstudio-selected-object-save-fields";
+const STUDIO_SELECTED_OBJECT_CANCEL_FIELDS_ID = "xstudio-selected-object-cancel-fields";
 const STUDIO_SELECTED_OBJECT_MOVE_UP_ID = "xstudio-selected-object-move-up";
 const STUDIO_SELECTED_OBJECT_MOVE_DOWN_ID = "xstudio-selected-object-move-down";
-const STUDIO_SELECTED_OBJECT_HIDE_ID = "xstudio-selected-object-hide";
-const STUDIO_SELECTED_OBJECT_SHOW_ID = "xstudio-selected-object-show";
 const STUDIO_SELECTED_OBJECT_DUPLICATE_ID = "xstudio-selected-object-duplicate";
 const STUDIO_SELECTED_OBJECT_DELETE_REQUEST_ID = "xstudio-selected-object-delete-request";
 const STUDIO_SELECTED_OBJECT_DELETE_DIALOG_ID = "xstudio-selected-object-delete-dialog";
@@ -83,6 +59,12 @@ const STUDIO_SELECTED_OBJECT_DELETE_TYPE_ID = "xstudio-selected-object-delete-ty
 const STUDIO_SELECTED_OBJECT_DELETE_NAME_ID = "xstudio-selected-object-delete-name";
 const STUDIO_SELECTED_OBJECT_DELETE_CANCEL_ID = "xstudio-selected-object-delete-cancel";
 const STUDIO_SELECTED_OBJECT_DELETE_CONFIRM_ID = "xstudio-selected-object-delete-confirm";
+const STUDIO_OBJECT_TREE_DUPLICATE_DIALOG_ID = "xstudio-object-tree-duplicate-dialog";
+const STUDIO_OBJECT_TREE_DUPLICATE_LABEL_ID = "xstudio-object-tree-duplicate-label";
+const STUDIO_OBJECT_TREE_DUPLICATE_TYPE_ID = "xstudio-object-tree-duplicate-type";
+const STUDIO_OBJECT_TREE_DUPLICATE_JSON_ID = "xstudio-object-tree-duplicate-json-id";
+const STUDIO_OBJECT_TREE_DUPLICATE_CANCEL_ID = "xstudio-object-tree-duplicate-cancel";
+const STUDIO_OBJECT_TREE_DUPLICATE_CONFIRM_ID = "xstudio-object-tree-duplicate-confirm";
 const STUDIO_SELECTED_OBJECT_UPDATE_JSON_ID = "xstudio-selected-object-update-json";
 const STUDIO_SELECTED_OBJECT_RESET_JSON_ID = "xstudio-selected-object-reset-json";
 const STUDIO_SELECTED_OBJECT_PROPERTIES_PORTLET_ID = "xstudio-selected-object-properties-portlet";
@@ -130,12 +112,11 @@ const STUDIO_JSON_SECTION_ID = "xstudio-json-section";
 const STUDIO_MODULES_SECTION_ID = "xstudio-generated-modules-section";
 const STUDIO_PORTLET_TOGGLE_ACTIVE_CLASS = "xstudio-portlet-toggle-active";
 const STUDIO_PORTLET_HIDDEN_CLASS = "xstudio-portlet-hidden";
-const STUDIO_SELECTED_OBJECT_DETAILS_EXPANDED_CLASS = "xstudio-selected-object-details-expanded";
 const STUDIO_EXPLORER_SECTION_COLLAPSED_CLASS = "xstudio-explorer-section-collapsed";
 
 type XStudioTheme = typeof STUDIO_THEME_OPTIONS[number];
 type XStudioPortletId = "selected" | "prompt" | "conversation" | "runtime" | "inspector" | "json" | "modules";
-type XStudioExplorerSectionId = "object_tree" | "selected_object" | "properties" | "raw_json";
+type XStudioExplorerSectionId = "object_tree" | "properties" | "raw_json";
 
 const STUDIO_PORTLETS: Record<XStudioPortletId, {
   _object_id: string;
@@ -200,12 +181,6 @@ const STUDIO_EXPLORER_SECTIONS: Record<XStudioExplorerSectionId, {
     _toggle_id: STUDIO_OBJECT_TREE_SECTION_TOGGLE_ID,
     _label: "Object Tree",
   },
-  selected_object: {
-    _section_id: STUDIO_SELECTED_OBJECT_SUMMARY_PORTLET_ID,
-    _body_id: STUDIO_SELECTED_OBJECT_SUMMARY_BODY_ID,
-    _toggle_id: STUDIO_SELECTED_OBJECT_SECTION_TOGGLE_ID,
-    _label: "Selected Object",
-  },
   properties: {
     _section_id: STUDIO_SELECTED_OBJECT_PROPERTIES_PORTLET_ID,
     _body_id: STUDIO_SELECTED_OBJECT_PROPERTIES_BODY_ID,
@@ -222,22 +197,14 @@ const STUDIO_EXPLORER_SECTIONS: Record<XStudioExplorerSectionId, {
 const STUDIO_EXPLORER_SECTION_IDS = Object.keys(STUDIO_EXPLORER_SECTIONS) as XStudioExplorerSectionId[];
 const STUDIO_DEFAULT_EXPLORER_SECTION_OPEN: Record<XStudioExplorerSectionId, boolean> = {
   object_tree: true,
-  selected_object: false,
   properties: true,
   raw_json: false,
 };
-const STUDIO_SELECTED_OBJECT_INSPECTOR_CONTROL_IDS = [
-  STUDIO_SELECTED_OBJECT_EDIT_TEXT_ID,
-  STUDIO_SELECTED_OBJECT_EDIT_CLASS_ID,
-  STUDIO_SELECTED_OBJECT_EDIT_STYLE_PROPERTY_ID,
-  STUDIO_SELECTED_OBJECT_EDIT_STYLE_VALUE_ID,
-  STUDIO_SELECTED_OBJECT_EDIT_DISABLED_ID,
-  STUDIO_SELECTED_OBJECT_EDIT_PLACEHOLDER_ID,
-  STUDIO_SELECTED_OBJECT_APPLY_TEXT_ID,
-  STUDIO_SELECTED_OBJECT_APPLY_CLASS_ID,
-  STUDIO_SELECTED_OBJECT_APPLY_STYLE_ID,
-  STUDIO_SELECTED_OBJECT_APPLY_DISABLED_ID,
-  STUDIO_SELECTED_OBJECT_APPLY_PLACEHOLDER_ID,
+const STUDIO_SELECTED_OBJECT_EDITOR_ACTION_CONTROL_IDS = [
+  STUDIO_SELECTED_OBJECT_SAVE_FIELDS_ID,
+  STUDIO_SELECTED_OBJECT_CANCEL_FIELDS_ID,
+];
+const STUDIO_SELECTED_OBJECT_RAW_CONTROL_IDS = [
   STUDIO_SELECTED_OBJECT_JSON_ID,
   STUDIO_SELECTED_OBJECT_UPDATE_JSON_ID,
   STUDIO_SELECTED_OBJECT_RESET_JSON_ID,
@@ -326,20 +293,34 @@ type XStudioSelectedObject = {
 };
 
 type XStudioSelectedObjectInspectorDraft = {
-  _text: string;
-  _class: string;
-  _style_property: string;
-  _style_value: string;
-  _disabled: string;
-  _placeholder: string;
+  [key: string]: string;
 };
 
-type XStudioSelectedObjectInspectorField =
-  | "text"
-  | "class"
-  | "style"
-  | "disabled"
-  | "placeholder";
+type XStudioSkillInspectorField = {
+  _key: string;
+  _label?: string;
+  _input?: "text" | "textarea" | "number" | "checkbox" | "select" | "json";
+  _options?: string[];
+  _placeholder?: string;
+  _description?: string;
+  _advanced?: boolean;
+  _readonly?: boolean;
+  _required?: boolean;
+};
+
+type XStudioSelectedObjectInspectorInput =
+  NonNullable<XStudioSkillInspectorField["_input"]>;
+
+type XStudioSelectedObjectInspectorResolvedField =
+  XStudioSkillInspectorField & {
+    _key: string;
+    _label: string;
+    _input: XStudioSelectedObjectInspectorInput;
+    _control_id: string;
+    _source: "design" | "fallback";
+  };
+
+type XStudioSelectedObjectInspectorField = string;
 
 type XStudioConversationMessage = {
   _role: "user" | "assistant" | "system" | "tool";
@@ -395,7 +376,7 @@ type XStudioSelectedObjectApplyViewEditParams = {
   _target_id: string;
   _target_type: string;
   _property_name?: string;
-  _property_value?: string | number | boolean | null;
+  _property_value?: any;
   _style_property?: string;
   _style_value?: string;
   _object_value?: Record<string, any>;
@@ -408,10 +389,14 @@ type XStudioObjectTreeNode = {
   _node_key: string;
   _parent_node_key: string;
   _label: string;
+  _label_primary: string;
+  _label_secondary: string;
+  _label_type: string;
   _search_text: string;
   _meta: XStudioSelectedObject | null;
   _object: Record<string, any> | null;
   _depth: number;
+  _children: XStudioObjectTreeNode[];
   _placeholder?: string;
 };
 
@@ -421,14 +406,12 @@ type XStudioSelectedObjectSiblingContext = {
   _next_sibling_id: string;
 };
 
-const empty_selected_object_inspector_draft = (): XStudioSelectedObjectInspectorDraft => ({
-  _text: "",
-  _class: "",
-  _style_property: "",
-  _style_value: "",
-  _disabled: "",
-  _placeholder: "",
-});
+type XStudioObjectTreeDuplicateTarget = {
+  _meta: XStudioSelectedObject;
+  _label: string;
+};
+
+const empty_selected_object_inspector_draft = (): XStudioSelectedObjectInspectorDraft => ({});
 
 const GENERATION_STAGE_STATUS: Record<string, string> = {
   preparing: "Preparing generation...",
@@ -519,16 +502,21 @@ export class XStudioModule extends XModule {
   private _shortcuts_registered = false;
   private _shortcut_keydown_handler: ((event: KeyboardEvent) => void) | null = null;
   private _selected_object: XStudioSelectedObject | null = null;
+  private _selected_object_data: Record<string, any> | null = null;
   private _selected_object_pending_delete: XStudioSelectedObject | null = null;
   private _selected_object_pending_select_id = "";
   private _selected_object_json = "";
   private _selected_object_inspector_draft = empty_selected_object_inspector_draft();
-  private _selected_object_details_expanded = false;
+  private _selected_object_inspector_fields: XStudioSelectedObjectInspectorResolvedField[] = [];
   private _selected_tree_row_id = "";
   private _selected_canvas_element: HTMLElement | null = null;
   private _object_tree_render_seq = 0;
   private _object_tree_nodes: XStudioObjectTreeNode[] = [];
   private _object_tree_search_query = "";
+  private _object_tree_view_id = "";
+  private _object_tree_expanded_node_keys = new Set<string>();
+  private _object_tree_touched_expansion_node_keys = new Set<string>();
+  private _object_tree_pending_duplicate: XStudioObjectTreeDuplicateTarget | null = null;
   private _studio_theme: XStudioTheme = STUDIO_THEME_DEFAULT;
   private _conversation_messages: XStudioConversationMessage[] = [];
   private _conversation_app_id = "";
@@ -551,6 +539,11 @@ export class XStudioModule extends XModule {
     });
 
     this._xvm_client = client ?? null;
+  }
+
+  override async onLoad() {
+    XUI.loadSVGPack();
+
   }
 
   private _client() {
@@ -693,24 +686,16 @@ export class XStudioModule extends XModule {
       this._log("studio apply ignored: preview already persists in V1");
     });
 
-    _xem.on("studio:selected-object:apply-text", async () => {
-      await this._apply_selected_object_inspector_field("text");
+    _xem.on("studio:selected-object:save-fields", async () => {
+      await this._save_selected_object_inspector_fields();
     });
 
-    _xem.on("studio:selected-object:apply-class", async () => {
-      await this._apply_selected_object_inspector_field("class");
+    _xem.on("studio:selected-object:cancel-fields", () => {
+      this._cancel_selected_object_inspector_fields();
     });
 
-    _xem.on("studio:selected-object:apply-style", async () => {
-      await this._apply_selected_object_inspector_field("style");
-    });
-
-    _xem.on("studio:selected-object:apply-disabled", async () => {
-      await this._apply_selected_object_inspector_field("disabled");
-    });
-
-    _xem.on("studio:selected-object:apply-placeholder", async () => {
-      await this._apply_selected_object_inspector_field("placeholder");
+    _xem.on("studio:selected-object:field-changed", (payload: any) => {
+      this._handle_selected_object_inspector_field_changed(payload);
     });
 
     _xem.on("studio:selected-object:move-up", async () => {
@@ -721,16 +706,16 @@ export class XStudioModule extends XModule {
       await this._move_selected_object("down");
     });
 
-    _xem.on("studio:selected-object:hide", async () => {
-      await this._apply_selected_object_visibility("hide");
-    });
-
-    _xem.on("studio:selected-object:show", async () => {
-      await this._apply_selected_object_visibility("show");
-    });
-
     _xem.on("studio:selected-object:duplicate", async () => {
       await this._duplicate_selected_object();
+    });
+
+    _xem.on("studio:object-tree:duplicate-cancel", () => {
+      this._cancel_object_tree_node_duplicate();
+    });
+
+    _xem.on("studio:object-tree:duplicate-confirm", async () => {
+      await this._confirm_object_tree_node_duplicate();
     });
 
     _xem.on("studio:selected-object:delete-request", () => {
@@ -743,10 +728,6 @@ export class XStudioModule extends XModule {
 
     _xem.on("studio:selected-object:delete-confirm", async () => {
       await this._confirm_delete_selected_object();
-    });
-
-    _xem.on("studio:selected-object:toggle-details", () => {
-      this._toggle_selected_object_details();
     });
 
     _xem.on("studio:selected-object:update-json", async () => {
@@ -1183,9 +1164,12 @@ export class XStudioModule extends XModule {
     object._visible = visible;
     const dom = object.dom;
     if (dom instanceof HTMLElement) {
+      dom.setAttribute("aria-hidden", String(!visible));
       if (visible) {
+        dom.removeAttribute("hidden");
         dom.style.removeProperty("display");
       } else {
+        dom.setAttribute("hidden", "true");
         dom.style.display = "none";
       }
     }
@@ -2036,6 +2020,7 @@ export class XStudioModule extends XModule {
     action: XStudioIntentActionView,
     status: XStudioIntentActionLocalStatus,
     error = "",
+    action_result?: any,
   ) {
     if (!this._conversation_app_id || !this._conversation_env || !this._conversation_id) {
       throw new Error("No active conversation selected.");
@@ -2060,6 +2045,9 @@ export class XStudioModule extends XModule {
       params._error = error;
       params._reason = error;
     }
+    if (action_result !== undefined) {
+      params._result = action_result;
+    }
 
     this._log("conversation action status update requested", {
       _conversation_id: this._conversation_id,
@@ -2073,6 +2061,8 @@ export class XStudioModule extends XModule {
       _message_id: action._message_id,
       _action_id: action_id,
       _status: status,
+      _has_result: action_result !== undefined,
+      _result_ok: is_obj(action_result) && action_result._ok === true,
     });
     const result = await this._send_xvibe_command("update-conversation-action", params);
     this._log("conversation action status update completed", {
@@ -2090,6 +2080,7 @@ export class XStudioModule extends XModule {
     action: XStudioIntentActionView,
     status: XStudioIntentActionLocalStatus,
     error = "",
+    action_result?: any,
   ) {
     if (!action._id.trim()) {
       const message = this._missing_intent_action_persisted_id_error();
@@ -2111,7 +2102,12 @@ export class XStudioModule extends XModule {
     }
 
     try {
-      await this._update_conversation_action_status(action, status, error);
+      await this._update_conversation_action_status(
+        action,
+        status,
+        error,
+        action_result,
+      );
       await this._load_conversation_messages();
       return true;
     } catch (err) {
@@ -2567,6 +2563,7 @@ export class XStudioModule extends XModule {
           action,
           STUDIO_INTENT_ACTION_STATUS_FAILED,
           message,
+          result,
         );
         this._write_studio_status(message);
         this._error("intent action execute failed", {
@@ -2588,6 +2585,8 @@ export class XStudioModule extends XModule {
       await this._persist_conversation_action_status_and_reload(
         action,
         STUDIO_INTENT_ACTION_STATUS_DONE,
+        "",
+        result,
       );
       this._append_conversation_apply_result_message(params._edit_action);
       this._write_studio_status("Action applied");
@@ -3089,30 +3088,45 @@ export class XStudioModule extends XModule {
       : clean;
   }
 
-  private _format_object_tree_label(obj: Record<string, any>) {
+  private _format_object_tree_label_parts(obj: Record<string, any>) {
     const type = typeof obj._type === "string" && obj._type.trim() ? obj._type.trim() : "object";
-    const text = this._format_tree_text(obj._text, 44);
-    const label = this._format_tree_text(obj._label, 44);
-    const title = this._format_tree_text(obj._title, 44);
-    const id = this._format_tree_text(obj._id, 28);
+    const text = this._format_tree_text(obj._text, 56);
+    const name = this._format_tree_text(obj._name, 56);
+    const label = this._format_tree_text(obj._label, 56);
+    const title = this._format_tree_text(obj._title, 56);
+    const id = this._format_tree_text(obj._id, 36);
     const id_label = id ? `#${id}` : "";
     const view_ref = type === "xvm-view"
       ? this._format_tree_text(obj._view_id, 36)
       : "";
 
-    const primary = text || label || title || id_label || view_ref || "(anonymous)";
-    const parts = [primary, type];
+    const primary = text || name || label || title || id_label || view_ref || "(anonymous)";
+    const secondary_parts: string[] = [];
 
-    if (id_label && id_label !== primary) parts.push(id_label);
-    if (view_ref && view_ref !== primary) parts.push(`ref:${view_ref}`);
+    if (id_label && id_label !== primary) secondary_parts.push(id_label);
+    if (view_ref && view_ref !== primary) secondary_parts.push(`ref:${view_ref}`);
 
-    return parts.join(" | ");
+    return {
+      _primary: primary,
+      _secondary: secondary_parts.join(" "),
+      _type: type,
+      _title: [
+        primary,
+        ...secondary_parts,
+        `[${type}]`,
+      ].filter(Boolean).join(" "),
+    };
+  }
+
+  private _format_object_tree_label(obj: Record<string, any>) {
+    return this._format_object_tree_label_parts(obj)._title;
   }
 
   private _object_tree_search_text(obj: Record<string, any>) {
     return [
       obj._id,
       obj._text,
+      obj._name,
       obj._title,
       obj._label,
       obj._type,
@@ -3165,6 +3179,118 @@ export class XStudioModule extends XModule {
     }
   }
 
+  private _object_tree_node_key(
+    source_view_id: string,
+    tree_path: string,
+    path: string,
+    type: string,
+    json_id: string,
+  ) {
+    return [
+      source_view_id.trim() || "unknown-view",
+      tree_path.trim() || path.trim() || "$",
+      json_id.trim() || "anonymous",
+      type.trim() || "object",
+    ].join("::");
+  }
+
+  private _flatten_object_tree_nodes(
+    nodes: XStudioObjectTreeNode[],
+    out: XStudioObjectTreeNode[] = [],
+  ) {
+    for (const node of nodes) {
+      out.push(node);
+      if (node._children.length > 0) {
+        this._flatten_object_tree_nodes(node._children, out);
+      }
+    }
+
+    return out;
+  }
+
+  private _sync_object_tree_expansion_defaults(nodes: XStudioObjectTreeNode[]) {
+    const flat_nodes = this._flatten_object_tree_nodes(nodes);
+    const live_node_keys = new Set(flat_nodes.map((node) => node._node_key));
+
+    for (const key of Array.from(this._object_tree_expanded_node_keys)) {
+      if (!live_node_keys.has(key)) this._object_tree_expanded_node_keys.delete(key);
+    }
+
+    for (const key of Array.from(this._object_tree_touched_expansion_node_keys)) {
+      if (!live_node_keys.has(key)) this._object_tree_touched_expansion_node_keys.delete(key);
+    }
+
+    for (const node of flat_nodes) {
+      if (node._children.length === 0) continue;
+      if (node._depth > 1) continue;
+      if (this._object_tree_touched_expansion_node_keys.has(node._node_key)) continue;
+
+      this._object_tree_expanded_node_keys.add(node._node_key);
+    }
+  }
+
+  private _object_tree_node_is_expanded(node: XStudioObjectTreeNode, search_active: boolean) {
+    if (node._children.length === 0) return false;
+    if (search_active) return true;
+    return this._object_tree_expanded_node_keys.has(node._node_key);
+  }
+
+  private _toggle_object_tree_node(node: XStudioObjectTreeNode) {
+    if (node._children.length === 0) return;
+
+    const expanded = !this._object_tree_expanded_node_keys.has(node._node_key);
+    this._object_tree_touched_expansion_node_keys.add(node._node_key);
+    if (expanded) {
+      this._object_tree_expanded_node_keys.add(node._node_key);
+    } else {
+      this._object_tree_expanded_node_keys.delete(node._node_key);
+    }
+
+    this._log("object tree node toggled", {
+      _node_key: node._node_key,
+      _label: node._label,
+      _expanded: expanded,
+      _depth: node._depth,
+      _source_view_id: node._meta?._source_view_id ?? "",
+      _target_id: node._meta?._json_id ?? "",
+    });
+    this._render_cached_object_tree_nodes();
+  }
+
+  private _object_tree_style_hides_object(style: any) {
+    if (typeof style === "string") {
+      return /(?:^|;)\s*display\s*:\s*none\s*(?:;|$)/i.test(style) ||
+        /(?:^|;)\s*visibility\s*:\s*hidden\s*(?:;|$)/i.test(style);
+    }
+
+    if (!is_obj(style)) return false;
+
+    const display = String(style.display ?? style.Display ?? "").trim().toLowerCase();
+    const visibility = String(style.visibility ?? style.Visibility ?? "").trim().toLowerCase();
+    return display === "none" || visibility === "hidden";
+  }
+
+  private _object_tree_node_is_visible(node: XStudioObjectTreeNode) {
+    const obj = node._object;
+    if (!obj) return true;
+
+    if (obj._visible === false) return false;
+    if (obj.hidden === true) return false;
+    if (String(obj["aria-hidden"] ?? "").trim().toLowerCase() === "true") return false;
+    if (this._object_tree_style_hides_object(obj.style)) return false;
+    if (this._object_tree_style_hides_object(obj._style)) return false;
+
+    return true;
+  }
+
+  private _object_tree_node_can_edit_visibility(node: XStudioObjectTreeNode) {
+    const meta = node._meta;
+    if (!meta) return false;
+    if (!meta._json_id.trim()) return false;
+    if (!meta._source_view_id.trim()) return false;
+    return meta._path.trim() !== "$";
+  }
+
   private _build_object_tree_nodes(
     obj: Record<string, any>,
     source_view_id: string,
@@ -3173,6 +3299,7 @@ export class XStudioModule extends XModule {
     previous_sibling_id: string,
     next_sibling_id: string,
     parent_node_key: string,
+    tree_path: string,
     depth: number,
     is_xvm_ref_child: boolean,
     allow_xvm_refs: boolean,
@@ -3183,7 +3310,7 @@ export class XStudioModule extends XModule {
     const type = typeof obj._type === "string" && obj._type.trim() ? obj._type.trim() : "object";
     const json_id = typeof obj._id === "string" && obj._id.trim() ? obj._id.trim() : "";
     const text = typeof obj._text === "string" && obj._text.trim() ? obj._text.trim() : "";
-    const node_key = `xstudio-object-tree-node-${out.length}`;
+    const node_key = this._object_tree_node_key(source_view_id, tree_path, path, type, json_id);
     const meta: XStudioSelectedObject = {
       _id: json_id,
       _json_id: json_id,
@@ -3198,16 +3325,22 @@ export class XStudioModule extends XModule {
       _json_metadata: this._safe_selected_json_metadata(obj),
     };
 
-    out.push({
+    const label_parts = this._format_object_tree_label_parts(obj);
+    const node: XStudioObjectTreeNode = {
       _key: "",
       _node_key: node_key,
       _parent_node_key: parent_node_key,
-      _label: this._format_object_tree_label(obj),
+      _label: label_parts._title,
+      _label_primary: label_parts._primary,
+      _label_secondary: label_parts._secondary,
+      _label_type: label_parts._type,
       _search_text: this._object_tree_search_text(obj),
       _meta: meta,
       _object: obj,
       _depth: depth,
-    });
+      _children: [],
+    };
+    out.push(node);
 
     if (Array.isArray(obj._children)) {
       obj._children.forEach((child: any, index: number) => {
@@ -3222,10 +3355,11 @@ export class XStudioModule extends XModule {
           is_obj(previous) && typeof previous._id === "string" ? previous._id.trim() : "",
           is_obj(next) && typeof next._id === "string" ? next._id.trim() : "",
           node_key,
+          `${tree_path}._children[${index}]`,
           depth + 1,
           is_xvm_ref_child,
           allow_xvm_refs,
-          out,
+          node._children,
         );
       });
     }
@@ -3237,15 +3371,25 @@ export class XStudioModule extends XModule {
 
     const referenced_view = this._get_cached_view(ref_id);
     if (!is_obj(referenced_view) || !Array.isArray(referenced_view._children)) {
-      out.push({
+      node._children.push({
         _key: "",
-        _node_key: `xstudio-object-tree-node-${out.length}`,
+        _node_key: this._object_tree_node_key(
+          source_view_id,
+          `${tree_path}::xvm-ref(${ref_id})::missing`,
+          path,
+          "placeholder",
+          "",
+        ),
         _parent_node_key: node_key,
         _label: "referenced view not loaded",
+        _label_primary: "referenced view not loaded",
+        _label_secondary: "",
+        _label_type: "",
         _search_text: "",
         _meta: null,
         _object: null,
         _depth: depth + 1,
+        _children: [],
         _placeholder: "referenced view not loaded",
       });
       return;
@@ -3263,10 +3407,11 @@ export class XStudioModule extends XModule {
         is_obj(previous) && typeof previous._id === "string" ? previous._id.trim() : "",
         is_obj(next) && typeof next._id === "string" ? next._id.trim() : "",
         node_key,
+        `${tree_path}::xvm-ref(${ref_id})._children[${index}]`,
         depth + 1,
         true,
         false,
-        out,
+        node._children,
       );
     });
   }
@@ -3279,26 +3424,701 @@ export class XStudioModule extends XModule {
     const query = this._normalized_object_tree_search_query();
     if (!query) return nodes;
 
-    const nodes_by_key = new Map(nodes.map((node) => [node._node_key, node]));
-    const visible_keys = new Set<string>();
+    const filter_node = (node: XStudioObjectTreeNode): XStudioObjectTreeNode | null => {
+      const child_matches = node._children
+        .map((child) => filter_node(child))
+        .filter((child): child is XStudioObjectTreeNode => child !== null);
+      const node_matches = Boolean(node._meta && node._search_text.includes(query));
 
-    for (const node of nodes) {
-      if (!node._meta || !node._search_text.includes(query)) continue;
+      if (!node_matches && child_matches.length === 0) return null;
 
-      let current: XStudioObjectTreeNode | undefined = node;
-      while (current && !visible_keys.has(current._node_key)) {
-        visible_keys.add(current._node_key);
-        current = current._parent_node_key
-          ? nodes_by_key.get(current._parent_node_key)
-          : undefined;
-      }
-    }
+      return {
+        ...node,
+        _children: child_matches,
+      };
+    };
 
-    return nodes.filter((node) => visible_keys.has(node._node_key));
+    return nodes
+      .map((node) => filter_node(node))
+      .filter((node): node is XStudioObjectTreeNode => node !== null);
   }
 
   private _render_cached_object_tree_nodes() {
     this._render_object_tree_nodes(this._filter_object_tree_nodes(this._object_tree_nodes));
+  }
+
+  private _object_tree_label_children(node: XStudioObjectTreeNode) {
+    const children: Record<string, any>[] = [
+      {
+        _type: "span",
+        class: "xstudio-object-tree-label-primary",
+        _text: node._label_primary || node._label,
+      },
+    ];
+
+    if (node._label_secondary) {
+      children.push({
+        _type: "span",
+        class: "xstudio-object-tree-label-secondary",
+        _text: node._label_secondary,
+      });
+    }
+
+    if (node._label_type) {
+      children.push({
+        _type: "span",
+        class: "xstudio-object-tree-type-tag",
+        _text: `[${node._label_type}]`,
+      });
+    }
+
+    return children;
+  }
+
+  private _object_tree_visibility_icon(hidden: boolean) {
+    const line_attrs = {
+      fill: "none",
+      stroke: "currentColor",
+      "stroke-width": "1.8",
+      "stroke-linecap": "round",
+      "stroke-linejoin": "round",
+    };
+
+    return {
+      _type: "svg",
+      class: "xstudio-object-tree-visibility-icon",
+      viewBox: "0 0 24 24",
+      fill: "none",
+      xmlns: "http://www.w3.org/2000/svg",
+      "aria-hidden": "true",
+      focusable: "false",
+      _children: [
+        {
+          _type: "path",
+          ...line_attrs,
+          d: "M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z",
+        },
+        {
+          _type: "circle",
+          ...line_attrs,
+          cx: "12",
+          cy: "12",
+          r: "3",
+        },
+        ...(hidden
+          ? [
+            {
+              _type: "path",
+              ...line_attrs,
+              d: "M4 4l16 16",
+            },
+          ]
+          : []),
+      ],
+    };
+  }
+
+  private _object_tree_chevron_button(
+    node: XStudioObjectTreeNode,
+    row_id: string,
+    expanded: boolean,
+    search_active: boolean,
+  ) {
+    const has_children = node._children.length > 0;
+    const can_toggle = has_children && !search_active;
+
+    return {
+      _type: "button",
+      _id: `${row_id}-toggle`,
+      type: "button",
+      class: [
+        "xstudio-object-tree-chevron",
+        has_children ? "" : "xstudio-object-tree-chevron-spacer",
+        can_toggle ? "" : "xstudio-object-tree-chevron-disabled",
+      ].filter(Boolean).join(" "),
+      title: has_children
+        ? search_active
+          ? "Search expands matching branches"
+          : expanded
+            ? "Collapse"
+            : "Expand"
+        : "",
+      "aria-expanded": has_children ? String(expanded) : "false",
+      "aria-hidden": has_children ? "false" : "true",
+      _text: has_children ? (expanded ? "▾" : "▸") : "",
+      ...(has_children
+        ? {}
+        : { disabled: true }),
+      ...(can_toggle
+        ? {
+          _on: {
+            click: (event?: Event) => {
+              event?.preventDefault?.();
+              event?.stopPropagation?.();
+              this._toggle_object_tree_node(node);
+            },
+          },
+        }
+        : {}),
+    };
+  }
+
+  private _object_tree_visibility_button(node: XStudioObjectTreeNode, row_id: string) {
+    const visible = this._object_tree_node_is_visible(node);
+    const action = visible ? "hide" : "show";
+    const disabled = !this._object_tree_node_can_edit_visibility(node);
+    const action_label = visible ? "Hide" : "Show";
+
+    return {
+      _type: "button",
+      _id: `${row_id}-visibility`,
+      type: "button",
+      class: [
+        "xstudio-object-tree-visibility-action",
+        visible
+          ? "xstudio-object-tree-visibility-visible"
+          : "xstudio-object-tree-visibility-hidden",
+        disabled ? "xstudio-object-tree-visibility-disabled" : "",
+      ].filter(Boolean).join(" "),
+      title: disabled ? "Visibility cannot be edited" : `${action_label} ${node._label}`,
+      "aria-label": disabled ? "Visibility cannot be edited" : `${action_label} ${node._label}`,
+      ...(disabled ? { disabled: true } : {}),
+      _children: [
+        this._object_tree_visibility_icon(!visible),
+      ],
+      ...(disabled
+        ? {}
+        : {
+          _on: {
+            click: (event?: Event) => {
+              event?.preventDefault?.();
+              event?.stopPropagation?.();
+              void this._apply_object_tree_node_visibility(node, action);
+            },
+          },
+        }),
+    };
+  }
+
+  private _object_tree_node_sibling_context(node: XStudioObjectTreeNode) {
+    return node._meta
+      ? this._selected_object_sibling_context(node._meta)
+      : null;
+  }
+
+  private _object_tree_node_can_move(node: XStudioObjectTreeNode, direction: "up" | "down") {
+    const meta = node._meta;
+    if (!meta) return false;
+    if (!meta._json_id.trim()) return false;
+    if (!meta._source_view_id.trim()) return false;
+
+    const sibling_context = this._object_tree_node_sibling_context(node);
+    if (!sibling_context || sibling_context._is_root) return false;
+
+    return direction === "up"
+      ? Boolean(sibling_context._previous_sibling_id)
+      : Boolean(sibling_context._next_sibling_id);
+  }
+
+  private _object_tree_node_can_duplicate(node: XStudioObjectTreeNode) {
+    const meta = node._meta;
+    if (!meta) return false;
+    if (!meta._json_id.trim()) return false;
+    if (!meta._source_view_id.trim()) return false;
+    return !this._selected_object_is_root_view(meta);
+  }
+
+  private _object_tree_quick_action_button(
+    row_id: string,
+    action: "move-up" | "move-down" | "duplicate",
+    text: string,
+    title: string,
+    disabled: boolean,
+    on_click: (event?: Event) => void,
+  ) {
+    return {
+      _type: "button",
+      _id: `${row_id}-${action}`,
+      type: "button",
+      class: [
+        "xstudio-object-tree-quick-action",
+        `xstudio-object-tree-${action}-action`,
+        disabled ? "xstudio-object-tree-quick-action-disabled" : "",
+      ].filter(Boolean).join(" "),
+      title,
+      "aria-label": title,
+      ...(disabled ? { disabled: true } : {}),
+      _text: text,
+      ...(disabled
+        ? {}
+        : {
+          _on: {
+            click: on_click,
+          },
+        }),
+    };
+  }
+
+  private _object_tree_action_buttons(node: XStudioObjectTreeNode, row_id: string) {
+    const can_move_up = this._object_tree_node_can_move(node, "up");
+    const can_move_down = this._object_tree_node_can_move(node, "down");
+    const can_duplicate = this._object_tree_node_can_duplicate(node);
+
+    return {
+      _type: "view",
+      _id: `${row_id}-actions`,
+      class: "xstudio-object-tree-actions",
+      _children: [
+        this._object_tree_quick_action_button(
+          row_id,
+          "move-up",
+          "↑",
+          can_move_up ? `Move up ${node._label}` : "Object cannot move up",
+          !can_move_up,
+          (event?: Event) => {
+            event?.preventDefault?.();
+            event?.stopPropagation?.();
+            void this._apply_object_tree_node_move(node, "up");
+          },
+        ),
+        this._object_tree_quick_action_button(
+          row_id,
+          "move-down",
+          "↓",
+          can_move_down ? `Move down ${node._label}` : "Object cannot move down",
+          !can_move_down,
+          (event?: Event) => {
+            event?.preventDefault?.();
+            event?.stopPropagation?.();
+            void this._apply_object_tree_node_move(node, "down");
+          },
+        ),
+        this._object_tree_quick_action_button(
+          row_id,
+          "duplicate",
+          "⧉",
+          can_duplicate ? `Duplicate ${node._label}` : "Object cannot be duplicated",
+          !can_duplicate,
+          (event?: Event) => {
+            event?.preventDefault?.();
+            event?.stopPropagation?.();
+            this._request_object_tree_node_duplicate(node);
+          },
+        ),
+        this._object_tree_visibility_button(node, row_id),
+      ],
+    };
+  }
+
+  private async _request_object_tree_structured_edit_refresh(
+    params: XStudioSelectedObjectApplyViewEditParams,
+    result: any,
+  ) {
+    try {
+      const refresh_result = await this._request_intent_action_execute_refresh(params, result);
+      this._log("object tree quick action refresh completed", {
+        _edit_action: params._edit_action,
+        _view_id: params._view_id,
+        _target_id: params._target_id,
+        _refresh: refresh_result ?? null,
+      });
+    } catch (err) {
+      this._log("object tree quick action refresh completed", {
+        _edit_action: params._edit_action,
+        _view_id: params._view_id,
+        _target_id: params._target_id,
+        _refresh: {
+          _ok: false,
+          _error: to_err(err),
+        },
+      });
+    }
+  }
+
+  private async _apply_object_tree_node_move(
+    node: XStudioObjectTreeNode,
+    direction: "up" | "down",
+  ) {
+    const meta = node._meta;
+    if (!meta) return;
+
+    const target_id = meta._json_id.trim();
+    const source_view_id = meta._source_view_id.trim();
+    const target_type = meta._type.trim() || "object";
+    const sibling_context = this._object_tree_node_sibling_context(node);
+    const anchor_id = direction === "up"
+      ? sibling_context?._previous_sibling_id ?? ""
+      : sibling_context?._next_sibling_id ?? "";
+
+    if (!target_id || !source_view_id || !sibling_context || sibling_context._is_root || !anchor_id) {
+      this._write_studio_status(
+        direction === "up"
+          ? "Object cannot move up"
+          : "Object cannot move down",
+      );
+      this._log("object tree quick move action", {
+        _direction: direction,
+        _ignored: true,
+        _source_view_id: source_view_id,
+        _target_id: target_id,
+        _path: meta._path,
+      });
+      return;
+    }
+
+    const app_id = this._client().getActiveAppId();
+    const env = this._client().getActiveEnv();
+
+    if (!app_id) {
+      this._write_studio_status("No active app selected");
+      return;
+    }
+
+    if (!env) {
+      this._write_studio_status("No active environment selected");
+      return;
+    }
+
+    const params: XStudioSelectedObjectApplyViewEditParams = {
+      _app_id: app_id,
+      _env: env,
+      _view_id: source_view_id,
+      _edit_action: "move-object",
+      _target_id: target_id,
+      _target_type: target_type,
+      ...(direction === "up"
+        ? { _before_id: anchor_id }
+        : { _after_id: anchor_id }),
+    };
+
+    this._write_studio_status(
+      direction === "up"
+        ? "Moving object up..."
+        : "Moving object down...",
+    );
+    this._log("object tree quick move action", {
+      _direction: direction,
+      _source_view_id: params._view_id,
+      _target_id: params._target_id,
+      _target_type: params._target_type,
+      _before_id: params._before_id,
+      _after_id: params._after_id,
+      _path: meta._path,
+      _parent_path: meta._parent_path,
+    });
+
+    try {
+      const result = await this._send_xvibe_command("apply-view-edit", params);
+      if (!is_obj(result) || result._ok !== true) {
+        this._write_studio_status(this._format_apply_view_edit_failure(result));
+        this._error("object tree quick move failed", {
+          _direction: direction,
+          _structured_error: result,
+        });
+        return;
+      }
+
+      await this._request_object_tree_structured_edit_refresh(params, result);
+      this._refresh_object_tree_for_current_view();
+      this._write_studio_status(
+        direction === "up"
+          ? "Moved object up"
+          : "Moved object down",
+      );
+      this._log("object tree quick move result", {
+        _direction: direction,
+        _result: result,
+      });
+    } catch (err) {
+      const message = `Move ${direction} failed: ${to_err(err)}`;
+      this._write_studio_status(message);
+      this._error("object tree quick move failed", {
+        _direction: direction,
+        _error: to_err(err),
+      });
+    }
+  }
+
+  private _object_tree_duplicate_display_label(
+    meta: XStudioSelectedObject,
+    label: string,
+  ) {
+    const clean_label = label.trim();
+    if (clean_label) return clean_label;
+    return this._format_selected_object_delete_name(meta);
+  }
+
+  private _request_object_tree_node_duplicate(node: XStudioObjectTreeNode) {
+    const meta = node._meta;
+    if (!meta) return;
+
+    const target_id = meta._json_id.trim();
+    const source_view_id = meta._source_view_id.trim();
+    if (!target_id || !source_view_id || this._selected_object_is_root_view(meta)) {
+      this._write_studio_status("Object cannot be duplicated");
+      this._log("object tree quick duplicate action", {
+        _ignored: true,
+        _source_view_id: source_view_id,
+        _target_id: target_id,
+        _path: meta._path,
+      });
+      return;
+    }
+
+    const pending: XStudioObjectTreeDuplicateTarget = {
+      _meta: { ...meta },
+      _label: this._object_tree_duplicate_display_label(meta, node._label),
+    };
+    this._object_tree_pending_duplicate = pending;
+    this._set_studio_label(
+      STUDIO_OBJECT_TREE_DUPLICATE_LABEL_ID,
+      `Label: ${pending._label || "-"}`,
+    );
+    this._set_studio_label(
+      STUDIO_OBJECT_TREE_DUPLICATE_TYPE_ID,
+      `Type: ${pending._meta._type.trim() || "object"}`,
+    );
+    this._set_studio_label(
+      STUDIO_OBJECT_TREE_DUPLICATE_JSON_ID,
+      `ID: ${target_id || pending._meta._id.trim() || "-"}`,
+    );
+    this._set_studio_control_disabled(STUDIO_OBJECT_TREE_DUPLICATE_CANCEL_ID, false);
+    this._set_studio_control_disabled(STUDIO_OBJECT_TREE_DUPLICATE_CONFIRM_ID, false);
+
+    const dialog = XUI.getObject(STUDIO_OBJECT_TREE_DUPLICATE_DIALOG_ID) as any;
+    dialog?.show?.();
+    this._log("object tree duplicate confirmation opened", {
+      _source_view_id: source_view_id,
+      _target_id: target_id,
+      _target_type: pending._meta._type.trim() || "object",
+      _label: pending._label,
+      _path: pending._meta._path,
+      _parent_path: pending._meta._parent_path,
+    });
+  }
+
+  private _hide_object_tree_duplicate_dialog() {
+    this._object_tree_pending_duplicate = null;
+    this._set_studio_control_disabled(STUDIO_OBJECT_TREE_DUPLICATE_CANCEL_ID, false);
+    this._set_studio_control_disabled(STUDIO_OBJECT_TREE_DUPLICATE_CONFIRM_ID, false);
+    const dialog = XUI.getObject(STUDIO_OBJECT_TREE_DUPLICATE_DIALOG_ID) as any;
+    dialog?.hide?.();
+  }
+
+  private _cancel_object_tree_node_duplicate() {
+    const pending = this._object_tree_pending_duplicate;
+    this._log("object tree duplicate cancelled", {
+      _source_view_id: pending?._meta._source_view_id ?? "",
+      _target_id: pending?._meta._json_id ?? "",
+      _target_type: pending?._meta._type ?? "",
+      _label: pending?._label ?? "",
+    });
+    this._hide_object_tree_duplicate_dialog();
+  }
+
+  private async _confirm_object_tree_node_duplicate() {
+    const pending = this._object_tree_pending_duplicate;
+    if (!pending) {
+      this._hide_object_tree_duplicate_dialog();
+      this._write_studio_status("No object duplicate target selected");
+      return;
+    }
+
+    this._set_studio_control_disabled(STUDIO_OBJECT_TREE_DUPLICATE_CANCEL_ID, true);
+    this._set_studio_control_disabled(STUDIO_OBJECT_TREE_DUPLICATE_CONFIRM_ID, true);
+    this._log("object tree duplicate confirmed", {
+      _source_view_id: pending._meta._source_view_id,
+      _target_id: pending._meta._json_id,
+      _target_type: pending._meta._type,
+      _label: pending._label,
+      _path: pending._meta._path,
+      _parent_path: pending._meta._parent_path,
+    });
+
+    const ok = await this._apply_object_tree_node_duplicate_target(
+      pending._meta,
+      pending._label,
+    );
+    if (ok) {
+      this._hide_object_tree_duplicate_dialog();
+      return;
+    }
+
+    this._set_studio_control_disabled(STUDIO_OBJECT_TREE_DUPLICATE_CANCEL_ID, false);
+    this._set_studio_control_disabled(STUDIO_OBJECT_TREE_DUPLICATE_CONFIRM_ID, false);
+  }
+
+  private async _apply_object_tree_node_duplicate_target(
+    meta: XStudioSelectedObject,
+    label: string,
+  ) {
+    const target_id = meta._json_id.trim();
+    const source_view_id = meta._source_view_id.trim();
+    const target_type = meta._type.trim() || "object";
+    if (!target_id || !source_view_id || this._selected_object_is_root_view(meta)) {
+      this._write_studio_status("Object cannot be duplicated");
+      this._log("object tree quick duplicate action", {
+        _ignored: true,
+        _source_view_id: source_view_id,
+        _target_id: target_id,
+        _path: meta._path,
+      });
+      return false;
+    }
+
+    const app_id = this._client().getActiveAppId();
+    const env = this._client().getActiveEnv();
+
+    if (!app_id) {
+      this._write_studio_status("No active app selected");
+      return false;
+    }
+
+    if (!env) {
+      this._write_studio_status("No active environment selected");
+      return false;
+    }
+
+    const params: XStudioSelectedObjectApplyViewEditParams = {
+      _app_id: app_id,
+      _env: env,
+      _view_id: source_view_id,
+      _edit_action: "duplicate-object",
+      _target_id: target_id,
+      _target_type: target_type,
+    };
+
+    this._write_studio_status("Duplicating object...");
+    this._log("object tree quick duplicate action", {
+      _source_view_id: params._view_id,
+      _target_id: params._target_id,
+      _target_type: params._target_type,
+      _label: label,
+      _path: meta._path,
+      _parent_path: meta._parent_path,
+    });
+
+    try {
+      const result = await this._send_xvibe_command("apply-view-edit", params);
+      if (!is_obj(result) || result._ok !== true) {
+        this._write_studio_status(this._format_apply_view_edit_failure(result));
+        this._error("object tree quick duplicate failed", {
+          _structured_error: result,
+        });
+        return false;
+      }
+
+      const new_target_id = this._extract_new_target_id(result);
+      if (new_target_id && this._selected_object_matches(this._selected_object, meta)) {
+        this._selected_object_pending_select_id = new_target_id;
+      }
+
+      await this._request_object_tree_structured_edit_refresh(params, result);
+      this._refresh_object_tree_for_current_view();
+      this._write_studio_status("Duplicated object");
+      this._log("object tree quick duplicate result", {
+        _new_target_id: new_target_id,
+        _result: result,
+      });
+      return true;
+    } catch (err) {
+      const message = `Duplicate failed: ${to_err(err)}`;
+      this._write_studio_status(message);
+      this._error("object tree quick duplicate failed", {
+        _error: to_err(err),
+      });
+      return false;
+    }
+  }
+
+  private async _apply_object_tree_node_visibility(
+    node: XStudioObjectTreeNode,
+    action: "hide" | "show",
+  ) {
+    const meta = node._meta;
+    if (!meta) return;
+
+    const target_id = meta._json_id.trim();
+    const source_view_id = meta._source_view_id.trim();
+    const target_type = meta._type.trim() || "object";
+    if (!target_id || !source_view_id || meta._path.trim() === "$") {
+      this._write_studio_status("Object visibility cannot be edited");
+      this._log("object tree quick visibility action", {
+        _action: action,
+        _ignored: true,
+        _reason: "visibility_not_editable",
+        _source_view_id: source_view_id,
+        _target_id: target_id,
+      });
+      return;
+    }
+
+    const app_id = this._client().getActiveAppId();
+    const env = this._client().getActiveEnv();
+
+    if (!app_id) {
+      this._write_studio_status("No active app selected");
+      return;
+    }
+
+    if (!env) {
+      this._write_studio_status("No active environment selected");
+      return;
+    }
+
+    const params: XStudioSelectedObjectApplyViewEditParams = {
+      _app_id: app_id,
+      _env: env,
+      _view_id: source_view_id,
+      _target_id: target_id,
+      _target_type: target_type,
+      _edit_action: action === "hide" ? "hide-object" : "show-object",
+    };
+
+    this._write_studio_status(
+      action === "hide"
+        ? "Hiding object..."
+        : "Showing object...",
+    );
+    this._log("object tree quick visibility action", {
+      _action: action,
+      _source_view_id: params._view_id,
+      _target_id: params._target_id,
+      _target_type: params._target_type,
+      _edit_action: params._edit_action,
+      _path: meta._path,
+      _parent_path: meta._parent_path,
+    });
+
+    try {
+      const result = await this._send_xvibe_command("apply-view-edit", params);
+      if (!is_obj(result) || result._ok !== true) {
+        this._write_studio_status(this._format_apply_view_edit_failure(result));
+        this._error("object tree quick visibility failed", {
+          _action: action,
+          _structured_error: result,
+        });
+        return;
+      }
+
+      this._write_studio_status(
+        action === "hide"
+          ? "Hidden object"
+          : "Shown object",
+      );
+      this._log("object tree quick visibility result", {
+        _action: action,
+        _result: result,
+      });
+      this._refresh_object_tree_for_current_view();
+    } catch (err) {
+      const message = `${action === "hide" ? "Hide" : "Show"} failed: ${to_err(err)}`;
+      this._write_studio_status(message);
+      this._error("object tree quick visibility failed", {
+        _action: action,
+        _error: to_err(err),
+      });
+    }
   }
 
   private _object_tree_search_event_value(evt: any) {
@@ -3324,16 +4144,26 @@ export class XStudioModule extends XModule {
 
   private _render_object_tree_nodes(nodes: XStudioObjectTreeNode[]) {
     const tree_results = XUI.getObject(STUDIO_OBJECT_TREE_RESULTS_ID) as any;
-    const tree = tree_results ?? XUI.getObject(STUDIO_OBJECT_TREE_ID) as any;
-    if (!tree) return;
+    const renderTarget = tree_results ?? XUI.getObject(STUDIO_OBJECT_TREE_ID) as any;
+    if (!renderTarget) return;
 
     this._object_tree_render_seq += 1;
     const seq = this._object_tree_render_seq;
     let selected_row_id = "";
+    let row_index = 0;
     const search_active = Boolean(this._normalized_object_tree_search_query());
+    const search = this._normalized_object_tree_search_query();
+    const results = (tree_results?.dom ?? renderTarget.dom ?? null) as HTMLElement | null;
+    const filtered_count = this._flatten_object_tree_nodes(nodes).length;
+
+    this._log("object tree render", {
+      _filtered_nodes: filtered_count,
+      _search: search,
+      _render_target: renderTarget._id ?? renderTarget.dom?.id ?? "",
+    });
 
     if (nodes.length === 0) {
-      tree.update?.({
+      renderTarget.update?.({
         _children: [
           {
             _type: "label",
@@ -3343,54 +4173,110 @@ export class XStudioModule extends XModule {
           },
         ],
       });
+      this._log("object tree rendered", {
+        _children_rendered: renderTarget.dom?.children?.length ?? 0,
+        "results.clientHeight": results?.clientHeight ?? null,
+        "results.scrollHeight": results?.scrollHeight ?? null,
+        "results.offsetHeight": results?.offsetHeight ?? null,
+      });
       this._selected_tree_row_id = "";
       return;
     }
 
-    const children = nodes.map((node, index) => {
-      const row_id = `xstudio-object-tree-row-${seq}-${index}`;
+    const render_node = (node: XStudioObjectTreeNode): Record<string, any> => {
+      const row_id = `xstudio-object-tree-row-${seq}-${row_index}`;
+      row_index += 1;
       node._key = row_id;
       const selected = this._selected_object_matches(this._selected_object, node._meta);
       if (selected) selected_row_id = row_id;
+      const expanded = this._object_tree_node_is_expanded(node, search_active);
 
       if (!node._meta) {
         return {
-          _type: "label",
+          _type: "view",
           _id: row_id,
           class: "xstudio-object-tree-placeholder-row",
-          _text: node._placeholder ?? node._label,
           _style: {
             "--xstudio-tree-indent": `${node._depth * 14}px`,
           },
+          _children: [
+            {
+              _type: "view",
+              _id: `${row_id}-toggle`,
+              class: "xstudio-object-tree-chevron xstudio-object-tree-chevron-spacer",
+            },
+            {
+              _type: "label",
+              _id: `${row_id}-label`,
+              class: "xstudio-object-tree-placeholder-label",
+              _text: node._placeholder ?? node._label,
+            },
+          ],
         };
       }
 
-      return {
-        _type: "button",
+      const row = {
+        _type: "view",
         _id: row_id,
-        type: "button",
         class: [
           "xstudio-object-tree-row",
           node._meta._is_xvm_ref_child ? "xstudio-object-tree-row-ref" : "",
+          this._object_tree_node_is_visible(node) ? "" : "xstudio-object-tree-row-hidden",
           selected ? STUDIO_SELECTED_OBJECT_ROW_CLASS : "",
         ].filter(Boolean).join(" "),
         title: node._label,
-        _text: node._label,
         _style: {
           "--xstudio-tree-indent": `${node._depth * 14}px`,
         },
-        _on: {
-          click: (event?: Event) => {
-            event?.preventDefault?.();
-            event?.stopPropagation?.();
-            this._select_object_tree_node(node, row_id);
+        _children: [
+          this._object_tree_chevron_button(node, row_id, expanded, search_active),
+          {
+            _type: "button",
+            _id: `${row_id}-label`,
+            type: "button",
+            class: "xstudio-object-tree-label",
+            title: node._label,
+            _children: this._object_tree_label_children(node),
+            _on: {
+              click: (event?: Event) => {
+                event?.preventDefault?.();
+                event?.stopPropagation?.();
+                this._select_object_tree_node(node, row_id);
+              },
+            },
           },
-        },
+          this._object_tree_action_buttons(node, row_id),
+        ],
       };
-    });
+
+      const item_children: Record<string, any>[] = [row];
+      if (expanded && node._children.length > 0) {
+        item_children.push({
+          _type: "view",
+          _id: `${row_id}-children`,
+          class: "xstudio-object-tree-children",
+          _children: node._children.map((child) => render_node(child)),
+        });
+      }
+
+      return {
+        _type: "view",
+        _id: `${row_id}-item`,
+        class: "xstudio-object-tree-item",
+        _children: item_children,
+      };
+    };
+
+    const children = nodes.map((node) => render_node(node));
 
     this._selected_tree_row_id = selected_row_id;
-    tree.update?.({ _children: children });
+    renderTarget.update?.({ _children: children });
+    this._log("object tree rendered", {
+      _children_rendered: renderTarget.dom?.children?.length ?? 0,
+      "results.clientHeight": results?.clientHeight ?? null,
+      "results.scrollHeight": results?.scrollHeight ?? null,
+      "results.offsetHeight": results?.offsetHeight ?? null,
+    });
   }
 
   private _clear_selected_canvas_highlight() {
@@ -3438,36 +4324,16 @@ export class XStudioModule extends XModule {
     this._selected_tree_row_id = row_id;
   }
 
-  private _set_selected_object_label(object_id: string, label: string, value?: string) {
-    const text = value && value.trim() ? `${label}: ${value.trim()}` : `${label}: -`;
-    this._set_studio_label(object_id, text);
-  }
-
-  private _format_selected_object_summary_line(selected: XStudioSelectedObject | null) {
-    if (!selected) return "No object selected";
-
-    const type = selected._type.trim() || "object";
-    const identity =
-      selected._json_id.trim() ||
-      selected._text.trim() ||
-      selected._id.trim() ||
-      selected._path.trim();
-
-    return identity ? `${type} · ${identity}` : type;
-  }
-
-  private _format_selected_object_summary_text(selected: XStudioSelectedObject | null) {
-    if (!selected) return "";
-
-    const id = selected._json_id.trim() || selected._id.trim();
-    const text = selected._text.trim();
-    if (!id || !text || text === id) return "";
-
-    return text;
-  }
-
   private _has_own_field(obj: Record<string, any>, field: string) {
     return Object.prototype.hasOwnProperty.call(obj, field);
+  }
+
+  private _is_inspector_primitive_value(value: unknown) {
+    return (
+      typeof value === "string" ||
+      typeof value === "number" ||
+      typeof value === "boolean"
+    );
   }
 
   private _primitive_field_as_string(obj: Record<string, any>, field: string) {
@@ -3478,83 +4344,284 @@ export class XStudioModule extends XModule {
     return String(value);
   }
 
-  private _class_field_as_string(obj: Record<string, any>) {
-    const class_value = this._primitive_field_as_string(obj, "class");
-    if (class_value) return class_value;
-    return this._primitive_field_as_string(obj, "_class");
+  private _normalize_inspector_input(input: unknown): XStudioSelectedObjectInspectorInput | null {
+    if (
+      input === "text" ||
+      input === "textarea" ||
+      input === "number" ||
+      input === "checkbox" ||
+      input === "select" ||
+      input === "json"
+    ) {
+      return input;
+    }
+
+    return null;
   }
 
-  private _disabled_field_as_string(obj: Record<string, any>) {
-    if (this._has_own_field(obj, "disabled")) {
-      const value = obj.disabled;
-      return typeof value === "boolean" ? String(value) : this._primitive_field_as_string(obj, "disabled");
-    }
-
-    if (this._has_own_field(obj, "_disabled")) {
-      const value = obj._disabled;
-      return typeof value === "boolean" ? String(value) : this._primitive_field_as_string(obj, "_disabled");
-    }
-
-    return "";
+  private _infer_inspector_input_for_key(
+    key: string,
+    value?: unknown,
+  ): XStudioSelectedObjectInspectorInput {
+    if (key === "_text") return "textarea";
+    if (key === "class" || key === "_class") return "text";
+    if (key === "style" || key === "_style") return "textarea";
+    if (key === "disabled") return "checkbox";
+    if (key === "placeholder") return "text";
+    if (key === "value") return "text";
+    if (key === "src") return "text";
+    if (key === "href") return "text";
+    if (typeof value === "number") return "number";
+    if (typeof value === "boolean") return "checkbox";
+    return "text";
   }
 
-  private _first_style_draft(obj: Record<string, any>) {
-    const style_object = is_obj(obj._style)
-      ? obj._style
-      : (is_obj(obj.style) ? obj.style : null);
-
-    if (!style_object) {
-      return {
-        _style_property: "",
-        _style_value: "",
-      };
-    }
-
-    for (const [name, value] of Object.entries(style_object)) {
-      if (value === undefined || value === null) continue;
-      if (typeof value === "object" || typeof value === "function") continue;
-      return {
-        _style_property: String(name),
-        _style_value: String(value),
-      };
-    }
-
-    return {
-      _style_property: "",
-      _style_value: "",
-    };
+  private _inspector_label_for_key(key: string) {
+    return key
+      .replace(/^_+/, "")
+      .replace(/[_-]+/g, " ")
+      .replace(/\b\w/g, char => char.toUpperCase());
   }
 
-  private _selected_object_inspector_draft_from_json(obj: Record<string, any> | null) {
+  private _inspector_control_id(key: string, index: number) {
+    const safe_key = key
+      .replace(/[^a-zA-Z0-9_-]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .toLowerCase() || "field";
+
+    return `xstudio-selected-object-field-${index}-${safe_key}`;
+  }
+
+  private _normalize_design_inspector_fields(
+    skill: XpellSkill | null,
+    obj: Record<string, any>,
+  ): XStudioSelectedObjectInspectorResolvedField[] {
+    const fields = skill?._design?._inspector?._fields;
+    if (!Array.isArray(fields) || fields.length === 0) return [];
+
+    const out: XStudioSelectedObjectInspectorResolvedField[] = [];
+
+    fields.forEach((field, index) => {
+      if (!is_obj(field) || typeof field._key !== "string" || !field._key.trim()) {
+        return;
+      }
+
+      const key = field._key.trim();
+      const input =
+        this._normalize_inspector_input(field._input) ??
+        this._infer_inspector_input_for_key(key, obj[key]);
+
+      out.push({
+        ...field,
+        _key: key,
+        _label:
+          typeof field._label === "string" && field._label.trim()
+            ? field._label.trim()
+            : this._inspector_label_for_key(key),
+        _input: input,
+        _control_id: this._inspector_control_id(key, index),
+        _source: "design",
+      });
+    });
+
+    return out;
+  }
+
+  private _fallback_inspector_field_allowed(key: string, value: unknown) {
+    if (!this._is_inspector_primitive_value(value)) return false;
+
+    if (
+      key === "_id" ||
+      key === "_type" ||
+      key === "_children" ||
+      key === "_html" ||
+      key === "_html_tag" ||
+      key === "_html_ns" ||
+      key === "_parent" ||
+      key === "_parent_element"
+    ) {
+      return false;
+    }
+
+    if (
+      key.startsWith("_on") ||
+      key.startsWith("_once") ||
+      key.startsWith("_process") ||
+      key.startsWith("_xvm_view_stack")
+    ) {
+      return false;
+    }
+
+    return true;
+  }
+
+  private _infer_selected_object_inspector_fields(
+    obj: Record<string, any>,
+  ): XStudioSelectedObjectInspectorResolvedField[] {
+    const preferred = [
+      "_text",
+      "class",
+      "_class",
+      "style",
+      "_style",
+      "disabled",
+      "placeholder",
+      "value",
+      "src",
+      "href",
+    ];
+    const keys = [
+      ...preferred.filter(key => this._has_own_field(obj, key)),
+      ...Object.keys(obj).filter(key => !preferred.includes(key)),
+    ];
+    const seen = new Set<string>();
+    const fields: XStudioSelectedObjectInspectorResolvedField[] = [];
+
+    for (const key of keys) {
+      if (seen.has(key)) continue;
+      seen.add(key);
+
+      const value = obj[key];
+      if (!this._fallback_inspector_field_allowed(key, value)) continue;
+
+      fields.push({
+        _key: key,
+        _label: this._inspector_label_for_key(key),
+        _input: this._infer_inspector_input_for_key(key, value),
+        _control_id: this._inspector_control_id(key, fields.length),
+        _source: "fallback",
+      });
+    }
+
+    return fields;
+  }
+
+  private _resolve_selected_object_skill(type: string) {
+    const normalized_type = type.trim();
+    if (!normalized_type) return null;
+
+    const object_skills =
+      typeof (XUI as any).getObjectSkills === "function"
+        ? (XUI as any).getObjectSkills() as XpellSkill[]
+        : [];
+
+    return object_skills.find(skill => skill?._id === normalized_type) ?? null;
+  }
+
+  private _resolve_selected_object_inspector_fields(
+    obj: Record<string, any> | null,
+  ): XStudioSelectedObjectInspectorResolvedField[] {
+    if (!obj) {
+      this._log("inspector fields resolved", {
+        _type: "",
+        _source: "none",
+        _count: 0,
+        _fields: [],
+      });
+      return [];
+    }
+
+    const type =
+      typeof obj._type === "string" && obj._type.trim()
+        ? obj._type.trim()
+        : this._selected_object?._type?.trim() ?? "";
+    const skill = this._resolve_selected_object_skill(type);
+    const design_fields = this._normalize_design_inspector_fields(skill, obj);
+    const fields =
+      design_fields.length > 0
+        ? design_fields
+        : this._infer_selected_object_inspector_fields(obj);
+
+    this._log("inspector fields resolved", {
+      _type: type,
+      _skill_id: skill?._id ?? "",
+      _source: design_fields.length > 0 ? "design" : "fallback",
+      _count: fields.length,
+      _fields: fields.map(field => field._key),
+    });
+
+    return fields;
+  }
+
+  private _stringify_inspector_field_value(
+    obj: Record<string, any>,
+    field: XStudioSelectedObjectInspectorResolvedField,
+  ) {
+    if (!this._has_own_field(obj, field._key)) {
+      return field._input === "checkbox" ? "false" : "";
+    }
+
+    const value = obj[field._key];
+    if (value === undefined || value === null) return "";
+
+    if (field._input === "json") {
+      try {
+        return JSON.stringify(value, null, 2);
+      } catch {
+        return "";
+      }
+    }
+
+    if (field._input === "checkbox") {
+      return value === true || String(value).toLowerCase() === "true"
+        ? "true"
+        : "false";
+    }
+
+    if (typeof value === "object" || typeof value === "function") return "";
+
+    return String(value);
+  }
+
+  private _selected_object_inspector_draft_from_json(
+    obj: Record<string, any> | null,
+    fields: XStudioSelectedObjectInspectorResolvedField[],
+  ) {
     if (!obj) return empty_selected_object_inspector_draft();
 
-    const style = this._first_style_draft(obj);
-    return {
-      _text: this._primitive_field_as_string(obj, "_text"),
-      _class: this._class_field_as_string(obj),
-      _style_property: style._style_property,
-      _style_value: style._style_value,
-      _disabled: this._disabled_field_as_string(obj),
-      _placeholder: this._primitive_field_as_string(obj, "placeholder"),
-    };
+    const draft: XStudioSelectedObjectInspectorDraft = {};
+    for (const field of fields) {
+      draft[field._key] = this._stringify_inspector_field_value(obj, field);
+    }
+    return draft;
   }
 
   private _set_studio_control_value(object_id: string, value: string) {
     const control = XUI.getObject(object_id) as any;
     if (!control) return;
 
-    if (typeof control.setValue === "function") {
-      control.setValue(value);
-    } else if (control.dom && "value" in control.dom) {
-      control.dom.value = value;
+    const normalized = String(value ?? "");
+    const dom = control.dom;
+
+    if (dom instanceof HTMLInputElement && dom.type === "checkbox") {
+      dom.checked = normalized === "true";
+      dom.value = normalized;
+      control.checked = dom.checked;
+      control.value = normalized;
+      return;
     }
 
-    control.value = value;
+    if (typeof control.renderOptions === "function") {
+      control.renderOptions();
+    }
+
+    if (typeof control.setValue === "function") {
+      control.setValue(normalized);
+    } else if (control.dom && "value" in control.dom) {
+      control.dom.value = normalized;
+    }
+
+    control.value = normalized;
   }
 
   private _read_studio_control_value(object_id: string) {
     const control = XUI.getObject(object_id) as any;
     if (!control) return "";
+
+    const dom = control.dom;
+    if (dom instanceof HTMLInputElement && dom.type === "checkbox") {
+      return dom.checked ? "true" : "false";
+    }
 
     if (typeof control.getValue === "function") {
       return String(control.getValue() ?? "");
@@ -3572,6 +4639,150 @@ export class XStudioModule extends XModule {
     this._set_studio_control_value(STUDIO_SELECTED_OBJECT_JSON_ID, value);
   }
 
+  private _write_selected_object_inspector_draft(
+    draft: XStudioSelectedObjectInspectorDraft | null,
+    source: string,
+  ) {
+    _xd.set(_XD_KEYS.STUDIO_SELECTED_OBJECT_INSPECTOR_DRAFT, draft, { source });
+
+    if (!draft) return;
+
+    for (const [key, value] of Object.entries(draft)) {
+      _xd.set(`studio:selected_object_inspector:${key}`, value, { source });
+    }
+  }
+
+  private _selected_object_inspector_field_control(
+    field: XStudioSelectedObjectInspectorResolvedField,
+    disabled: boolean,
+  ): Record<string, any> {
+    const readonly = field._readonly === true;
+    const readonly_uses_disabled =
+      field._input === "checkbox" ||
+      field._input === "select";
+    const control_disabled = disabled || (readonly && readonly_uses_disabled);
+    const control_readonly = readonly && !control_disabled;
+    const event_name =
+      field._input === "select" || field._input === "checkbox"
+        ? "change"
+        : "input";
+    const base = {
+      _id: field._control_id,
+      class: [
+        "xstudio-selected-object-editor-input",
+        `xstudio-selected-object-editor-input-${field._input}`,
+        field._readonly === true ? "xstudio-selected-object-editor-input-readonly" : "",
+      ].filter(Boolean).join(" "),
+      placeholder: field._placeholder ?? "",
+      title: field._description ?? field._label,
+      ...(control_disabled ? { disabled: true } : {}),
+      ...(control_readonly ? { readonly: true } : {}),
+      _data_source: `studio:selected_object_inspector:${field._key}`,
+      _data_output: `studio:selected_object_inspector:${field._key}`,
+      _update_data_source_event: event_name,
+      _on: {
+        [event_name]: {
+          _module: "xem",
+          _op: "fire",
+          _params: {
+            event: "studio:selected-object:field-changed",
+            data: {
+              _key: field._key,
+              _input: field._input,
+            },
+          },
+        },
+      },
+    };
+
+    if (field._input === "textarea" || field._input === "json") {
+      return {
+        ...base,
+        _type: "textarea",
+      };
+    }
+
+    if (field._input === "select") {
+      return {
+        ...base,
+        _type: "select",
+        _options: [
+          ...(Array.isArray(field._options)
+            ? field._options.map((option: string) => ({
+              label: String(option),
+              value: String(option),
+            }))
+            : []),
+        ],
+      };
+    }
+
+    if (field._input === "checkbox") {
+      return {
+        ...base,
+        _type: "input",
+        _input_type: "checkbox",
+      };
+    }
+
+    return {
+      ...base,
+      _type: "text",
+      ...(field._input === "number" ? { type: "number" } : {}),
+    };
+  }
+
+  private _render_selected_object_inspector_fields(
+    fields: XStudioSelectedObjectInspectorResolvedField[],
+    draft: XStudioSelectedObjectInspectorDraft,
+    has_selected_object: boolean,
+  ) {
+    const container = XUI.getObject(STUDIO_SELECTED_OBJECT_FIELDS_CONTAINER_ID) as any;
+    if (!container) return;
+
+    const children = fields.length > 0
+      ? fields.map(field => ({
+        _id: `${field._control_id}-row`,
+        _type: "view",
+        class: [
+          "xstudio-selected-object-editor-row",
+          `xstudio-selected-object-editor-row-${field._input}`,
+          field._advanced ? "xstudio-selected-object-editor-row-advanced" : "",
+          field._required ? "xstudio-selected-object-editor-row-required" : "",
+        ].filter(Boolean).join(" "),
+        _children: [
+          {
+            _type: "label",
+            class: [
+              "xstudio-selected-object-editor-label",
+              field._required ? "xstudio-selected-object-editor-label-required" : "",
+            ].filter(Boolean).join(" "),
+            _text: field._required ? `${field._label} *` : field._label,
+            title: field._description ?? field._key,
+          },
+          this._selected_object_inspector_field_control(
+            field,
+            !has_selected_object,
+          ),
+        ],
+      }))
+      : [
+        {
+          _id: "xstudio-selected-object-fields-empty",
+          _type: "label",
+          class: "xstudio-selected-object-editor-empty",
+          _text: has_selected_object ? "No editable fields" : "Select an object",
+        },
+      ];
+
+    container.update?.({ _children: children });
+
+    for (const field of fields) {
+      this._set_studio_control_value(field._control_id, draft[field._key] ?? "");
+      this._set_selected_object_field_editable_state(field, has_selected_object);
+    }
+  }
+
   private _set_studio_control_disabled(object_id: string, disabled: boolean) {
     const control = XUI.getObject(object_id) as any;
     if (!control) return;
@@ -3587,31 +4798,46 @@ export class XStudioModule extends XModule {
     }
   }
 
-  private _apply_selected_object_details_state() {
-    const details = XUI.getObject(STUDIO_SELECTED_OBJECT_DETAILS_ID) as any;
-    const toggle = XUI.getObject(STUDIO_SELECTED_OBJECT_DETAILS_TOGGLE_ID) as any;
-    this._set_object_class_token(
-      STUDIO_SELECTED_OBJECT_DETAILS_ID,
-      STUDIO_SELECTED_OBJECT_DETAILS_EXPANDED_CLASS,
-      this._selected_object_details_expanded,
-    );
+  private _set_selected_object_field_editable_state(
+    field: XStudioSelectedObjectInspectorResolvedField,
+    has_selected_object: boolean,
+  ) {
+    const control = XUI.getObject(field._control_id) as any;
+    if (!control) return;
 
-    if (this._selected_object_details_expanded) {
-      details?.show?.();
-    } else {
-      details?.hide?.();
+    const readonly = field._readonly === true;
+    const readonly_uses_disabled =
+      field._input === "checkbox" ||
+      field._input === "select";
+    const disabled = !has_selected_object || (readonly && readonly_uses_disabled);
+    const read_only = has_selected_object && readonly && !disabled;
+
+    control.disabled = disabled;
+    control.readonly = read_only;
+    control.readOnly = read_only;
+
+    const dom = control.dom;
+    if (
+      dom instanceof HTMLInputElement ||
+      dom instanceof HTMLTextAreaElement ||
+      dom instanceof HTMLSelectElement
+    ) {
+      dom.disabled = disabled;
+      if (disabled) {
+        dom.setAttribute("disabled", "true");
+      } else {
+        dom.removeAttribute("disabled");
+      }
     }
 
-    toggle?.setText?.(
-      this._selected_object_details_expanded
-        ? "Details ▲"
-        : "Details ▼",
-    );
-  }
-
-  private _toggle_selected_object_details() {
-    this._selected_object_details_expanded = !this._selected_object_details_expanded;
-    this._apply_selected_object_details_state();
+    if (dom instanceof HTMLInputElement || dom instanceof HTMLTextAreaElement) {
+      dom.readOnly = read_only;
+      if (read_only) {
+        dom.setAttribute("readonly", "true");
+      } else {
+        dom.removeAttribute("readonly");
+      }
+    }
   }
 
   private _reset_selected_object_json_editor() {
@@ -3630,31 +4856,25 @@ export class XStudioModule extends XModule {
     this._log("selected object JSON update ignored", { _message: message });
   }
 
-  private _write_selected_object_inspector_draft(
-    draft: XStudioSelectedObjectInspectorDraft | null,
-    source: string,
-  ) {
-    _xd.set(_XD_KEYS.STUDIO_SELECTED_OBJECT_INSPECTOR_DRAFT, draft, { source });
-    _xd.set(_XD_KEYS.STUDIO_SELECTED_OBJECT_DRAFT_TEXT, draft?._text ?? "", { source });
-    _xd.set(_XD_KEYS.STUDIO_SELECTED_OBJECT_DRAFT_CLASS, draft?._class ?? "", { source });
-    _xd.set(_XD_KEYS.STUDIO_SELECTED_OBJECT_DRAFT_STYLE_PROPERTY, draft?._style_property ?? "", { source });
-    _xd.set(_XD_KEYS.STUDIO_SELECTED_OBJECT_DRAFT_STYLE_VALUE, draft?._style_value ?? "", { source });
-    _xd.set(_XD_KEYS.STUDIO_SELECTED_OBJECT_DRAFT_DISABLED, draft?._disabled ?? "", { source });
-    _xd.set(_XD_KEYS.STUDIO_SELECTED_OBJECT_DRAFT_PLACEHOLDER, draft?._placeholder ?? "", { source });
-  }
-
   private _set_selected_object_inspector_controls(
     draft: XStudioSelectedObjectInspectorDraft,
     has_selected_object: boolean,
   ) {
-    this._set_studio_control_value(STUDIO_SELECTED_OBJECT_EDIT_TEXT_ID, draft._text);
-    this._set_studio_control_value(STUDIO_SELECTED_OBJECT_EDIT_CLASS_ID, draft._class);
-    this._set_studio_control_value(STUDIO_SELECTED_OBJECT_EDIT_STYLE_PROPERTY_ID, draft._style_property);
-    this._set_studio_control_value(STUDIO_SELECTED_OBJECT_EDIT_STYLE_VALUE_ID, draft._style_value);
-    this._set_studio_control_value(STUDIO_SELECTED_OBJECT_EDIT_DISABLED_ID, draft._disabled);
-    this._set_studio_control_value(STUDIO_SELECTED_OBJECT_EDIT_PLACEHOLDER_ID, draft._placeholder);
+    this._render_selected_object_inspector_fields(
+      this._selected_object_inspector_fields,
+      draft,
+      has_selected_object,
+    );
 
-    for (const control_id of STUDIO_SELECTED_OBJECT_INSPECTOR_CONTROL_IDS) {
+    const has_editable_fields =
+      has_selected_object &&
+      this._selected_object_inspector_fields.some(field => field._readonly !== true);
+
+    for (const control_id of STUDIO_SELECTED_OBJECT_EDITOR_ACTION_CONTROL_IDS) {
+      this._set_studio_control_disabled(control_id, !has_editable_fields);
+    }
+
+    for (const control_id of STUDIO_SELECTED_OBJECT_RAW_CONTROL_IDS) {
       this._set_studio_control_disabled(control_id, !has_selected_object);
     }
   }
@@ -3801,30 +5021,24 @@ export class XStudioModule extends XModule {
     );
   }
 
-  private _set_selected_object_visibility_controls(
-    selected: XStudioSelectedObject | null = this._selected_object,
-  ) {
-    const disabled = !selected ||
-      !selected._json_id.trim() ||
-      this._selected_object_is_root_view(selected);
-
-    this._set_studio_control_disabled(STUDIO_SELECTED_OBJECT_HIDE_ID, disabled);
-    this._set_studio_control_disabled(STUDIO_SELECTED_OBJECT_SHOW_ID, disabled);
-  }
-
   private _set_selected_object_duplicate_controls(
     selected: XStudioSelectedObject | null = this._selected_object,
   ) {
     this._set_studio_control_disabled(
       STUDIO_SELECTED_OBJECT_DUPLICATE_ID,
       !selected ||
-        !selected._json_id.trim() ||
-        this._selected_object_is_root_view(selected),
+      !selected._json_id.trim() ||
+      this._selected_object_is_root_view(selected),
     );
   }
 
   private _populate_selected_object_inspector_draft(obj: Record<string, any> | null) {
-    this._selected_object_inspector_draft = this._selected_object_inspector_draft_from_json(obj);
+    this._selected_object_data = obj;
+    this._selected_object_inspector_fields = this._resolve_selected_object_inspector_fields(obj);
+    this._selected_object_inspector_draft = this._selected_object_inspector_draft_from_json(
+      obj,
+      this._selected_object_inspector_fields,
+    );
     this._write_selected_object_inspector_draft(
       this._selected_object_inspector_draft,
       "xstudio-object-tree",
@@ -3833,23 +5047,41 @@ export class XStudioModule extends XModule {
   }
 
   private _clear_selected_object_inspector_draft() {
+    this._selected_object_data = null;
+    this._selected_object_inspector_fields = [];
     this._selected_object_inspector_draft = empty_selected_object_inspector_draft();
     this._write_selected_object_inspector_draft(null, "xstudio-object-tree");
     this._set_selected_object_inspector_controls(this._selected_object_inspector_draft, false);
   }
 
   private _read_selected_object_inspector_draft_from_controls() {
-    return {
-      _text: this._read_studio_control_value(STUDIO_SELECTED_OBJECT_EDIT_TEXT_ID),
-      _class: this._read_studio_control_value(STUDIO_SELECTED_OBJECT_EDIT_CLASS_ID),
-      _style_property: this._read_studio_control_value(STUDIO_SELECTED_OBJECT_EDIT_STYLE_PROPERTY_ID),
-      _style_value: this._read_studio_control_value(STUDIO_SELECTED_OBJECT_EDIT_STYLE_VALUE_ID),
-      _disabled: this._read_studio_control_value(STUDIO_SELECTED_OBJECT_EDIT_DISABLED_ID),
-      _placeholder: this._read_studio_control_value(STUDIO_SELECTED_OBJECT_EDIT_PLACEHOLDER_ID),
-    };
+    const draft: XStudioSelectedObjectInspectorDraft = {};
+
+    for (const field of this._selected_object_inspector_fields) {
+      draft[field._key] = this._read_studio_control_value(field._control_id);
+    }
+
+    return draft;
   }
 
-  private _selected_object_apply_error(message: string, field: XStudioSelectedObjectInspectorField) {
+  private _handle_selected_object_inspector_field_changed(payload: any) {
+    const evt = this._normalize_event_payload(payload);
+    const key =
+      is_obj(evt) && typeof evt._key === "string"
+        ? evt._key
+        : "";
+    const input =
+      is_obj(evt) && typeof evt._input === "string"
+        ? evt._input
+        : "";
+
+    this._log("inspector field changed", {
+      _field: key,
+      _input: input,
+    });
+  }
+
+  private _selected_object_apply_error(message: string, field: XStudioSelectedObjectInspectorField | "fields") {
     this._write_studio_status(message);
     this._log("selected object inspector apply ignored", { _field: field, _message: message });
   }
@@ -3857,15 +5089,6 @@ export class XStudioModule extends XModule {
   private _selected_object_move_error(message: string, direction: "up" | "down") {
     this._write_studio_status(message);
     this._log("selected object move ignored", { _direction: direction, _message: message });
-  }
-
-  private _selected_object_visibility_error(message: string, action: "hide" | "show", selected: XStudioSelectedObject | null) {
-    this._write_studio_status(message);
-    this._log("selected object visibility ignored", {
-      _action: action,
-      _message: message,
-      ...this._selected_object_persisted_metadata(selected),
-    });
   }
 
   private _selected_object_duplicate_error(message: string, selected: XStudioSelectedObject | null) {
@@ -3967,9 +5190,9 @@ export class XStudioModule extends XModule {
       typeof error._message === "string" && error._message.trim()
         ? error._message.trim()
         : error_message ||
-          (typeof result?._message === "string" && result._message.trim()
-            ? result._message.trim()
-            : "");
+        (typeof result?._message === "string" && result._message.trim()
+          ? result._message.trim()
+          : "");
     const reason =
       typeof result?._reason === "string" && result._reason.trim()
         ? result._reason.trim()
@@ -4087,70 +5310,45 @@ export class XStudioModule extends XModule {
       _target_type: type,
     };
 
-    if (field === "text") {
+    const field_meta = this._selected_object_inspector_fields
+      .find(item => item._key === field);
+
+    if (!field_meta) {
       return {
-        _ok: true,
-        _error: "",
-        _params: {
-          ...base,
-          _property_name: "_text",
-          _property_value: draft._text,
-        },
+        _ok: false,
+        _error: `Unknown inspector field: ${field}`,
+        _params: null,
       };
     }
 
-    if (field === "class") {
+    if (field_meta._readonly === true) {
       return {
-        _ok: true,
-        _error: "",
-        _params: {
-          ...base,
-          _property_name: "class",
-          _property_value: draft._class,
-        },
+        _ok: false,
+        _error: `${field_meta._label} is readonly`,
+        _params: null,
       };
     }
 
-    if (field === "style") {
-      const property = draft._style_property.trim();
-      if (!property) {
-        return {
-          _ok: false,
-          _error: "Enter a style property first",
-          _params: null,
-        };
-      }
+    const raw_value = draft[field] ?? "";
 
+    if (field_meta._required && !String(raw_value).trim()) {
       return {
-        _ok: true,
-        _error: "",
-        _params: {
-          ...base,
-          _edit_action: "set-style",
-          _style_property: property,
-          _style_value: draft._style_value,
-        },
+        _ok: false,
+        _error: `${field_meta._label} is required`,
+        _params: null,
       };
     }
 
-    if (field === "disabled") {
-      const disabled = draft._disabled.trim().toLowerCase();
-      if (disabled !== "true" && disabled !== "false") {
-        return {
-          _ok: false,
-          _error: "Choose disabled true or false first",
-          _params: null,
-        };
-      }
+    const parsed = this._parse_selected_object_inspector_field_value(
+      field_meta,
+      raw_value,
+    );
 
+    if (!parsed._ok) {
       return {
-        _ok: true,
-        _error: "",
-        _params: {
-          ...base,
-          _property_name: "disabled",
-          _property_value: disabled === "true",
-        },
+        _ok: false,
+        _error: parsed._error,
+        _params: null,
       };
     }
 
@@ -4159,16 +5357,157 @@ export class XStudioModule extends XModule {
       _error: "",
       _params: {
         ...base,
-        _property_name: "placeholder",
-        _property_value: draft._placeholder,
+        _property_name: field_meta._key,
+        _property_value: parsed._value,
       },
     };
   }
 
-  private async _apply_selected_object_inspector_field(field: XStudioSelectedObjectInspectorField) {
+  private _parse_selected_object_inspector_field_value(
+    field: XStudioSelectedObjectInspectorResolvedField,
+    raw_value: string,
+  ): {
+    _ok: boolean;
+    _error: string;
+    _value: any;
+  } {
+    if (field._input === "json") {
+      const value = raw_value.trim();
+      if (!value) {
+        return {
+          _ok: true,
+          _error: "",
+          _value: null,
+        };
+      }
+
+      try {
+        return {
+          _ok: true,
+          _error: "",
+          _value: JSON.parse(value),
+        };
+      } catch (err) {
+        return {
+          _ok: false,
+          _error: `Invalid ${field._label} JSON: ${to_err(err)}`,
+          _value: null,
+        };
+      }
+    }
+
+    if (field._input === "number") {
+      const value = raw_value.trim();
+      if (!value) {
+        return {
+          _ok: true,
+          _error: "",
+          _value: null,
+        };
+      }
+
+      const number_value = Number(value);
+      if (!Number.isFinite(number_value)) {
+        return {
+          _ok: false,
+          _error: `${field._label} must be a number`,
+          _value: null,
+        };
+      }
+
+      return {
+        _ok: true,
+        _error: "",
+        _value: number_value,
+      };
+    }
+
+    if (field._input === "checkbox") {
+      return {
+        _ok: true,
+        _error: "",
+        _value: raw_value.trim().toLowerCase() === "true",
+      };
+    }
+
+    return {
+      _ok: true,
+      _error: "",
+      _value: raw_value,
+    };
+  }
+
+  private _changed_selected_object_inspector_fields(
+    previous: XStudioSelectedObjectInspectorDraft,
+    next: XStudioSelectedObjectInspectorDraft,
+  ) {
+    const fields: XStudioSelectedObjectInspectorField[] = [];
+
+    for (const field of this._selected_object_inspector_fields) {
+      if (field._readonly === true) continue;
+      if ((previous[field._key] ?? "") !== (next[field._key] ?? "")) {
+        fields.push(field._key);
+      }
+    }
+
+    return fields;
+  }
+
+  private async _apply_selected_object_inspector_edit(
+    field: XStudioSelectedObjectInspectorField,
+    selected: XStudioSelectedObject,
+    params: XStudioSelectedObjectApplyViewEditParams,
+  ) {
+    this._log("selected object inspector apply request", {
+      _field: field,
+      _source_view_id: params._view_id,
+      _target_id: params._target_id,
+      _edit_action: params._edit_action,
+      _path: selected._path,
+      _parent_path: selected._parent_path,
+    });
+
+    try {
+      const result = await this._send_xvibe_command("apply-view-edit", params);
+      if (!is_obj(result) || result._ok !== true) {
+        this._write_studio_status(this._format_apply_view_edit_failure(result));
+        this._error("selected object inspector apply failed", {
+          _field: field,
+          _structured_error: result,
+        });
+        return false;
+      }
+
+      this._log("selected object inspector apply result", {
+        _field: field,
+        _result: result,
+      });
+      return true;
+    } catch (err) {
+      const message = `Apply failed: ${to_err(err)}`;
+      this._write_studio_status(message);
+      this._error("selected object inspector apply failed", {
+        _field: field,
+        _error: to_err(err),
+      });
+      return false;
+    }
+  }
+
+  private async _save_selected_object_inspector_fields() {
+    this._log("inspector save requested", {
+      _field_count: this._selected_object_inspector_fields.length,
+      ...this._selected_object_persisted_metadata(this._selected_object),
+    });
+
     if (!this._selected_object) {
       this._set_selected_object_inspector_controls(this._selected_object_inspector_draft, false);
-      this._selected_object_apply_error("Select an object first", field);
+      this._selected_object_apply_error("Select an object first", "fields");
+      return;
+    }
+
+    if (this._selected_object_inspector_fields.length === 0) {
+      this._selected_object_apply_error("Selected object has no editable inspector fields", "fields");
       return;
     }
 
@@ -4179,77 +5518,116 @@ export class XStudioModule extends XModule {
     }
 
     if (!this._selected_object._source_view_id.trim()) {
-      this._selected_object_apply_error("Selected object has no source view", field);
+      this._selected_object_apply_error("Selected object has no source view", "fields");
       return;
     }
 
-    this._selected_object_inspector_draft = this._read_selected_object_inspector_draft_from_controls();
-    this._write_selected_object_inspector_draft(
+    const next_draft = this._read_selected_object_inspector_draft_from_controls();
+    const changed_fields = this._changed_selected_object_inspector_fields(
       this._selected_object_inspector_draft,
-      "xstudio-selected-object-inspector",
+      next_draft,
     );
+
+    if (changed_fields.length === 0) {
+      this._write_studio_status("No selected object field changes to save");
+      return;
+    }
 
     const app_id = this._client().getActiveAppId();
     const env = this._client().getActiveEnv();
 
     if (!app_id) {
-      this._selected_object_apply_error("No active app selected", field);
+      this._selected_object_apply_error("No active app selected", "fields");
       return;
     }
 
     if (!env) {
-      this._selected_object_apply_error("No active environment selected", field);
+      this._selected_object_apply_error("No active environment selected", "fields");
       return;
     }
 
-    const edit_result = this._build_selected_object_inspector_edit_params(
-      field,
-      this._selected_object,
-      this._selected_object_inspector_draft,
-      app_id,
-      env,
-    );
+    const edits: {
+      _field: XStudioSelectedObjectInspectorField;
+      _params: XStudioSelectedObjectApplyViewEditParams;
+    }[] = [];
 
-    if (!edit_result._ok || !edit_result._params) {
-      this._selected_object_apply_error(edit_result._error, field);
-      return;
-    }
+    for (const field of changed_fields) {
+      const edit_result = this._build_selected_object_inspector_edit_params(
+        field,
+        this._selected_object,
+        next_draft,
+        app_id,
+        env,
+      );
 
-    this._write_studio_status(`Applying selected object ${field}...`);
-    this._log("selected object inspector apply request", {
-      _field: field,
-      _source_view_id: edit_result._params._view_id,
-      _target_id: edit_result._params._target_id,
-      _edit_action: edit_result._params._edit_action,
-      _path: this._selected_object._path,
-      _parent_path: this._selected_object._parent_path,
-    });
-
-    try {
-      const result =
-        await this._send_xvibe_command("apply-view-edit", edit_result._params);
-      if (!is_obj(result) || result._ok !== true) {
-        this._write_studio_status(this._format_apply_view_edit_failure(result));
-        this._error("selected object inspector apply failed", {
-          _field: field,
-          _structured_error: result,
-        });
+      if (!edit_result._ok || !edit_result._params) {
+        this._selected_object_apply_error(edit_result._error, field);
         return;
       }
 
-      this._write_studio_status(`Applied selected object ${field}`);
-      this._log("selected object inspector apply result", {
+      edits.push({
         _field: field,
-        _result: result,
-      });
-    } catch (err) {
-      const message = `Apply failed: ${to_err(err)}`;
-      this._write_studio_status(message);
-      this._error("selected object inspector apply failed", {
-        _field: field,
-        _error: to_err(err),
+        _params: edit_result._params,
       });
     }
+
+    this._write_studio_status(
+      edits.length === 1
+        ? "Saving selected object field..."
+        : `Saving ${edits.length} selected object fields...`,
+    );
+
+    for (const edit of edits) {
+      const ok = await this._apply_selected_object_inspector_edit(
+        edit._field,
+        this._selected_object,
+        edit._params,
+      );
+      if (!ok) {
+        return;
+      }
+    }
+
+    if (this._selected_object_data) {
+      for (const edit of edits) {
+        if (typeof edit._params._property_name === "string") {
+          this._selected_object_data[edit._params._property_name] =
+            edit._params._property_value;
+        }
+      }
+      this._selected_object_json = this._safe_selected_json_preview(this._selected_object_data);
+    }
+
+    this._selected_object_inspector_draft = next_draft;
+    this._write_selected_object_inspector_draft(
+      this._selected_object_inspector_draft,
+      "xstudio-selected-object-inspector",
+    );
+    this._set_selected_object_inspector_controls(this._selected_object_inspector_draft, true);
+    this._write_studio_status(
+      edits.length === 1
+        ? "Saved selected object field"
+        : `Saved ${edits.length} selected object fields`,
+    );
+  }
+
+  private _cancel_selected_object_inspector_fields() {
+    if (!this._selected_object) {
+      this._set_selected_object_inspector_controls(this._selected_object_inspector_draft, false);
+      this._selected_object_apply_error("Select an object first", "fields");
+      return;
+    }
+
+    this._selected_object_inspector_draft = this._selected_object_inspector_draft_from_json(
+      this._selected_object_data,
+      this._selected_object_inspector_fields,
+    );
+    this._set_selected_object_inspector_controls(this._selected_object_inspector_draft, true);
+    this._write_selected_object_inspector_draft(
+      this._selected_object_inspector_draft,
+      "xstudio-selected-object-inspector-cancel",
+    );
+    this._write_studio_status("Canceled selected object field edits");
   }
 
   private async _update_selected_object_json_from_editor() {
@@ -4475,102 +5853,6 @@ export class XStudioModule extends XModule {
       this._write_studio_status(message);
       this._error("selected object move failed", {
         _direction: direction,
-        _error: to_err(err),
-      });
-    }
-  }
-
-  private async _apply_selected_object_visibility(action: "hide" | "show") {
-    const selected = this._selected_object;
-
-    if (!selected) {
-      this._set_selected_object_visibility_controls(null);
-      this._selected_object_visibility_error("Select an object first", action, null);
-      return;
-    }
-
-    const target_id = this._selected_object_json_id(selected);
-    if (!target_id) {
-      this._set_selected_object_visibility_controls(selected);
-      this._selected_object_persisted_id_error(`selected object ${action}`, selected);
-      return;
-    }
-
-    const source_view_id = selected._source_view_id.trim();
-    if (!source_view_id) {
-      this._selected_object_visibility_error("Selected object has no source view", action, selected);
-      return;
-    }
-
-    if (this._selected_object_is_root_view(selected)) {
-      this._set_selected_object_visibility_controls(selected);
-      this._selected_object_visibility_error("Root object visibility cannot be edited", action, selected);
-      return;
-    }
-
-    const app_id = this._client().getActiveAppId();
-    const env = this._client().getActiveEnv();
-
-    if (!app_id) {
-      this._selected_object_visibility_error("No active app selected", action, selected);
-      return;
-    }
-
-    if (!env) {
-      this._selected_object_visibility_error("No active environment selected", action, selected);
-      return;
-    }
-
-    const params: XStudioSelectedObjectApplyViewEditParams = {
-      _app_id: app_id,
-      _env: env,
-      _view_id: source_view_id,
-      _target_id: target_id,
-      _target_type: selected._type.trim() || "object",
-      _edit_action: action === "hide" ? "hide-object" : "show-object",
-    };
-
-    this._write_studio_status(
-      action === "hide"
-        ? "Hiding selected object..."
-        : "Showing selected object...",
-    );
-    this._log("selected object visibility request", {
-      _action: action,
-      _source_view_id: params._view_id,
-      _target_id: params._target_id,
-      _target_type: params._target_type,
-      _edit_action: params._edit_action,
-      _path: selected._path,
-      _parent_path: selected._parent_path,
-    });
-
-    try {
-      const result = await this._send_xvibe_command("apply-view-edit", params);
-      if (!is_obj(result) || result._ok !== true) {
-        this._write_studio_status(this._format_apply_view_edit_failure(result));
-        this._error("selected object visibility failed", {
-          _action: action,
-          _structured_error: result,
-        });
-        return;
-      }
-
-      this._write_studio_status(
-        action === "hide"
-          ? "Hidden selected object"
-          : "Shown selected object",
-      );
-      this._log("selected object visibility result", {
-        _action: action,
-        _result: result,
-      });
-      this._refresh_object_tree_for_current_view();
-    } catch (err) {
-      const message = `${action === "hide" ? "Hide" : "Show"} failed: ${to_err(err)}`;
-      this._write_studio_status(message);
-      this._error("selected object visibility failed", {
-        _action: action,
         _error: to_err(err),
       });
     }
@@ -4828,41 +6110,16 @@ export class XStudioModule extends XModule {
 
     if (!selected) {
       this._set_selected_object_inspector_controls(this._selected_object_inspector_draft, false);
-      this._set_studio_label(STUDIO_SELECTED_OBJECT_SUMMARY_LINE_ID, this._format_selected_object_summary_line(null));
-      this._set_studio_label(STUDIO_SELECTED_OBJECT_SUMMARY_TEXT_ID, "");
-      this._set_object_visible(STUDIO_SELECTED_OBJECT_SUMMARY_TEXT_ID, false);
-      this._set_selected_object_label(STUDIO_SELECTED_OBJECT_TYPE_ID, "Type");
-      this._set_selected_object_label(STUDIO_SELECTED_OBJECT_ID_ID, "ID");
-      this._set_selected_object_label(STUDIO_SELECTED_OBJECT_TEXT_ID, "Text");
-      this._set_selected_object_label(STUDIO_SELECTED_OBJECT_SOURCE_ID, "Source View");
-      this._set_selected_object_label(STUDIO_SELECTED_OBJECT_PATH_ID, "Path");
-      this._set_selected_object_label(STUDIO_SELECTED_OBJECT_DOM_ID, "DOM");
-      this._set_selected_object_label(STUDIO_SELECTED_OBJECT_METADATA_ID, "Metadata");
       this._write_selected_object_json_editor("");
-      this._apply_selected_object_details_state();
       this._set_selected_object_move_controls(null);
-      this._set_selected_object_visibility_controls(null);
       this._set_selected_object_duplicate_controls(null);
       this._set_selected_object_delete_controls(null);
       return;
     }
 
     this._set_selected_object_inspector_controls(this._selected_object_inspector_draft, true);
-    const summary_text = this._format_selected_object_summary_text(selected);
-    this._set_studio_label(STUDIO_SELECTED_OBJECT_SUMMARY_LINE_ID, this._format_selected_object_summary_line(selected));
-    this._set_studio_label(STUDIO_SELECTED_OBJECT_SUMMARY_TEXT_ID, summary_text);
-    this._set_object_visible(STUDIO_SELECTED_OBJECT_SUMMARY_TEXT_ID, Boolean(summary_text));
-    this._set_selected_object_label(STUDIO_SELECTED_OBJECT_TYPE_ID, "Type", selected._type);
-    this._set_selected_object_label(STUDIO_SELECTED_OBJECT_ID_ID, "ID", selected._json_id);
-    this._set_selected_object_label(STUDIO_SELECTED_OBJECT_TEXT_ID, "Text", selected._text);
-    this._set_selected_object_label(STUDIO_SELECTED_OBJECT_SOURCE_ID, "Source View", selected._source_view_id);
-    this._set_selected_object_label(STUDIO_SELECTED_OBJECT_PATH_ID, "Path", selected._path);
-    this._set_selected_object_label(STUDIO_SELECTED_OBJECT_DOM_ID, "DOM", selected._dom_status);
-    this._set_selected_object_label(STUDIO_SELECTED_OBJECT_METADATA_ID, "Metadata", selected._json_metadata);
     this._write_selected_object_json_editor(this._selected_object_json);
-    this._apply_selected_object_details_state();
     this._set_selected_object_move_controls(selected);
-    this._set_selected_object_visibility_controls(selected);
     this._set_selected_object_duplicate_controls(selected);
     this._set_selected_object_delete_controls(selected);
   }
@@ -4907,6 +6164,9 @@ export class XStudioModule extends XModule {
 
     if (!view_id || !is_obj(view)) {
       this._object_tree_nodes = [];
+      this._object_tree_view_id = "";
+      this._object_tree_expanded_node_keys.clear();
+      this._object_tree_touched_expansion_node_keys.clear();
       const tree = (XUI.getObject(STUDIO_OBJECT_TREE_RESULTS_ID) ?? XUI.getObject(STUDIO_OBJECT_TREE_ID)) as any;
       tree?.update?.({
         _children: [
@@ -4923,13 +6183,22 @@ export class XStudioModule extends XModule {
     }
 
     const nodes: XStudioObjectTreeNode[] = [];
-    this._build_object_tree_nodes(view, view_id, "$", "$", "", "", "", 0, false, true, nodes);
+    if (view_id !== this._object_tree_view_id) {
+      this._object_tree_view_id = view_id;
+      this._object_tree_expanded_node_keys.clear();
+      this._object_tree_touched_expansion_node_keys.clear();
+    }
+
+    this._build_object_tree_nodes(view, view_id, "$", "$", "", "", "", "$", 0, false, true, nodes);
     this._object_tree_nodes = nodes;
+    this._sync_object_tree_expansion_defaults(nodes);
+    const flat_nodes = this._flatten_object_tree_nodes(nodes);
+    this._log("object tree cache", { _total_nodes: flat_nodes.length });
 
     const previous_selected = this._selected_object;
     const pending_select_id = this._selected_object_pending_select_id.trim();
     const pending_selected_node = pending_select_id
-      ? nodes.find((node) =>
+      ? flat_nodes.find((node) =>
         node._meta?._json_id.trim() === pending_select_id ||
         node._meta?._id.trim() === pending_select_id)
       : undefined;
@@ -4940,7 +6209,7 @@ export class XStudioModule extends XModule {
     const next_selected_node =
       pending_selected_node ||
       (previous_selected
-        ? nodes.find((node) => this._selected_object_matches(previous_selected, node._meta))
+        ? flat_nodes.find((node) => this._selected_object_matches(previous_selected, node._meta))
         : undefined);
 
     if (previous_selected && !next_selected_node && !pending_select_id) {
