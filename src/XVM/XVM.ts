@@ -921,6 +921,11 @@ class _XVM extends XModule {
 
 
     this._active[containerId] = target._id ?? null;
+    void _xem.fire("xvm:view-navigated", {
+      _view_id: target._id ?? "",
+      _region: t.region,
+      _container_id: containerId,
+    });
   }
 
   stack(view: XUIObject, opts?: { containerId?: string; region?: RegionName }) {
@@ -937,8 +942,8 @@ class _XVM extends XModule {
     const route = this._routes[id];
     const viewId = route?._view_id ?? id;
 
-    const region = (opts.region ?? route?._region) as any;
-    const containerId = (opts.containerId ?? route?._container_id) as any;
+    const region = (opts.region ?? (opts as any)._region ?? route?._region) as any;
+    const containerId = (opts.containerId ?? (opts as any)._container_id ?? route?._container_id) as any;
 
     const t = this.resolveTarget({ containerId, region });
     const view = await this.resolveViewByIdAsync(viewId, opts, t.containerId, route, (opts as any)._params, t.region);
@@ -963,8 +968,8 @@ class _XVM extends XModule {
     if (!id) return;
 
     const route = this._routes[id];
-    const region = (opts.region ?? route?._region) as any;
-    const containerId = (opts.containerId ?? route?._container_id) as any;
+    const region = (opts.region ?? (opts as any)._region ?? route?._region) as any;
+    const containerId = (opts.containerId ?? (opts as any)._container_id ?? route?._container_id) as any;
 
     const t = this.resolveTarget({ containerId, region });
     const policy = this.regionPolicy(t.region);

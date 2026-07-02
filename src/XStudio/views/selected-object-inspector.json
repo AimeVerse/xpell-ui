@@ -113,7 +113,203 @@
                   ]
                 }
               ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "_id": "xstudio-selected-object-interactions-section",
+      "_type": "view",
+      "class": "xstudio-portlet xstudio-explorer-section xstudio-selected-object-interactions-section xstudio-portlet-hidden",
+      "_visible": false,
+      "aria-hidden": "true",
+      "style": "display: none;",
+      "_children": [
+        {
+          "_type": "view",
+          "class": "xstudio-portlet-header xstudio-explorer-section-header",
+          "_children": [
+            {
+              "_id": "xstudio-selected-object-interactions-section-toggle",
+              "_type": "button",
+              "type": "button",
+              "class": "xstudio-explorer-section-toggle",
+              "_text": "▾ Interactions",
+              "title": "Collapse Interactions",
+              "aria-expanded": "true",
+              "_on": {
+                "click": {
+                  "_module": "xem",
+                  "_op": "fire",
+                  "_params": {
+                    "event": "studio:explorer-section:toggle",
+                    "data": {
+                      "_section": "interactions"
+                    }
+                  }
+                }
+              }
             },
+            {
+              "_type": "view",
+              "class": "xstudio-explorer-section-actions"
+            }
+          ]
+        },
+        {
+          "_id": "xstudio-selected-object-interactions-body",
+          "_type": "view",
+          "class": "xstudio-portlet-body xstudio-selected-object-interactions-body",
+          "_children": [
+            {
+              "_type": "label",
+              "class": "xstudio-selected-object-editor-empty",
+              "_text": "No interactions"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "_id": "xstudio-selected-object-raw-section",
+      "_type": "view",
+      "class": "xstudio-portlet xstudio-explorer-section xstudio-selected-object-raw-section xstudio-explorer-section-collapsed",
+      "_children": [
+        {
+          "_type": "view",
+          "class": "xstudio-portlet-header xstudio-explorer-section-header xstudio-selected-object-raw-header",
+          "_children": [
+            {
+              "_id": "xstudio-selected-object-raw-section-toggle",
+              "_type": "button",
+              "type": "button",
+              "class": "xstudio-explorer-section-toggle",
+              "_text": "▸ Raw JSON",
+              "title": "Expand Raw JSON",
+              "aria-expanded": "false",
+              "_on": {
+                "click": {
+                  "_module": "xem",
+                  "_op": "fire",
+                  "_params": {
+                    "event": "studio:explorer-section:toggle",
+                    "data": {
+                      "_section": "raw_json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "_type": "view",
+              "class": "xstudio-explorer-section-actions"
+            }
+          ]
+        },
+        {
+          "_id": "xstudio-selected-object-raw-body",
+          "_type": "view",
+          "class": "xstudio-portlet-body xstudio-selected-object-raw-body",
+          "_visible": false,
+          "aria-hidden": "true",
+          "style": "display: none;",
+          "_children": [
+            {
+              "_type": "view",
+              "class": "xstudio-selected-object-raw-actions",
+              "_children": [
+                {
+                  "_id": "xstudio-selected-object-update-json",
+                  "_type": "button",
+                  "type": "button",
+                  "class": "xstudio-selected-object-editor-button",
+                  "_text": "Update JSON",
+                  "disabled": true,
+                  "_on": {
+                    "click": {
+                      "_module": "xem",
+                      "_op": "fire",
+                      "_params": {
+                        "event": "studio:selected-object:update-json"
+                      }
+                    }
+                  }
+                },
+                {
+                  "_id": "xstudio-selected-object-reset-json",
+                  "_type": "button",
+                  "type": "button",
+                  "class": "xstudio-selected-object-editor-button",
+                  "_text": "Reset JSON",
+                  "disabled": true,
+                  "_on": {
+                    "click": {
+                      "_module": "xem",
+                      "_op": "fire",
+                      "_params": {
+                        "event": "studio:selected-object:reset-json"
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "_id": "xstudio-selected-object-json",
+              "_type": "textarea",
+              "class": "xstudio-selected-object-json",
+              "placeholder": "Select an object to edit JSON.",
+              "disabled": true,
+              "_data_source": "studio:selected_object:raw_json",
+              "_data_output": "studio:selected_object:raw_json",
+              "_update_data_source_event": "input"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "_id": "xstudio-selected-object-danger-section",
+      "_type": "view",
+      "class": "xstudio-portlet xstudio-explorer-section xstudio-selected-object-danger-section",
+      "_children": [
+        {
+          "_type": "view",
+          "class": "xstudio-portlet-header xstudio-explorer-section-header",
+          "_children": [
+            {
+              "_id": "xstudio-selected-object-danger-section-toggle",
+              "_type": "button",
+              "type": "button",
+              "class": "xstudio-explorer-section-toggle",
+              "_text": "▾ Danger Zone",
+              "title": "Collapse Danger Zone",
+              "aria-expanded": "true",
+              "_on": {
+                "click": {
+                  "_module": "xem",
+                  "_op": "fire",
+                  "_params": {
+                    "event": "studio:explorer-section:toggle",
+                    "data": {
+                      "_section": "danger"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "_type": "view",
+              "class": "xstudio-explorer-section-actions"
+            }
+          ]
+        },
+        {
+          "_id": "xstudio-selected-object-danger-body",
+          "_type": "view",
+          "class": "xstudio-portlet-body xstudio-selected-object-danger-body",
+          "_children": [
             {
               "_type": "view",
               "class": "xstudio-selected-object-properties-section xstudio-selected-object-delete-section",
@@ -134,104 +330,6 @@
                       }
                     }
                   }
-                }
-              ]
-            },
-            {
-              "_id": "xstudio-selected-object-raw-section",
-              "_type": "view",
-              "class": "xstudio-selected-object-properties-section xstudio-selected-object-raw-section xstudio-explorer-section xstudio-explorer-section-collapsed",
-              "_children": [
-                {
-                  "_type": "view",
-                  "class": "xstudio-selected-object-raw-header xstudio-explorer-section-header",
-                  "_children": [
-                    {
-                      "_id": "xstudio-selected-object-raw-section-toggle",
-                      "_type": "button",
-                      "type": "button",
-                      "class": "xstudio-explorer-section-toggle",
-                      "_text": "▸ Raw JSON",
-                      "title": "Expand Raw JSON",
-                      "aria-expanded": "false",
-                      "_on": {
-                        "click": {
-                          "_module": "xem",
-                          "_op": "fire",
-                          "_params": {
-                            "event": "studio:explorer-section:toggle",
-                            "data": {
-                              "_section": "raw_json"
-                            }
-                          }
-                        }
-                      }
-                    },
-                    {
-                      "_type": "view",
-                      "class": "xstudio-explorer-section-actions"
-                    }
-                  ]
-                },
-                {
-                  "_id": "xstudio-selected-object-raw-body",
-                  "_type": "view",
-                  "class": "xstudio-selected-object-raw-body",
-                  "_visible": false,
-                  "aria-hidden": "true",
-                  "style": "display: none;",
-                  "_children": [
-                    {
-                      "_type": "view",
-                      "class": "xstudio-selected-object-raw-actions",
-                      "_children": [
-                        {
-                          "_id": "xstudio-selected-object-update-json",
-                          "_type": "button",
-                          "type": "button",
-                          "class": "xstudio-selected-object-editor-button",
-                          "_text": "Update JSON",
-                          "disabled": true,
-                          "_on": {
-                            "click": {
-                              "_module": "xem",
-                              "_op": "fire",
-                              "_params": {
-                                "event": "studio:selected-object:update-json"
-                              }
-                            }
-                          }
-                        },
-                        {
-                          "_id": "xstudio-selected-object-reset-json",
-                          "_type": "button",
-                          "type": "button",
-                          "class": "xstudio-selected-object-editor-button",
-                          "_text": "Reset JSON",
-                          "disabled": true,
-                          "_on": {
-                            "click": {
-                              "_module": "xem",
-                              "_op": "fire",
-                              "_params": {
-                                "event": "studio:selected-object:reset-json"
-                              }
-                            }
-                          }
-                        }
-                      ]
-                    },
-                    {
-                      "_id": "xstudio-selected-object-json",
-                      "_type": "textarea",
-                      "class": "xstudio-selected-object-json",
-                      "placeholder": "Select an object to edit JSON.",
-                      "disabled": true,
-                      "_data_source": "studio:selected_object:raw_json",
-                      "_data_output": "studio:selected_object:raw_json",
-                      "_update_data_source_event": "input"
-                    }
-                  ]
                 }
               ]
             }

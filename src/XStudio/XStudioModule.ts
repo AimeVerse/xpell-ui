@@ -87,9 +87,15 @@ const STUDIO_SELECTED_OBJECT_RESET_JSON_ID = "xstudio-selected-object-reset-json
 const STUDIO_SELECTED_OBJECT_PROPERTIES_PORTLET_ID = "xstudio-selected-object-properties-portlet";
 const STUDIO_SELECTED_OBJECT_PROPERTIES_BODY_ID = "xstudio-selected-object-properties-body";
 const STUDIO_SELECTED_OBJECT_PROPERTIES_SECTION_TOGGLE_ID = "xstudio-selected-object-properties-section-toggle";
+const STUDIO_SELECTED_OBJECT_INTERACTIONS_SECTION_ID = "xstudio-selected-object-interactions-section";
+const STUDIO_SELECTED_OBJECT_INTERACTIONS_BODY_ID = "xstudio-selected-object-interactions-body";
+const STUDIO_SELECTED_OBJECT_INTERACTIONS_SECTION_TOGGLE_ID = "xstudio-selected-object-interactions-section-toggle";
 const STUDIO_SELECTED_OBJECT_RAW_SECTION_ID = "xstudio-selected-object-raw-section";
 const STUDIO_SELECTED_OBJECT_RAW_BODY_ID = "xstudio-selected-object-raw-body";
 const STUDIO_SELECTED_OBJECT_RAW_SECTION_TOGGLE_ID = "xstudio-selected-object-raw-section-toggle";
+const STUDIO_SELECTED_OBJECT_DANGER_SECTION_ID = "xstudio-selected-object-danger-section";
+const STUDIO_SELECTED_OBJECT_DANGER_BODY_ID = "xstudio-selected-object-danger-body";
+const STUDIO_SELECTED_OBJECT_DANGER_SECTION_TOGGLE_ID = "xstudio-selected-object-danger-section-toggle";
 const STUDIO_SELECTED_OBJECT_ROW_CLASS = "xstudio-object-tree-row-selected";
 const STUDIO_SELECTED_CANVAS_CLASS = "xstudio-selected-object";
 const STUDIO_THEME_DEFAULT = "dark";
@@ -122,6 +128,7 @@ const STUDIO_INTENT_APPLY_VIEW_EDIT_REFRESH_ACTIONS = new Set([
   "show-object",
   "remove-object",
   "duplicate-object",
+  "add-child",
   "move-object",
 ]);
 const STUDIO_RUNTIME_INSPECTOR_SECTION_ID = "xstudio-runtime-inspector-section";
@@ -161,7 +168,8 @@ const STUDIO_OBJECT_TREE_CHILD_LEAF_TYPES = new Set([
 ]);
 type XStudioTheme = typeof STUDIO_THEME_OPTIONS[number];
 type XStudioPortletId = "selected" | "prompt" | "conversation" | "runtime" | "inspector" | "json" | "modules";
-type XStudioExplorerSectionId = "app_explorer" | "object_tree" | "properties" | "raw_json";
+type XStudioExplorerSectionId = "app_explorer" | "object_tree" | "properties" | "interactions" | "raw_json" | "danger";
+type XStudioSelectedObjectInspectorSectionId = "properties" | "interactions" | "raw_json" | "danger";
 type XStudioAppExplorerArtifactType = "view" | "flow" | "entity" | "module";
 type XStudioAppExplorerCategoryId = "views" | "flows" | "entities" | "modules";
 type XStudioAppExplorerSectionId = "app" | XStudioAppExplorerCategoryId;
@@ -241,11 +249,23 @@ const STUDIO_EXPLORER_SECTIONS: Record<XStudioExplorerSectionId, {
     _toggle_id: STUDIO_SELECTED_OBJECT_PROPERTIES_SECTION_TOGGLE_ID,
     _label: "Properties",
   },
+  interactions: {
+    _section_id: STUDIO_SELECTED_OBJECT_INTERACTIONS_SECTION_ID,
+    _body_id: STUDIO_SELECTED_OBJECT_INTERACTIONS_BODY_ID,
+    _toggle_id: STUDIO_SELECTED_OBJECT_INTERACTIONS_SECTION_TOGGLE_ID,
+    _label: "Interactions",
+  },
   raw_json: {
     _section_id: STUDIO_SELECTED_OBJECT_RAW_SECTION_ID,
     _body_id: STUDIO_SELECTED_OBJECT_RAW_BODY_ID,
     _toggle_id: STUDIO_SELECTED_OBJECT_RAW_SECTION_TOGGLE_ID,
     _label: "Raw JSON",
+  },
+  danger: {
+    _section_id: STUDIO_SELECTED_OBJECT_DANGER_SECTION_ID,
+    _body_id: STUDIO_SELECTED_OBJECT_DANGER_BODY_ID,
+    _toggle_id: STUDIO_SELECTED_OBJECT_DANGER_SECTION_TOGGLE_ID,
+    _label: "Danger Zone",
   },
 };
 const STUDIO_EXPLORER_SECTION_IDS = Object.keys(STUDIO_EXPLORER_SECTIONS) as XStudioExplorerSectionId[];
@@ -253,8 +273,21 @@ const STUDIO_DEFAULT_EXPLORER_SECTION_OPEN: Record<XStudioExplorerSectionId, boo
   app_explorer: true,
   object_tree: true,
   properties: true,
+  interactions: true,
   raw_json: false,
+  danger: true,
 };
+const STUDIO_SELECTED_OBJECT_INSPECTOR_SECTION_IDS: XStudioSelectedObjectInspectorSectionId[] = [
+  "properties",
+  "interactions",
+  "raw_json",
+  "danger",
+];
+const STUDIO_SELECTED_OBJECT_FALLBACK_INSPECTOR_SECTIONS: XStudioSelectedObjectInspectorSectionId[] = [
+  "properties",
+  "raw_json",
+  "danger",
+];
 const STUDIO_APP_EXPLORER_CATEGORIES: Record<XStudioAppExplorerCategoryId, {
   _label: string;
   _artifact_type: XStudioAppExplorerArtifactType;
@@ -319,6 +352,8 @@ type XStudioClientRuntime = {
   getActiveEnv(): string;
   get_current_view_id(): string;
   get_app_view_id(): string;
+  render_view(view_id: string): Promise<void>;
+  _resolve_region?(): string;
   get_view?(view_id: string): Record<string, any> | null;
   get_current_view?(): Record<string, any> | null;
   _read_cached_view?(view_id: string): Record<string, any> | null;
@@ -469,6 +504,7 @@ type XStudioSelectedObjectApplyViewEditParams = {
   _style_property?: string;
   _style_value?: string;
   _object_value?: Record<string, any>;
+  _child?: Record<string, any>;
   _before_id?: string;
   _after_id?: string;
 };
@@ -957,6 +993,9 @@ export class XStudioModule extends XModule {
   private _selected_object_json = "";
   private _selected_object_inspector_draft = empty_selected_object_inspector_draft();
   private _selected_object_inspector_fields: XStudioSelectedObjectInspectorResolvedField[] = [];
+  private _selected_object_inspector_sections: XStudioSelectedObjectInspectorSectionId[] = [
+    ...STUDIO_SELECTED_OBJECT_FALLBACK_INSPECTOR_SECTIONS,
+  ];
   private _selected_tree_row_id = "";
   private _selected_canvas_element: HTMLElement | null = null;
   private _object_tree_render_seq = 0;
@@ -1038,6 +1077,20 @@ export class XStudioModule extends XModule {
       this._refresh_object_tree_for_current_view();
       void this._refresh_app_explorer();
       void this._ensure_conversation_for_current_context();
+    });
+
+    _xem.on("xvm:view-navigated", (payload: any) => {
+      const evt = this._normalize_event_payload(payload);
+      if (!is_obj(evt)) return;
+
+      const view_id = typeof evt._view_id === "string" ? evt._view_id.trim() : "";
+      const region = typeof evt._region === "string" ? evt._region.trim() : "";
+      if (!view_id || view_id === STUDIO_VIEW_ID || region === STUDIO_REGION_ID) return;
+      if (region && region !== this._resolve_app_view_region()) return;
+
+      this._clear_selected_object();
+      this._refresh_object_tree_for_current_view();
+      this._render_cached_app_explorer();
     });
 
     _xem.on("xvm:view-cache-updated", (payload: any) => {
@@ -4163,12 +4216,32 @@ export class XStudioModule extends XModule {
       .sort((a, b) => a._id.localeCompare(b._id));
   }
 
-  private _app_explorer_current_view_id() {
+  private _resolve_app_view_region() {
+    const region =
+      typeof this._xvm_client?._resolve_region === "function"
+        ? this._xvm_client._resolve_region()
+        : "";
+    return typeof region === "string" && region.trim() ? region.trim() : "main";
+  }
+
+  private _active_xvm_app_view_id() {
     try {
-      return this._resolve_studio_target_view_id();
+      const active_view_id = (XVM as any).getActiveViewId?.({
+        region: this._resolve_app_view_region(),
+      });
+      return typeof active_view_id === "string" && active_view_id.trim()
+        ? active_view_id.trim()
+        : "";
     } catch {
-      return this._xvm_client?.get_current_view_id?.() ?? "";
+      return "";
     }
+  }
+
+  private _app_explorer_current_view_id() {
+    return this._active_xvm_app_view_id() ||
+      this._xvm_client?.get_app_view_id?.() ||
+      this._xvm_client?.get_current_view_id?.() ||
+      "";
   }
 
   private _select_app_explorer_artifact(artifact: XStudioAppExplorerArtifact) {
@@ -4185,6 +4258,56 @@ export class XStudioModule extends XModule {
         _current_view_id: this._app_explorer_current_view_id(),
         _loaded: false,
       });
+    }
+  }
+
+  private async _open_app_explorer_view(artifact: XStudioAppExplorerArtifact) {
+    if (artifact._type !== "view") return false;
+
+    const view_id = artifact._id.trim();
+    if (!view_id) return false;
+
+    const key = this._app_explorer_artifact_key(artifact._type, artifact._id);
+    if (this._app_explorer_selected_key !== key) {
+      this._select_app_explorer_artifact(artifact);
+    }
+
+    const app_id = this._client().getActiveAppId();
+    const env = this._client().getActiveEnv();
+    const previous_view_id = this._app_explorer_current_view_id();
+
+    this._write_studio_status(`Opening ${view_id}...`);
+    this._log("app explorer open requested", {
+      _app_id: app_id,
+      _env: env,
+      _view_id: view_id,
+      _previous_view_id: previous_view_id,
+    });
+
+    try {
+      this._clear_selected_object();
+      await this._client().render_view(view_id);
+      this._refresh_object_tree_for_current_view();
+      this._render_cached_app_explorer();
+      this._write_studio_status(`Opened ${view_id}`);
+      this._log("app explorer view opened", {
+        _app_id: app_id,
+        _env: env,
+        _view_id: view_id,
+        _previous_view_id: previous_view_id,
+        _current_view_id: this._app_explorer_current_view_id(),
+      });
+      return true;
+    } catch (err) {
+      const message = `Open view failed: ${to_err(err)}`;
+      this._write_studio_status(message);
+      this._error("app explorer open failed", {
+        _app_id: app_id,
+        _env: env,
+        _view_id: view_id,
+        _error: to_err(err),
+      });
+      return false;
     }
   }
 
@@ -4334,6 +4457,11 @@ export class XStudioModule extends XModule {
               event?.preventDefault?.();
               event?.stopPropagation?.();
               this._select_app_explorer_artifact(artifact);
+            },
+            dblclick: (event?: Event) => {
+              event?.preventDefault?.();
+              event?.stopPropagation?.();
+              void this._open_app_explorer_view(artifact);
             },
           },
         },
@@ -4867,6 +4995,150 @@ export class XStudioModule extends XModule {
       _skill_title: selected_skill._title,
       _default_object: selected_skill._design?._palette?._default_object ?? null,
     });
+
+    await this._apply_object_tree_node_add_child(node, selected_skill);
+  }
+
+  private async _apply_object_tree_node_add_child(
+    node: XStudioObjectTreeNode,
+    selected_skill: XpellSkill,
+  ) {
+    const meta = node._meta;
+    if (!meta || !this._object_tree_node_can_add_child(node)) return false;
+
+    this._selected_object_pending_select_id = "";
+
+    const target_id = meta._json_id.trim();
+    const source_view_id = meta._source_view_id.trim();
+    const target_type = meta._type.trim() || "object";
+    const default_object = selected_skill._design?._palette?._default_object;
+
+    if (!target_id || !source_view_id) {
+      this._write_studio_status("Object cannot accept a child");
+      this._error("object tree add child failed", {
+        _reason: "missing_target_or_source_view",
+        _source_view_id: source_view_id,
+        _target_id: target_id,
+        _target_type: target_type,
+        _skill_id: selected_skill._id,
+        _path: meta._path,
+      });
+      return false;
+    }
+
+    if (!is_obj(default_object)) {
+      this._write_studio_status("Selected object has no default palette object");
+      this._error("object tree add child failed", {
+        _reason: "missing_default_object",
+        _source_view_id: source_view_id,
+        _target_id: target_id,
+        _target_type: target_type,
+        _skill_id: selected_skill._id,
+      });
+      return false;
+    }
+
+    const child = _xu.clone_json(default_object) as Record<string, any>;
+    if (!is_obj(child)) {
+      this._write_studio_status("Selected object default is invalid");
+      this._error("object tree add child failed", {
+        _reason: "invalid_default_object",
+        _source_view_id: source_view_id,
+        _target_id: target_id,
+        _target_type: target_type,
+        _skill_id: selected_skill._id,
+      });
+      return false;
+    }
+
+    const app_id = this._client().getActiveAppId();
+    const env = this._client().getActiveEnv();
+
+    if (!app_id) {
+      this._write_studio_status("No active app selected");
+      this._error("object tree add child failed", {
+        _reason: "missing_app",
+        _source_view_id: source_view_id,
+        _target_id: target_id,
+        _target_type: target_type,
+        _skill_id: selected_skill._id,
+      });
+      return false;
+    }
+
+    if (!env) {
+      this._write_studio_status("No active environment selected");
+      this._error("object tree add child failed", {
+        _reason: "missing_env",
+        _app_id: app_id,
+        _source_view_id: source_view_id,
+        _target_id: target_id,
+        _target_type: target_type,
+        _skill_id: selected_skill._id,
+      });
+      return false;
+    }
+
+    const params: XStudioSelectedObjectApplyViewEditParams = {
+      _app_id: app_id,
+      _env: env,
+      _view_id: source_view_id,
+      _edit_action: "add-child",
+      _target_id: target_id,
+      _target_type: target_type,
+      _child: child,
+    };
+
+    this._write_studio_status("Adding child object...");
+    this._log("object tree add child requested", {
+      _source_view_id: params._view_id,
+      _target_id: params._target_id,
+      _target_type: params._target_type,
+      _skill_id: selected_skill._id,
+      _skill_type: selected_skill._type,
+      _child_type: child._type,
+      _child_id: typeof child._id === "string" ? child._id : "",
+      _path: meta._path,
+      _parent_path: meta._parent_path,
+    });
+
+    try {
+      const result = await this._send_xvibe_command("apply-view-edit", params);
+      if (!is_obj(result) || result._ok !== true) {
+        this._selected_object_pending_select_id = "";
+        this._write_studio_status(this._format_apply_view_edit_failure(result));
+        this._error("object tree add child failed", {
+          _structured_error: result,
+        });
+        return false;
+      }
+
+      const new_target_id = this._extract_new_target_id(result);
+      if (new_target_id) {
+        this._selected_object_pending_select_id = new_target_id;
+      }
+
+      await this._request_object_tree_structured_edit_refresh(params, result);
+      this._refresh_object_tree_for_current_view();
+      this._write_studio_status(
+        new_target_id
+          ? "Added child object"
+          : "Added child object; preserved selection",
+      );
+      this._log("object tree add child completed", {
+        _new_target_id: new_target_id,
+        _result: result,
+      });
+      return true;
+    } catch (err) {
+      this._selected_object_pending_select_id = "";
+      const message = `Add child failed: ${to_err(err)}`;
+      this._write_studio_status(message);
+      this._error("object tree add child failed", {
+        _error: to_err(err),
+      });
+      return false;
+    }
   }
 
   private async _request_object_tree_structured_edit_refresh(
@@ -5667,6 +5939,75 @@ export class XStudioModule extends XModule {
     return object_skills.find(skill => skill?._id === normalized_type) ?? null;
   }
 
+  private _selected_object_type_from_data(obj: Record<string, any> | null) {
+    if (obj && typeof obj._type === "string" && obj._type.trim()) {
+      return obj._type.trim();
+    }
+
+    return this._selected_object?._type?.trim() ?? "";
+  }
+
+  private _normalize_selected_object_inspector_section_id(
+    value: unknown,
+  ): XStudioSelectedObjectInspectorSectionId | null {
+    const section_id = String(value ?? "").trim().toLowerCase().replace(/-/g, "_");
+    return (STUDIO_SELECTED_OBJECT_INSPECTOR_SECTION_IDS as readonly string[]).includes(section_id)
+      ? (section_id as XStudioSelectedObjectInspectorSectionId)
+      : null;
+  }
+
+  private _resolve_selected_object_inspector_sections(
+    obj: Record<string, any> | null,
+  ): XStudioSelectedObjectInspectorSectionId[] {
+    const type = this._selected_object_type_from_data(obj);
+    const skill = type ? this._resolve_selected_object_skill(type) : null;
+    const design = skill?._design as
+      | {
+        _inspector?: unknown;
+        inspector?: unknown;
+      }
+      | undefined;
+    const inspector_raw = is_obj(design?._inspector)
+      ? design?._inspector
+      : is_obj(design?.inspector)
+        ? design?.inspector
+        : undefined;
+    const inspector = inspector_raw as
+      | { _sections?: unknown; sections?: unknown }
+      | undefined;
+    const sections_raw =
+      Array.isArray(inspector?._sections)
+        ? inspector?._sections
+        : Array.isArray(inspector?.sections)
+          ? inspector?.sections
+          : null;
+    const has_sections_metadata = sections_raw !== null;
+    const seen = new Set<XStudioSelectedObjectInspectorSectionId>();
+    const sections: XStudioSelectedObjectInspectorSectionId[] = [];
+
+    if (sections_raw) {
+      for (const item of sections_raw) {
+        const section_id = this._normalize_selected_object_inspector_section_id(item);
+        if (!section_id || seen.has(section_id)) continue;
+        seen.add(section_id);
+        sections.push(section_id);
+      }
+    }
+
+    const resolved = has_sections_metadata
+      ? sections
+      : [...STUDIO_SELECTED_OBJECT_FALLBACK_INSPECTOR_SECTIONS];
+
+    this._log("inspector sections resolved", {
+      _type: type,
+      _skill_id: skill?._id ?? "",
+      _source: has_sections_metadata ? "design" : "fallback",
+      _sections: resolved.map(section => section === "raw_json" ? "raw-json" : section),
+    });
+
+    return resolved;
+  }
+
   private _resolve_selected_object_inspector_fields(
     obj: Record<string, any> | null,
   ): XStudioSelectedObjectInspectorResolvedField[] {
@@ -5680,10 +6021,7 @@ export class XStudioModule extends XModule {
       return [];
     }
 
-    const type =
-      typeof obj._type === "string" && obj._type.trim()
-        ? obj._type.trim()
-        : this._selected_object?._type?.trim() ?? "";
+    const type = this._selected_object_type_from_data(obj);
     const skill = this._resolve_selected_object_skill(type);
     const design_fields = this._normalize_design_inspector_fields(skill, obj);
     const fields =
@@ -5999,6 +6337,30 @@ export class XStudioModule extends XModule {
     }
   }
 
+  private _selected_object_inspector_section_supported(
+    section_id: XStudioSelectedObjectInspectorSectionId,
+  ) {
+    return this._selected_object_inspector_sections.includes(section_id);
+  }
+
+  private _set_selected_object_inspector_section_visible(
+    section_id: XStudioSelectedObjectInspectorSectionId,
+    visible: boolean,
+  ) {
+    const config = STUDIO_EXPLORER_SECTIONS[section_id];
+    this._set_object_class_token(config._section_id, STUDIO_PORTLET_HIDDEN_CLASS, !visible);
+    this._set_object_visible(config._section_id, visible);
+  }
+
+  private _apply_selected_object_inspector_sections() {
+    for (const section_id of STUDIO_SELECTED_OBJECT_INSPECTOR_SECTION_IDS) {
+      this._set_selected_object_inspector_section_visible(
+        section_id,
+        this._selected_object_inspector_section_supported(section_id),
+      );
+    }
+  }
+
   private _reset_selected_object_json_editor() {
     if (!this._selected_object) {
       this._write_studio_status("Select an object first");
@@ -6019,14 +6381,21 @@ export class XStudioModule extends XModule {
     draft: XStudioSelectedObjectInspectorDraft,
     has_selected_object: boolean,
   ) {
-    this._render_selected_object_inspector_fields(
-      this._selected_object_inspector_fields,
-      draft,
-      has_selected_object,
-    );
+    this._apply_selected_object_inspector_sections();
+
+    if (this._selected_object_inspector_section_supported("properties")) {
+      this._render_selected_object_inspector_fields(
+        this._selected_object_inspector_fields,
+        draft,
+        has_selected_object,
+      );
+    } else {
+      this._render_selected_object_inspector_fields([], draft, false);
+    }
 
     const has_editable_fields =
       has_selected_object &&
+      this._selected_object_inspector_section_supported("properties") &&
       this._selected_object_inspector_fields.some(field => field._readonly !== true);
 
     for (const control_id of STUDIO_SELECTED_OBJECT_EDITOR_ACTION_CONTROL_IDS) {
@@ -6193,6 +6562,7 @@ export class XStudioModule extends XModule {
 
   private _populate_selected_object_inspector_draft(obj: Record<string, any> | null) {
     this._selected_object_data = obj;
+    this._selected_object_inspector_sections = this._resolve_selected_object_inspector_sections(obj);
     this._selected_object_inspector_fields = this._resolve_selected_object_inspector_fields(obj);
     this._selected_object_inspector_draft = this._selected_object_inspector_draft_from_json(
       obj,
@@ -6207,6 +6577,7 @@ export class XStudioModule extends XModule {
 
   private _clear_selected_object_inspector_draft() {
     this._selected_object_data = null;
+    this._selected_object_inspector_sections = this._resolve_selected_object_inspector_sections(null);
     this._selected_object_inspector_fields = [];
     this._selected_object_inspector_draft = empty_selected_object_inspector_draft();
     this._write_selected_object_inspector_draft(null, "xstudio-object-tree");
@@ -6376,9 +6747,21 @@ export class XStudioModule extends XModule {
   private _extract_new_target_id(result: any): string {
     const candidates = [
       result?._new_target_id,
+      result?._created_id,
+      result?._created_object_id,
+      result?._created_target_id,
       result?._result?._new_target_id,
+      result?._result?._created_id,
+      result?._result?._created_object_id,
+      result?._result?._created_target_id,
       result?._mutation?._new_target_id,
+      result?._mutation?._created_id,
+      result?._mutation?._created_object_id,
+      result?._mutation?._created_target_id,
       result?._result?._mutation?._new_target_id,
+      result?._result?._mutation?._created_id,
+      result?._result?._mutation?._created_object_id,
+      result?._result?._mutation?._created_target_id,
     ];
 
     for (const candidate of candidates) {
@@ -8204,6 +8587,11 @@ export class XStudioModule extends XModule {
   }
 
   _resolve_studio_target_view_id() {
+    const active_app_view_id = this._active_xvm_app_view_id();
+    if (active_app_view_id && active_app_view_id !== STUDIO_VIEW_ID) {
+      return active_app_view_id;
+    }
+
     const current_view_id = this._client().get_current_view_id() === STUDIO_VIEW_ID
       ? ""
       : this._client().get_current_view_id();
