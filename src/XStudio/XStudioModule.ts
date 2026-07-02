@@ -90,6 +90,11 @@ const STUDIO_SELECTED_OBJECT_PROPERTIES_SECTION_TOGGLE_ID = "xstudio-selected-ob
 const STUDIO_SELECTED_OBJECT_INTERACTIONS_SECTION_ID = "xstudio-selected-object-interactions-section";
 const STUDIO_SELECTED_OBJECT_INTERACTIONS_BODY_ID = "xstudio-selected-object-interactions-body";
 const STUDIO_SELECTED_OBJECT_INTERACTIONS_SECTION_TOGGLE_ID = "xstudio-selected-object-interactions-section-toggle";
+const STUDIO_SELECTED_OBJECT_INTERACTION_ADD_CLICK_ID = "xstudio-selected-object-interaction-add-click";
+const STUDIO_SELECTED_OBJECT_INTERACTION_REMOVE_CLICK_ID = "xstudio-selected-object-interaction-remove-click";
+const STUDIO_SELECTED_OBJECT_INTERACTION_VIEW_SELECT_ID = "xstudio-selected-object-interaction-view-select";
+const STUDIO_SELECTED_OBJECT_INTERACTION_SAVE_ID = "xstudio-selected-object-interaction-save";
+const STUDIO_SELECTED_OBJECT_INTERACTION_CANCEL_ID = "xstudio-selected-object-interaction-cancel";
 const STUDIO_SELECTED_OBJECT_RAW_SECTION_ID = "xstudio-selected-object-raw-section";
 const STUDIO_SELECTED_OBJECT_RAW_BODY_ID = "xstudio-selected-object-raw-body";
 const STUDIO_SELECTED_OBJECT_RAW_SECTION_TOGGLE_ID = "xstudio-selected-object-raw-section-toggle";
@@ -325,6 +330,8 @@ const STUDIO_DEFAULT_APP_EXPLORER_SECTION_OPEN: Record<XStudioAppExplorerSection
 const STUDIO_SELECTED_OBJECT_EDITOR_ACTION_CONTROL_IDS = [
   STUDIO_SELECTED_OBJECT_SAVE_FIELDS_ID,
   STUDIO_SELECTED_OBJECT_CANCEL_FIELDS_ID,
+  STUDIO_SELECTED_OBJECT_INTERACTION_SAVE_ID,
+  STUDIO_SELECTED_OBJECT_INTERACTION_CANCEL_ID,
 ];
 const STUDIO_SELECTED_OBJECT_RAW_CONTROL_IDS = [
   STUDIO_SELECTED_OBJECT_JSON_ID,
@@ -446,6 +453,15 @@ type XStudioSelectedObjectInspectorResolvedField =
 
 type XStudioSelectedObjectInspectorField = string;
 
+type XStudioSelectedObjectClickInteractionKind = "none" | "navigate" | "custom";
+
+type XStudioSelectedObjectClickInteractionDraft = {
+  _kind: XStudioSelectedObjectClickInteractionKind;
+  _view_id: string;
+  _custom_json: string;
+  _uses_legacy_view_id?: boolean;
+};
+
 type XStudioConversationMessage = {
   _role: "user" | "assistant" | "system" | "tool";
   _text: string;
@@ -501,6 +517,9 @@ type XStudioSelectedObjectApplyViewEditParams = {
   _target_type: string;
   _property_name?: string;
   _property_value?: any;
+  _interaction_scope?: "_on" | "_once";
+  _trigger?: string;
+  _handler?: Record<string, any> | null;
   _style_property?: string;
   _style_value?: string;
   _object_value?: Record<string, any>;
@@ -583,6 +602,12 @@ type ServerCreateViewRes = {
 };
 
 const empty_selected_object_inspector_draft = (): XStudioSelectedObjectInspectorDraft => ({});
+const empty_selected_object_click_interaction_draft = (): XStudioSelectedObjectClickInteractionDraft => ({
+  _kind: "none",
+  _view_id: "",
+  _custom_json: "",
+  _uses_legacy_view_id: false,
+});
 
 let object_palette_session: XStudioObjectPaletteSession | null = null;
 
@@ -996,6 +1021,8 @@ export class XStudioModule extends XModule {
   private _selected_object_inspector_sections: XStudioSelectedObjectInspectorSectionId[] = [
     ...STUDIO_SELECTED_OBJECT_FALLBACK_INSPECTOR_SECTIONS,
   ];
+  private _selected_object_click_interaction_original = empty_selected_object_click_interaction_draft();
+  private _selected_object_click_interaction_draft = empty_selected_object_click_interaction_draft();
   private _selected_tree_row_id = "";
   private _selected_canvas_element: HTMLElement | null = null;
   private _object_tree_render_seq = 0;
@@ -1240,6 +1267,18 @@ export class XStudioModule extends XModule {
 
     _xem.on("studio:selected-object:field-changed", (payload: any) => {
       this._handle_selected_object_inspector_field_changed(payload);
+    });
+
+    _xem.on("studio:selected-object:interaction-add-click", () => {
+      this._add_selected_object_click_interaction();
+    });
+
+    _xem.on("studio:selected-object:interaction-remove-click", () => {
+      this._remove_selected_object_click_interaction();
+    });
+
+    _xem.on("studio:selected-object:interaction-view-changed", () => {
+      this._handle_selected_object_interaction_view_changed();
     });
 
     _xem.on("studio:selected-object:move-up", async () => {
@@ -4559,6 +4598,10 @@ export class XStudioModule extends XModule {
         modules: [],
       };
       this._render_cached_app_explorer();
+      this._set_selected_object_inspector_controls(
+        this._selected_object_inspector_draft,
+        this._selected_object !== null,
+      );
       return false;
     }
 
@@ -4612,6 +4655,10 @@ export class XStudioModule extends XModule {
     };
 
     this._render_cached_app_explorer();
+    this._set_selected_object_inspector_controls(
+      this._selected_object_inspector_draft,
+      this._selected_object !== null,
+    );
     this._log("app explorer loaded", {
       _app_id: app_id,
       _env: env,
@@ -5838,6 +5885,10 @@ export class XStudioModule extends XModule {
       }
 
       const key = field._key.trim();
+      if (key === "_on") {
+        return;
+      }
+
       const input =
         this._normalize_inspector_input(field._input) ??
         this._infer_inspector_input_for_key(key, obj[key]);
@@ -5956,6 +6007,18 @@ export class XStudioModule extends XModule {
       : null;
   }
 
+  private _selected_object_skill_supports_interactions(skill: XpellSkill | null) {
+    if (!skill) return false;
+
+    if (is_obj(skill._fields) && Object.prototype.hasOwnProperty.call(skill._fields, "_on")) {
+      return true;
+    }
+
+    const fields = skill._design?._inspector?._fields;
+    return Array.isArray(fields) &&
+      fields.some(field => is_obj(field) && field._key === "_on");
+  }
+
   private _resolve_selected_object_inspector_sections(
     obj: Record<string, any> | null,
   ): XStudioSelectedObjectInspectorSectionId[] {
@@ -5996,7 +6059,14 @@ export class XStudioModule extends XModule {
 
     const resolved = has_sections_metadata
       ? sections
-      : [...STUDIO_SELECTED_OBJECT_FALLBACK_INSPECTOR_SECTIONS];
+      : this._selected_object_skill_supports_interactions(skill)
+        ? [
+          "properties",
+          "interactions",
+          "raw_json",
+          "danger",
+        ] as XStudioSelectedObjectInspectorSectionId[]
+        : [...STUDIO_SELECTED_OBJECT_FALLBACK_INSPECTOR_SECTIONS];
 
     this._log("inspector sections resolved", {
       _type: type,
@@ -6337,6 +6407,399 @@ export class XStudioModule extends XModule {
     }
   }
 
+  private _read_xvm_navigate_target(handler: unknown) {
+    if (!is_obj(handler)) {
+      return {
+        _view_id: "",
+        _uses_legacy_view_id: false,
+      };
+    }
+
+    const module_name = typeof handler._module === "string" ? handler._module.trim() : "";
+    const op = typeof handler._op === "string" ? handler._op.trim() : "";
+    if (module_name !== "xvm" || op !== "navigate") {
+      return {
+        _view_id: "",
+        _uses_legacy_view_id: false,
+      };
+    }
+
+    const params = is_obj(handler._params) ? handler._params : {};
+    const to =
+      typeof params._to === "string" && params._to.trim()
+        ? params._to.trim()
+        : "";
+    const legacy_view_id =
+      typeof params._view_id === "string" && params._view_id.trim()
+        ? params._view_id.trim()
+        : "";
+
+    return {
+      _view_id: to || legacy_view_id,
+      _uses_legacy_view_id: !to && Boolean(legacy_view_id),
+    };
+  }
+
+  private _safe_interaction_json(value: unknown) {
+    try {
+      return JSON.stringify(value, null, 2);
+    } catch {
+      return "";
+    }
+  }
+
+  private _resolve_selected_object_click_interaction(
+    obj: Record<string, any> | null,
+  ): XStudioSelectedObjectClickInteractionDraft {
+    if (!obj || !is_obj(obj._on) || !Object.prototype.hasOwnProperty.call(obj._on, "click")) {
+      const draft = empty_selected_object_click_interaction_draft();
+      this._log("interaction loaded", {
+        _trigger: "click",
+        _kind: draft._kind,
+        _view_id: "",
+      });
+      return draft;
+    }
+
+    const click_handler = obj._on.click;
+    const navigate_target = this._read_xvm_navigate_target(click_handler);
+    const draft: XStudioSelectedObjectClickInteractionDraft = navigate_target._view_id
+      ? {
+        _kind: "navigate",
+        _view_id: navigate_target._view_id,
+        _custom_json: "",
+        _uses_legacy_view_id: navigate_target._uses_legacy_view_id,
+      }
+      : {
+        _kind: "custom",
+        _view_id: "",
+        _custom_json: this._safe_interaction_json(click_handler),
+        _uses_legacy_view_id: false,
+      };
+
+    this._log("interaction loaded", {
+      _trigger: "click",
+      _kind: draft._kind,
+      _view_id: draft._view_id,
+    });
+
+    return draft;
+  }
+
+  private _selected_object_interaction_view_artifacts() {
+    return this._app_explorer_artifacts.views ?? [];
+  }
+
+  private _selected_object_interaction_view_options(selected_view_id: string) {
+    const selected = selected_view_id.trim();
+    const views = this._selected_object_interaction_view_artifacts();
+
+    return [
+      {
+        label: views.length > 0 ? "Select view" : "No views",
+        value: "",
+        disabled: true,
+        selected: selected.length === 0,
+      },
+      ...views.map(view => ({
+        label: view._title && view._title !== view._id
+          ? `${view._id} - ${view._title}`
+          : view._id,
+        value: view._id,
+        selected: view._id === selected,
+      })),
+    ];
+  }
+
+  private _xvm_navigate_click_handler(view_id: string) {
+    const target = view_id.trim();
+    return {
+      _module: "xvm",
+      _op: "navigate",
+      _params: {
+        _to: target,
+      },
+    };
+  }
+
+  private _selected_object_click_interaction_changed() {
+    if (this._selected_object_click_interaction_original._kind === "custom") return false;
+    if (this._selected_object_click_interaction_draft._kind === "custom") return false;
+    if (
+      this._selected_object_click_interaction_original._kind === "navigate" &&
+      this._selected_object_click_interaction_original._uses_legacy_view_id === true
+    ) {
+      return true;
+    }
+
+    return (
+      this._selected_object_click_interaction_original._kind !==
+        this._selected_object_click_interaction_draft._kind ||
+      this._selected_object_click_interaction_original._view_id.trim() !==
+        this._selected_object_click_interaction_draft._view_id.trim()
+    );
+  }
+
+  private _selected_object_interaction_actions() {
+    return {
+      _type: "view",
+      class: "xstudio-selected-object-interaction-actions",
+      _children: [
+        {
+          _id: STUDIO_SELECTED_OBJECT_INTERACTION_SAVE_ID,
+          _type: "button",
+          type: "button",
+          class: "xstudio-selected-object-editor-button xstudio-selected-object-save-button",
+          _text: "Save",
+          disabled: true,
+          _on: {
+            click: {
+              _module: "xem",
+              _op: "fire",
+              _params: {
+                event: "studio:selected-object:save-fields",
+              },
+            },
+          },
+        },
+        {
+          _id: STUDIO_SELECTED_OBJECT_INTERACTION_CANCEL_ID,
+          _type: "button",
+          type: "button",
+          class: "xstudio-selected-object-editor-button xstudio-selected-object-cancel-button",
+          _text: "Cancel",
+          disabled: true,
+          _on: {
+            click: {
+              _module: "xem",
+              _op: "fire",
+              _params: {
+                event: "studio:selected-object:cancel-fields",
+              },
+            },
+          },
+        },
+      ],
+    };
+  }
+
+  private _render_selected_object_interactions(has_selected_object: boolean) {
+    const body = XUI.getObject(STUDIO_SELECTED_OBJECT_INTERACTIONS_BODY_ID) as any;
+    if (!body) return;
+
+    const draft = this._selected_object_click_interaction_draft;
+    const views = this._selected_object_interaction_view_artifacts();
+    const children: Record<string, any>[] = [];
+
+    if (!has_selected_object) {
+      children.push({
+        _type: "label",
+        class: "xstudio-selected-object-editor-empty",
+        _text: "Select an object",
+      });
+    } else if (draft._kind === "custom") {
+      children.push(
+        {
+          _type: "view",
+          class: "xstudio-selected-object-interaction-summary",
+          _children: [
+            {
+              _type: "label",
+              class: "xstudio-selected-object-section-title",
+              _text: "Custom interaction",
+            },
+            {
+              _type: "textarea",
+              class: "xstudio-selected-object-editor-input xstudio-selected-object-editor-input-json xstudio-selected-object-interaction-custom-json",
+              readonly: true,
+              disabled: true,
+              _text: draft._custom_json,
+            },
+          ],
+        },
+      );
+    } else if (draft._kind === "navigate") {
+      children.push(
+        {
+          _type: "view",
+          class: "xstudio-selected-object-interaction-grid",
+          _children: [
+            {
+              _type: "label",
+              class: "xstudio-selected-object-editor-label",
+              _text: "Trigger",
+            },
+            {
+              _type: "label",
+              class: "xstudio-selected-object-interaction-value",
+              _text: "Click",
+            },
+            {
+              _type: "label",
+              class: "xstudio-selected-object-editor-label",
+              _text: "Action",
+            },
+            {
+              _type: "label",
+              class: "xstudio-selected-object-interaction-value",
+              _text: "Navigate",
+            },
+            {
+              _type: "label",
+              class: "xstudio-selected-object-editor-label",
+              _text: "View",
+            },
+            {
+              _id: STUDIO_SELECTED_OBJECT_INTERACTION_VIEW_SELECT_ID,
+              _type: "select",
+              class: "xstudio-selected-object-editor-input xstudio-selected-object-editor-input-select xstudio-selected-object-interaction-view-select",
+              _options: this._selected_object_interaction_view_options(draft._view_id),
+              disabled: views.length === 0,
+              _on: {
+                change: {
+                  _module: "xem",
+                  _op: "fire",
+                  _params: {
+                    event: "studio:selected-object:interaction-view-changed",
+                  },
+                },
+              },
+            },
+          ],
+        },
+        {
+          _id: STUDIO_SELECTED_OBJECT_INTERACTION_REMOVE_CLICK_ID,
+          _type: "button",
+          type: "button",
+          class: "xstudio-selected-object-editor-button xstudio-selected-object-interaction-remove-button",
+          _text: "Remove Click Interaction",
+          _on: {
+            click: {
+              _module: "xem",
+              _op: "fire",
+              _params: {
+                event: "studio:selected-object:interaction-remove-click",
+              },
+            },
+          },
+        },
+        this._selected_object_interaction_actions(),
+      );
+    } else {
+      children.push(
+        {
+          _type: "label",
+          class: "xstudio-selected-object-editor-empty",
+          _text: "No interactions",
+        },
+        {
+          _id: STUDIO_SELECTED_OBJECT_INTERACTION_ADD_CLICK_ID,
+          _type: "button",
+          type: "button",
+          class: "xstudio-selected-object-editor-button xstudio-selected-object-interaction-add-button",
+          _text: views.length > 0 ? "Add Click Navigate" : "No views available",
+          disabled: views.length === 0,
+          _on: {
+            click: {
+              _module: "xem",
+              _op: "fire",
+              _params: {
+                event: "studio:selected-object:interaction-add-click",
+              },
+            },
+          },
+        },
+        this._selected_object_interaction_actions(),
+      );
+    }
+
+    body.update?.({ _children: children });
+
+    if (draft._kind === "navigate") {
+      this._set_studio_control_value(STUDIO_SELECTED_OBJECT_INTERACTION_VIEW_SELECT_ID, draft._view_id);
+    }
+
+    this._set_selected_object_interaction_controls(has_selected_object);
+  }
+
+  private _set_selected_object_interaction_controls(has_selected_object: boolean) {
+    const has_views = this._selected_object_interaction_view_artifacts().length > 0;
+    const draft = this._selected_object_click_interaction_draft;
+
+    this._set_studio_control_disabled(
+      STUDIO_SELECTED_OBJECT_INTERACTION_ADD_CLICK_ID,
+      !has_selected_object || !has_views || draft._kind !== "none",
+    );
+    this._set_studio_control_disabled(
+      STUDIO_SELECTED_OBJECT_INTERACTION_REMOVE_CLICK_ID,
+      !has_selected_object || draft._kind !== "navigate",
+    );
+    this._set_studio_control_disabled(
+      STUDIO_SELECTED_OBJECT_INTERACTION_VIEW_SELECT_ID,
+      !has_selected_object || !has_views || draft._kind !== "navigate",
+    );
+  }
+
+  private _mark_selected_object_interaction_changed(
+    action: "add" | "remove" | "view",
+  ) {
+    this._log("interaction changed", {
+      _trigger: "click",
+      _action: action,
+      _kind: this._selected_object_click_interaction_draft._kind,
+      _view_id: this._selected_object_click_interaction_draft._view_id,
+    });
+    this._set_selected_object_inspector_controls(
+      this._selected_object_inspector_draft,
+      this._selected_object !== null,
+    );
+  }
+
+  private _add_selected_object_click_interaction() {
+    if (!this._selected_object) {
+      this._write_studio_status("Select an object first");
+      return;
+    }
+
+    const first_view = this._selected_object_interaction_view_artifacts()[0]?._id ?? "";
+    if (!first_view) {
+      this._write_studio_status("No views available");
+      return;
+    }
+
+    this._selected_object_click_interaction_draft = {
+      _kind: "navigate",
+      _view_id: first_view,
+      _custom_json: "",
+      _uses_legacy_view_id: false,
+    };
+    this._mark_selected_object_interaction_changed("add");
+  }
+
+  private _remove_selected_object_click_interaction() {
+    if (this._selected_object_click_interaction_draft._kind !== "navigate") return;
+
+    this._log("interaction remove requested", {
+      _trigger: "click",
+      _kind: this._selected_object_click_interaction_draft._kind,
+      _view_id: this._selected_object_click_interaction_draft._view_id,
+    });
+    this._selected_object_click_interaction_draft = empty_selected_object_click_interaction_draft();
+    this._mark_selected_object_interaction_changed("remove");
+  }
+
+  private _handle_selected_object_interaction_view_changed() {
+    if (this._selected_object_click_interaction_draft._kind !== "navigate") return;
+
+    const view_id = this._read_studio_control_value(STUDIO_SELECTED_OBJECT_INTERACTION_VIEW_SELECT_ID).trim();
+    this._selected_object_click_interaction_draft = {
+      ...this._selected_object_click_interaction_draft,
+      _view_id: view_id,
+      _uses_legacy_view_id: false,
+    };
+    this._mark_selected_object_interaction_changed("view");
+  }
+
   private _selected_object_inspector_section_supported(
     section_id: XStudioSelectedObjectInspectorSectionId,
   ) {
@@ -6382,6 +6845,10 @@ export class XStudioModule extends XModule {
     has_selected_object: boolean,
   ) {
     this._apply_selected_object_inspector_sections();
+    this._render_selected_object_interactions(
+      has_selected_object &&
+      this._selected_object_inspector_section_supported("interactions"),
+    );
 
     if (this._selected_object_inspector_section_supported("properties")) {
       this._render_selected_object_inspector_fields(
@@ -6395,8 +6862,16 @@ export class XStudioModule extends XModule {
 
     const has_editable_fields =
       has_selected_object &&
-      this._selected_object_inspector_section_supported("properties") &&
-      this._selected_object_inspector_fields.some(field => field._readonly !== true);
+      (
+        (
+          this._selected_object_inspector_section_supported("properties") &&
+          this._selected_object_inspector_fields.some(field => field._readonly !== true)
+        ) ||
+        (
+          this._selected_object_inspector_section_supported("interactions") &&
+          this._selected_object_click_interaction_changed()
+        )
+      );
 
     for (const control_id of STUDIO_SELECTED_OBJECT_EDITOR_ACTION_CONTROL_IDS) {
       this._set_studio_control_disabled(control_id, !has_editable_fields);
@@ -6564,6 +7039,11 @@ export class XStudioModule extends XModule {
     this._selected_object_data = obj;
     this._selected_object_inspector_sections = this._resolve_selected_object_inspector_sections(obj);
     this._selected_object_inspector_fields = this._resolve_selected_object_inspector_fields(obj);
+    this._selected_object_click_interaction_original =
+      this._resolve_selected_object_click_interaction(obj);
+    this._selected_object_click_interaction_draft = {
+      ...this._selected_object_click_interaction_original,
+    };
     this._selected_object_inspector_draft = this._selected_object_inspector_draft_from_json(
       obj,
       this._selected_object_inspector_fields,
@@ -6579,6 +7059,8 @@ export class XStudioModule extends XModule {
     this._selected_object_data = null;
     this._selected_object_inspector_sections = this._resolve_selected_object_inspector_sections(null);
     this._selected_object_inspector_fields = [];
+    this._selected_object_click_interaction_original = empty_selected_object_click_interaction_draft();
+    this._selected_object_click_interaction_draft = empty_selected_object_click_interaction_draft();
     this._selected_object_inspector_draft = empty_selected_object_inspector_draft();
     this._write_selected_object_inspector_draft(null, "xstudio-object-tree");
     this._set_selected_object_inspector_controls(this._selected_object_inspector_draft, false);
@@ -6605,10 +7087,10 @@ export class XStudioModule extends XModule {
         ? evt._input
         : "";
 
-    this._log("inspector field changed", {
-      _field: key,
-      _input: input,
-    });
+    // this._log("inspector field changed", {
+    //   _field: key,
+    //   _input: input,
+    // });
   }
 
   private _selected_object_apply_error(message: string, field: XStudioSelectedObjectInspectorField | "fields") {
@@ -6833,6 +7315,83 @@ export class XStudioModule extends XModule {
     });
   }
 
+  private _build_selected_object_interaction_edit_params(
+    selected: XStudioSelectedObject,
+    app_id: string,
+    env: string,
+  ) {
+    if (!this._selected_object_inspector_section_supported("interactions")) {
+      return {
+        _ok: true,
+        _changed: false,
+        _error: "",
+        _params: null,
+      };
+    }
+
+    if (this._selected_object_click_interaction_original._kind === "custom") {
+      return {
+        _ok: true,
+        _changed: false,
+        _error: "",
+        _params: null,
+      };
+    }
+
+    if (this._selected_object_click_interaction_draft._kind === "custom") {
+      return {
+        _ok: true,
+        _changed: false,
+        _error: "",
+        _params: null,
+      };
+    }
+
+    if (!this._selected_object_click_interaction_changed()) {
+      return {
+        _ok: true,
+        _changed: false,
+        _error: "",
+        _params: null,
+      };
+    }
+
+    if (
+      this._selected_object_click_interaction_draft._kind === "navigate" &&
+      !this._selected_object_click_interaction_draft._view_id.trim()
+    ) {
+      return {
+        _ok: false,
+        _changed: true,
+        _error: "Select a destination view",
+        _params: null,
+      };
+    }
+
+    const view_id = selected._source_view_id.trim();
+    const id = selected._json_id.trim();
+    const type = selected._type.trim() || "object";
+
+    return {
+      _ok: true,
+      _changed: true,
+      _error: "",
+      _params: {
+        _app_id: app_id,
+        _env: env,
+        _view_id: view_id,
+        _edit_action: "set-interaction",
+        _target_id: id,
+        _target_type: type,
+        _interaction_scope: "_on",
+        _trigger: "click",
+        _handler: this._selected_object_click_interaction_draft._kind === "navigate"
+          ? this._xvm_navigate_click_handler(this._selected_object_click_interaction_draft._view_id)
+          : null,
+      } as XStudioSelectedObjectApplyViewEditParams,
+    };
+  }
+
   private _build_selected_object_inspector_edit_params(
     field: XStudioSelectedObjectInspectorField,
     selected: XStudioSelectedObject,
@@ -7000,6 +7559,7 @@ export class XStudioModule extends XModule {
     selected: XStudioSelectedObject,
     params: XStudioSelectedObjectApplyViewEditParams,
   ) {
+    const is_interaction_edit = params._edit_action === "set-interaction";
     this._log("selected object inspector apply request", {
       _field: field,
       _source_view_id: params._view_id,
@@ -7009,6 +7569,23 @@ export class XStudioModule extends XModule {
       _parent_path: selected._parent_path,
     });
 
+    if (is_interaction_edit) {
+      this._log("interaction set-interaction requested", {
+        _source_view_id: params._view_id,
+        _target_id: params._target_id,
+        _target_type: params._target_type,
+        _interaction_scope: params._interaction_scope,
+        _trigger: params._trigger,
+        _handler_removed: params._handler === null,
+        ...(is_obj(params._handler)
+          ? {
+            _handler_module: params._handler._module,
+            _handler_op: params._handler._op,
+          }
+          : {}),
+      });
+    }
+
     try {
       const result = await this._send_xvibe_command("apply-view-edit", params);
       if (!is_obj(result) || result._ok !== true) {
@@ -7017,6 +7594,13 @@ export class XStudioModule extends XModule {
           _field: field,
           _structured_error: result,
         });
+        if (is_interaction_edit) {
+          this._error("interaction save failed", {
+            _target_id: params._target_id,
+            _trigger: params._trigger,
+            _structured_error: result,
+          });
+        }
         return false;
       }
 
@@ -7032,8 +7616,44 @@ export class XStudioModule extends XModule {
         _field: field,
         _error: to_err(err),
       });
+      if (is_interaction_edit) {
+        this._error("interaction save failed", {
+          _target_id: params._target_id,
+          _trigger: params._trigger,
+          _error: to_err(err),
+        });
+      }
       return false;
     }
+  }
+
+  private _apply_saved_selected_object_interaction_to_local_data(
+    params: XStudioSelectedObjectApplyViewEditParams,
+  ) {
+    if (!this._selected_object_data || params._edit_action !== "set-interaction") return;
+
+    const scope = params._interaction_scope === "_once" ? "_once" : "_on";
+    const trigger = typeof params._trigger === "string" ? params._trigger.trim() : "";
+    if (!trigger) return;
+
+    const current_scope = is_obj(this._selected_object_data[scope])
+      ? this._selected_object_data[scope] as Record<string, any>
+      : {};
+
+    if (params._handler === null) {
+      if (is_obj(this._selected_object_data[scope])) {
+        delete current_scope[trigger];
+        if (Object.keys(current_scope).length === 0) {
+          delete this._selected_object_data[scope];
+        }
+      }
+      return;
+    }
+
+    if (!is_obj(params._handler)) return;
+
+    current_scope[trigger] = _xu.clone_json(params._handler);
+    this._selected_object_data[scope] = current_scope;
   }
 
   private async _save_selected_object_inspector_fields() {
@@ -7045,11 +7665,6 @@ export class XStudioModule extends XModule {
     if (!this._selected_object) {
       this._set_selected_object_inspector_controls(this._selected_object_inspector_draft, false);
       this._selected_object_apply_error("Select an object first", "fields");
-      return;
-    }
-
-    if (this._selected_object_inspector_fields.length === 0) {
-      this._selected_object_apply_error("Selected object has no editable inspector fields", "fields");
       return;
     }
 
@@ -7070,11 +7685,6 @@ export class XStudioModule extends XModule {
       next_draft,
     );
 
-    if (changed_fields.length === 0) {
-      this._write_studio_status("No selected object field changes to save");
-      return;
-    }
-
     const app_id = this._client().getActiveAppId();
     const env = this._client().getActiveEnv();
 
@@ -7091,6 +7701,7 @@ export class XStudioModule extends XModule {
     const edits: {
       _field: XStudioSelectedObjectInspectorField;
       _params: XStudioSelectedObjectApplyViewEditParams;
+      _interaction?: boolean;
     }[] = [];
 
     for (const field of changed_fields) {
@@ -7113,10 +7724,34 @@ export class XStudioModule extends XModule {
       });
     }
 
+    const interaction_edit = this._build_selected_object_interaction_edit_params(
+      this._selected_object,
+      app_id,
+      env,
+    );
+
+    if (!interaction_edit._ok) {
+      this._selected_object_apply_error(interaction_edit._error, "fields");
+      return;
+    }
+
+    if (interaction_edit._changed && interaction_edit._params) {
+      edits.push({
+        _field: "_on.click",
+        _params: interaction_edit._params,
+        _interaction: true,
+      });
+    }
+
+    if (edits.length === 0) {
+      this._write_studio_status("No selected object changes to save");
+      return;
+    }
+
     this._write_studio_status(
       edits.length === 1
-        ? "Saving selected object field..."
-        : `Saving ${edits.length} selected object fields...`,
+        ? "Saving selected object edit..."
+        : `Saving ${edits.length} selected object edits...`,
     );
 
     for (const edit of edits) {
@@ -7135,21 +7770,35 @@ export class XStudioModule extends XModule {
         if (typeof edit._params._property_name === "string") {
           this._selected_object_data[edit._params._property_name] =
             edit._params._property_value;
+        } else if (edit._interaction) {
+          this._apply_saved_selected_object_interaction_to_local_data(edit._params);
         }
       }
       this._selected_object_json = this._safe_selected_json_preview(this._selected_object_data);
     }
 
     this._selected_object_inspector_draft = next_draft;
+    this._selected_object_click_interaction_original = {
+      ...this._selected_object_click_interaction_draft,
+    };
     this._write_selected_object_inspector_draft(
       this._selected_object_inspector_draft,
       "xstudio-selected-object-inspector",
     );
     this._set_selected_object_inspector_controls(this._selected_object_inspector_draft, true);
+
+    if (edits.some(edit => edit._interaction)) {
+      this._log("interaction saved", {
+        _trigger: "click",
+        _kind: this._selected_object_click_interaction_draft._kind,
+        _view_id: this._selected_object_click_interaction_draft._view_id,
+      });
+    }
+
     this._write_studio_status(
       edits.length === 1
-        ? "Saved selected object field"
-        : `Saved ${edits.length} selected object fields`,
+        ? "Saved selected object edit"
+        : `Saved ${edits.length} selected object edits`,
     );
   }
 
@@ -7164,6 +7813,9 @@ export class XStudioModule extends XModule {
       this._selected_object_data,
       this._selected_object_inspector_fields,
     );
+    this._selected_object_click_interaction_draft = {
+      ...this._selected_object_click_interaction_original,
+    };
     this._set_selected_object_inspector_controls(this._selected_object_inspector_draft, true);
     this._write_selected_object_inspector_draft(
       this._selected_object_inspector_draft,
