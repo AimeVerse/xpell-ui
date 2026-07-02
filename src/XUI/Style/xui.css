@@ -680,6 +680,7 @@ body {
     color: var(--xstudio-text-muted);
 }
 
+.xstudio-app-explorer-results,
 .xstudio-object-tree {
     box-sizing: border-box;
     width: 100%;
@@ -690,6 +691,36 @@ body {
     flex-direction: column;
     gap: 4px;
     overflow-y: scroll;
+}
+
+.xstudio-app-explorer-portlet {
+    flex: 0 1 34%;
+    min-height: 96px;
+    max-height: 100%;
+    overflow: hidden;
+}
+
+.xstudio-app-explorer-portlet.xstudio-explorer-section-collapsed {
+    flex: 0 0 auto;
+    min-height: 0;
+}
+
+.xstudio-app-explorer-body {
+    flex: 1 1 0;
+    min-height: 0;
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 4px 6px;
+}
+
+.xstudio-app-explorer-results {
+    flex: 1 1 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding-right: 2px;
+    scrollbar-gutter: stable;
 }
 
 .xstudio-object-tree-portlet {
@@ -887,11 +918,20 @@ body {
     gap: 0;
 }
 
+.xstudio-object-tree-actions-has-add-child {
+    min-width: 80px;
+}
+
 .xstudio-object-tree-quick-action {
     color: var(--xstudio-text-muted);
     cursor: pointer;
     opacity: 0;
     transition: opacity 0.12s ease, color 0.12s ease, background-color 0.12s ease;
+}
+
+.xstudio-object-tree-add-child-action {
+    font-size: 13px;
+    font-weight: 700;
 }
 
 .xstudio-object-tree-visibility-action {
@@ -996,6 +1036,59 @@ body {
 
 .xstudio-object-tree-row:hover {
     background: color-mix(in srgb, var(--xstudio-accent) 8%, transparent);
+}
+
+.xstudio-app-explorer-row-current,
+.xstudio-app-explorer-row-current:hover {
+    background: color-mix(in srgb, var(--xstudio-accent) 15%, transparent);
+    color: var(--xstudio-accent);
+    box-shadow: inset 2px 0 0 var(--xstudio-accent);
+}
+
+.xstudio-app-explorer-row-selected:not(.xstudio-app-explorer-row-current),
+.xstudio-app-explorer-row-selected:not(.xstudio-app-explorer-row-current):hover {
+    background: color-mix(in srgb, var(--xstudio-accent) 10%, transparent);
+    color: var(--xstudio-accent);
+}
+
+.xstudio-app-explorer-section-row .xstudio-object-tree-label-primary {
+    color: var(--xstudio-text);
+    font-weight: 700;
+}
+
+.xstudio-app-explorer-row-current .xstudio-object-tree-label-primary,
+.xstudio-app-explorer-row-selected .xstudio-object-tree-label-primary {
+    color: var(--xstudio-accent);
+}
+
+.xstudio-app-explorer-type-tag {
+    color: var(--xstudio-text-muted);
+}
+
+.xstudio-app-explorer-empty-row {
+    min-height: 20px;
+}
+
+.xstudio-app-explorer-add-view-button {
+    flex: 0 0 auto;
+    min-width: 74px;
+    min-height: 18px;
+    height: 18px;
+    margin-left: 4px;
+    padding: 1px 6px;
+    border: 1px solid color-mix(in srgb, var(--xstudio-border) 70%, transparent);
+    border-radius: var(--xstudio-radius-sm);
+    background: transparent;
+    color: var(--xstudio-text-muted);
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 14px;
+    white-space: nowrap;
+}
+
+.xstudio-app-explorer-add-view-button:hover {
+    background: color-mix(in srgb, var(--xstudio-accent) 12%, transparent);
+    color: var(--xstudio-accent);
 }
 
 .xstudio-object-tree-row-ref {
@@ -1351,6 +1444,268 @@ body {
 
 .xstudio-object-tree-duplicate-confirm:hover:not(:disabled) {
     background: color-mix(in srgb, var(--xstudio-accent) 22%, transparent);
+}
+
+.xstudio-add-view-card {
+    width: min(360px, calc(100% - 32px));
+    border-color: color-mix(in srgb, var(--xstudio-accent) 48%, var(--xstudio-border));
+}
+
+.xstudio-add-view-form {
+    box-sizing: border-box;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.xstudio-add-view-field {
+    box-sizing: border-box;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: 82px minmax(0, 1fr);
+    gap: 8px;
+    align-items: center;
+}
+
+.xstudio-add-view-label {
+    min-width: 0;
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    line-height: 16px;
+    letter-spacing: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.xstudio-add-view-input {
+    min-height: 26px;
+    padding: 4px 7px;
+    font-size: 11px;
+    line-height: 16px;
+}
+
+.xstudio-add-view-error {
+    min-height: 16px;
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    line-height: 16px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-add-view-error-visible {
+    color: var(--xstudio-accent);
+}
+
+.xstudio-add-view-create {
+    border-color: color-mix(in srgb, var(--xstudio-accent) 68%, transparent);
+    background: color-mix(in srgb, var(--xstudio-accent) 14%, transparent);
+    color: var(--xstudio-accent);
+    font-weight: 700;
+}
+
+.xstudio-add-view-create:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--xstudio-accent) 22%, transparent);
+}
+
+.xstudio-object-palette-dialog {
+    color: var(--xstudio-text);
+    overflow: hidden;
+}
+
+.xstudio-object-palette-card {
+    width: min(420px, calc(100% - 32px));
+    max-height: min(70vh, calc(100dvh - 96px));
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border-color: color-mix(in srgb, var(--xstudio-accent) 48%, var(--xstudio-border));
+    overflow-y: auto;
+}
+
+.xstudio-scrollable {
+    scrollbar-width: thin;
+    scrollbar-color: var(--xstudio-scrollbar-thumb) var(--xstudio-scrollbar-track);
+}
+
+.xstudio-scrollable::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+.xstudio-scrollable::-webkit-scrollbar-track {
+    background: var(--xstudio-scrollbar-track);
+}
+
+.xstudio-scrollable::-webkit-scrollbar-thumb {
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background: var(--xstudio-scrollbar-thumb);
+    background-clip: content-box;
+}
+
+.xstudio-scrollable::-webkit-scrollbar-thumb:hover {
+    background: var(--xstudio-scrollbar-thumb-hover);
+    background-clip: content-box;
+}
+
+.xstudio-scrollable::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+.xstudio-object-palette-header {
+    box-sizing: border-box;
+    min-width: 0;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.xstudio-object-palette-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.xstudio-object-palette-close {
+    flex: 0 0 auto;
+    width: 24px;
+    min-width: 24px;
+    height: 24px;
+    min-height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid color-mix(in srgb, var(--xstudio-border) 70%, transparent);
+    border-radius: var(--xstudio-radius-sm);
+    background: transparent;
+    color: var(--xstudio-text-muted);
+    font-size: 16px;
+    line-height: 20px;
+}
+
+.xstudio-object-palette-close:hover,
+.xstudio-object-palette-close:focus-visible {
+    background: color-mix(in srgb, var(--xstudio-accent) 12%, transparent);
+    color: var(--xstudio-accent);
+    outline: none;
+}
+
+.xstudio-object-palette-search {
+    flex: 0 0 auto;
+    min-height: 28px;
+    padding: 5px 8px;
+    font-size: 12px;
+    line-height: 16px;
+}
+
+.xstudio-object-palette-divider {
+    flex: 0 0 auto;
+    height: 1px;
+    background: color-mix(in srgb, var(--xstudio-border) 70%, transparent);
+}
+
+.xstudio-object-palette-results {
+    box-sizing: border-box;
+    min-width: 0;
+    min-height: 0;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding-right: 2px;
+    scrollbar-gutter: stable;
+}
+
+.xstudio-object-palette-category {
+    box-sizing: border-box;
+    min-width: 0;
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.xstudio-object-palette-category-title {
+    display: block;
+    min-width: 0;
+    padding: 2px 0 1px;
+    color: var(--xstudio-accent);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 16px;
+    letter-spacing: 0;
+    text-transform: uppercase;
+}
+
+.xstudio-object-palette-entry {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    min-height: 24px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+    padding: 3px 7px;
+    border: 1px solid transparent;
+    border-radius: var(--xstudio-radius-sm);
+    background: transparent;
+    color: var(--xstudio-text);
+    font-family: inherit;
+    font-size: 12px;
+    line-height: 16px;
+    text-align: left;
+}
+
+.xstudio-object-palette-entry:hover,
+.xstudio-object-palette-entry:focus-visible {
+    border-color: color-mix(in srgb, var(--xstudio-accent) 44%, transparent);
+    background: color-mix(in srgb, var(--xstudio-accent) 12%, transparent);
+    color: var(--xstudio-accent);
+    outline: none;
+}
+
+.xstudio-object-palette-entry-title,
+.xstudio-object-palette-entry-id {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.xstudio-object-palette-entry-title {
+    font-weight: 700;
+}
+
+.xstudio-object-palette-entry-id {
+    color: var(--xstudio-text-muted);
+    font-size: 10px;
+    line-height: 14px;
+}
+
+.xstudio-object-palette-entry:hover .xstudio-object-palette-entry-id,
+.xstudio-object-palette-entry:focus-visible .xstudio-object-palette-entry-id {
+    color: color-mix(in srgb, var(--xstudio-accent) 70%, var(--xstudio-text-muted));
+}
+
+.xstudio-object-palette-empty {
+    display: block;
+    min-width: 0;
+    flex: 0 0 auto;
+    padding: 8px 0;
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    line-height: 16px;
 }
 
 .xstudio-selected-object-raw-editor {
@@ -2023,9 +2378,12 @@ body {
 .xstudio-right-dock,
 .xstudio-portlet,
 .xstudio-portlet-body,
+.xstudio-app-explorer-body,
+.xstudio-app-explorer-results,
 .xstudio-object-tree,
 .xstudio-object-tree-body,
 .xstudio-object-tree-results,
+.xstudio-object-palette-results,
 .xstudio-selected-object-panel,
 .xstudio-selected-object-properties-body,
 .xstudio-selected-object-raw-body,
@@ -2044,9 +2402,12 @@ body {
 .xstudio-right-dock::-webkit-scrollbar,
 .xstudio-portlet::-webkit-scrollbar,
 .xstudio-portlet-body::-webkit-scrollbar,
+.xstudio-app-explorer-body::-webkit-scrollbar,
+.xstudio-app-explorer-results::-webkit-scrollbar,
 .xstudio-object-tree::-webkit-scrollbar,
 .xstudio-object-tree-body::-webkit-scrollbar,
 .xstudio-object-tree-results::-webkit-scrollbar,
+.xstudio-object-palette-results::-webkit-scrollbar,
 .xstudio-selected-object-panel::-webkit-scrollbar,
 .xstudio-selected-object-properties-body::-webkit-scrollbar,
 .xstudio-selected-object-raw-body::-webkit-scrollbar,
@@ -2065,9 +2426,12 @@ body {
 .xstudio-right-dock::-webkit-scrollbar-track,
 .xstudio-portlet::-webkit-scrollbar-track,
 .xstudio-portlet-body::-webkit-scrollbar-track,
+.xstudio-app-explorer-body::-webkit-scrollbar-track,
+.xstudio-app-explorer-results::-webkit-scrollbar-track,
 .xstudio-object-tree::-webkit-scrollbar-track,
 .xstudio-object-tree-body::-webkit-scrollbar-track,
 .xstudio-object-tree-results::-webkit-scrollbar-track,
+.xstudio-object-palette-results::-webkit-scrollbar-track,
 .xstudio-selected-object-panel::-webkit-scrollbar-track,
 .xstudio-selected-object-properties-body::-webkit-scrollbar-track,
 .xstudio-selected-object-raw-body::-webkit-scrollbar-track,
@@ -2085,9 +2449,12 @@ body {
 .xstudio-right-dock::-webkit-scrollbar-thumb,
 .xstudio-portlet::-webkit-scrollbar-thumb,
 .xstudio-portlet-body::-webkit-scrollbar-thumb,
+.xstudio-app-explorer-body::-webkit-scrollbar-thumb,
+.xstudio-app-explorer-results::-webkit-scrollbar-thumb,
 .xstudio-object-tree::-webkit-scrollbar-thumb,
 .xstudio-object-tree-body::-webkit-scrollbar-thumb,
 .xstudio-object-tree-results::-webkit-scrollbar-thumb,
+.xstudio-object-palette-results::-webkit-scrollbar-thumb,
 .xstudio-selected-object-panel::-webkit-scrollbar-thumb,
 .xstudio-selected-object-properties-body::-webkit-scrollbar-thumb,
 .xstudio-selected-object-raw-body::-webkit-scrollbar-thumb,
@@ -2108,9 +2475,12 @@ body {
 .xstudio-right-dock::-webkit-scrollbar-thumb:hover,
 .xstudio-portlet::-webkit-scrollbar-thumb:hover,
 .xstudio-portlet-body::-webkit-scrollbar-thumb:hover,
+.xstudio-app-explorer-body::-webkit-scrollbar-thumb:hover,
+.xstudio-app-explorer-results::-webkit-scrollbar-thumb:hover,
 .xstudio-object-tree::-webkit-scrollbar-thumb:hover,
 .xstudio-object-tree-body::-webkit-scrollbar-thumb:hover,
 .xstudio-object-tree-results::-webkit-scrollbar-thumb:hover,
+.xstudio-object-palette-results::-webkit-scrollbar-thumb:hover,
 .xstudio-selected-object-panel::-webkit-scrollbar-thumb:hover,
 .xstudio-selected-object-properties-body::-webkit-scrollbar-thumb:hover,
 .xstudio-selected-object-raw-body::-webkit-scrollbar-thumb:hover,
@@ -2129,9 +2499,12 @@ body {
 .xstudio-right-dock::-webkit-scrollbar-corner,
 .xstudio-portlet::-webkit-scrollbar-corner,
 .xstudio-portlet-body::-webkit-scrollbar-corner,
+.xstudio-app-explorer-body::-webkit-scrollbar-corner,
+.xstudio-app-explorer-results::-webkit-scrollbar-corner,
 .xstudio-object-tree::-webkit-scrollbar-corner,
 .xstudio-object-tree-body::-webkit-scrollbar-corner,
 .xstudio-object-tree-results::-webkit-scrollbar-corner,
+.xstudio-object-palette-results::-webkit-scrollbar-corner,
 .xstudio-selected-object-panel::-webkit-scrollbar-corner,
 .xstudio-selected-object-properties-body::-webkit-scrollbar-corner,
 .xstudio-selected-object-raw-body::-webkit-scrollbar-corner,

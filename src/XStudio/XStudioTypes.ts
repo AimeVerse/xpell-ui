@@ -40,6 +40,10 @@ export type ServerListFlowsRes = {
   _flows?: any[];
 };
 
+export type ServerListEntitiesRes = {
+  _entities?: any[];
+};
+
 export type ServerListGeneratedModulesRes = {
   _modules?: any[];
 };

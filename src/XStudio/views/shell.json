@@ -22,6 +22,63 @@
           "class": "xstudio-left-dock",
           "_children": [
             {
+              "_id": "xstudio-app-explorer-portlet",
+              "_type": "view",
+              "class": "xstudio-portlet xstudio-explorer-section xstudio-app-explorer-portlet",
+              "_children": [
+                {
+                  "_type": "view",
+                  "class": "xstudio-portlet-header xstudio-explorer-section-header",
+                  "_children": [
+                    {
+                      "_id": "xstudio-app-explorer-section-toggle",
+                      "_type": "button",
+                      "type": "button",
+                      "class": "xstudio-explorer-section-toggle",
+                      "_text": "▾ App Explorer",
+                      "title": "Collapse App Explorer",
+                      "aria-expanded": "true",
+                      "_on": {
+                        "click": {
+                          "_module": "xem",
+                          "_op": "fire",
+                          "_params": {
+                            "event": "studio:explorer-section:toggle",
+                            "data": {
+                              "_section": "app_explorer"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "_type": "view",
+                      "class": "xstudio-explorer-section-actions"
+                    }
+                  ]
+                },
+                {
+                  "_id": "xstudio-app-explorer-body",
+                  "_type": "view",
+                  "class": "xstudio-portlet-body xstudio-app-explorer-body",
+                  "_children": [
+                    {
+                      "_id": "xstudio-app-explorer-results",
+                      "_type": "view",
+                      "class": "xstudio-app-explorer-results",
+                      "_children": [
+                        {
+                          "_type": "label",
+                          "class": "xstudio-dock-placeholder",
+                          "_text": "Loading app artifacts..."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
               "_id": "xstudio-object-tree-portlet",
               "_type": "view",
               "class": "xstudio-portlet xstudio-explorer-section xstudio-object-tree-portlet",
@@ -213,6 +270,226 @@
                   ]
                 }
               ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "_id": "xstudio-add-view-dialog",
+      "_type": "view",
+      "class": "xstudio-selected-object-delete-dialog xstudio-add-view-dialog",
+      "_visible": false,
+      "role": "dialog",
+      "aria-modal": "true",
+      "_children": [
+        {
+          "_type": "view",
+          "class": "xstudio-selected-object-delete-card xstudio-add-view-card",
+          "_children": [
+            {
+              "_id": "xstudio-add-view-title-label",
+              "_type": "label",
+              "class": "xstudio-selected-object-delete-title",
+              "_text": "Add View"
+            },
+            {
+              "_type": "view",
+              "class": "xstudio-add-view-form",
+              "_children": [
+                {
+                  "_type": "label",
+                  "class": "xstudio-add-view-field",
+                  "_children": [
+                    {
+                      "_type": "span",
+                      "class": "xstudio-add-view-label",
+                      "_text": "View ID"
+                    },
+                    {
+                      "_id": "xstudio-add-view-id",
+                      "_type": "text",
+                      "class": "xstudio-add-view-input",
+                      "autocomplete": "off",
+                      "spellcheck": "false",
+                      "placeholder": "view-id",
+                      "_on": {
+                        "input": {
+                          "_module": "xem",
+                          "_op": "fire",
+                          "_params": {
+                            "event": "studio:app-explorer:add-view-input"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "_type": "label",
+                  "class": "xstudio-add-view-field",
+                  "_children": [
+                    {
+                      "_type": "span",
+                      "class": "xstudio-add-view-label",
+                      "_text": "Title"
+                    },
+                    {
+                      "_id": "xstudio-add-view-title",
+                      "_type": "text",
+                      "class": "xstudio-add-view-input",
+                      "autocomplete": "off",
+                      "placeholder": "Title"
+                    }
+                  ]
+                },
+                {
+                  "_type": "label",
+                  "class": "xstudio-add-view-field",
+                  "_children": [
+                    {
+                      "_type": "span",
+                      "class": "xstudio-add-view-label",
+                      "_text": "Template"
+                    },
+                    {
+                      "_id": "xstudio-add-view-template",
+                      "_type": "select",
+                      "class": "xstudio-add-view-input xstudio-add-view-template",
+                      "_value": "blank",
+                      "value": "blank",
+                      "_options": [
+                        {
+                          "value": "blank",
+                          "label": "blank",
+                          "selected": true
+                        },
+                        {
+                          "value": "page",
+                          "label": "page"
+                        },
+                        {
+                          "value": "component",
+                          "label": "component"
+                        }
+                      ],
+                      "_on": {
+                        "change": {
+                          "_module": "xem",
+                          "_op": "fire",
+                          "_params": {
+                            "event": "studio:app-explorer:add-view-input"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "_id": "xstudio-add-view-error",
+                  "_type": "label",
+                  "class": "xstudio-add-view-error",
+                  "aria-live": "polite",
+                  "_text": ""
+                }
+              ]
+            },
+            {
+              "_type": "view",
+              "class": "xstudio-selected-object-delete-actions xstudio-add-view-actions",
+              "_children": [
+                {
+                  "_id": "xstudio-add-view-cancel",
+                  "_type": "button",
+                  "type": "button",
+                  "class": "xstudio-selected-object-editor-button",
+                  "_text": "Cancel",
+                  "_on": {
+                    "click": {
+                      "_module": "xem",
+                      "_op": "fire",
+                      "_params": {
+                        "event": "studio:app-explorer:add-view-cancel"
+                      }
+                    }
+                  }
+                },
+                {
+                  "_id": "xstudio-add-view-create",
+                  "_type": "button",
+                  "type": "button",
+                  "class": "xstudio-selected-object-editor-button xstudio-add-view-create",
+                  "_text": "Create",
+                  "_on": {
+                    "click": {
+                      "_module": "xem",
+                      "_op": "fire",
+                      "_params": {
+                        "event": "studio:app-explorer:add-view-create"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "_id": "xstudio-object-palette-dialog",
+      "_type": "view",
+      "class": "xstudio-selected-object-delete-dialog xstudio-object-palette-dialog xstudio-scrollable",
+      "_visible": false,
+      "role": "dialog",
+      "aria-modal": "true",
+      "aria-hidden": "true",
+      "aria-labelledby": "xstudio-object-palette-title",
+      "_children": [
+        {
+          "_type": "view",
+          "class": "xstudio-selected-object-delete-card xstudio-object-palette-card",
+          "_children": [
+            {
+              "_type": "view",
+              "class": "xstudio-object-palette-header",
+              "_children": [
+                {
+                  "_id": "xstudio-object-palette-title",
+                  "_type": "label",
+                  "class": "xstudio-selected-object-delete-title xstudio-object-palette-title",
+                  "_text": "Object Palette"
+                },
+                {
+                  "_id": "xstudio-object-palette-close",
+                  "_type": "button",
+                  "type": "button",
+                  "class": "xstudio-object-palette-close",
+                  "title": "Close",
+                  "aria-label": "Close Object Palette",
+                  "_text": "×"
+                }
+              ]
+            },
+            {
+              "_id": "xstudio-object-palette-search",
+              "_type": "text",
+              "class": "xstudio-object-palette-search",
+              "autocomplete": "off",
+              "spellcheck": "false",
+              "placeholder": "Search...",
+              "aria-label": "Search Object Palette"
+            },
+            {
+              "_type": "view",
+              "class": "xstudio-object-palette-divider"
+            },
+            {
+              "_id": "xstudio-object-palette-results",
+              "_type": "view",
+              "class": "xstudio-object-palette-results",
+              "role": "listbox",
+              "_children": []
             }
           ]
         }

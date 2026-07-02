@@ -23,6 +23,7 @@ import {
   is_obj,
   to_err,
   type ServerGetViewRes,
+  type ServerListEntitiesRes,
   type ServerListFlowsRes,
   type ServerListGeneratedModulesRes,
   type ServerListViewsRes,
@@ -39,6 +40,22 @@ const STUDIO_TOPBAR_ID = "xstudio-topbar";
 const STUDIO_CANVAS_ID = "xstudio-canvas";
 const STUDIO_TOGGLE_LEFT_DOCK_ID = "xstudio-toggle-left-dock";
 const STUDIO_TOGGLE_RIGHT_DOCK_ID = "xstudio-toggle-right-dock";
+const STUDIO_APP_EXPLORER_PORTLET_ID = "xstudio-app-explorer-portlet";
+const STUDIO_APP_EXPLORER_BODY_ID = "xstudio-app-explorer-body";
+const STUDIO_APP_EXPLORER_RESULTS_ID = "xstudio-app-explorer-results";
+const STUDIO_APP_EXPLORER_SECTION_TOGGLE_ID = "xstudio-app-explorer-section-toggle";
+const STUDIO_APP_EXPLORER_ADD_VIEW_BUTTON_ID = "xstudio-app-explorer-add-view";
+const STUDIO_APP_EXPLORER_ADD_VIEW_DIALOG_ID = "xstudio-add-view-dialog";
+const STUDIO_APP_EXPLORER_ADD_VIEW_ID_INPUT_ID = "xstudio-add-view-id";
+const STUDIO_APP_EXPLORER_ADD_VIEW_TITLE_INPUT_ID = "xstudio-add-view-title";
+const STUDIO_APP_EXPLORER_ADD_VIEW_TEMPLATE_SELECT_ID = "xstudio-add-view-template";
+const STUDIO_APP_EXPLORER_ADD_VIEW_ERROR_ID = "xstudio-add-view-error";
+const STUDIO_APP_EXPLORER_ADD_VIEW_CANCEL_ID = "xstudio-add-view-cancel";
+const STUDIO_APP_EXPLORER_ADD_VIEW_CREATE_ID = "xstudio-add-view-create";
+const STUDIO_OBJECT_PALETTE_DIALOG_ID = "xstudio-object-palette-dialog";
+const STUDIO_OBJECT_PALETTE_SEARCH_ID = "xstudio-object-palette-search";
+const STUDIO_OBJECT_PALETTE_RESULTS_ID = "xstudio-object-palette-results";
+const STUDIO_OBJECT_PALETTE_CLOSE_ID = "xstudio-object-palette-close";
 const STUDIO_OBJECT_TREE_PORTLET_ID = "xstudio-object-tree-portlet";
 const STUDIO_OBJECT_TREE_ID = "xstudio-object-tree";
 const STUDIO_OBJECT_TREE_BODY_ID = "xstudio-object-tree-body";
@@ -113,10 +130,41 @@ const STUDIO_MODULES_SECTION_ID = "xstudio-generated-modules-section";
 const STUDIO_PORTLET_TOGGLE_ACTIVE_CLASS = "xstudio-portlet-toggle-active";
 const STUDIO_PORTLET_HIDDEN_CLASS = "xstudio-portlet-hidden";
 const STUDIO_EXPLORER_SECTION_COLLAPSED_CLASS = "xstudio-explorer-section-collapsed";
-
+const STUDIO_OBJECT_TREE_CHILD_CONTAINER_FALLBACK_TYPES = new Set([
+  "view",
+  "stack",
+  "grid",
+  "form",
+  "svg",
+]);
+const STUDIO_OBJECT_TREE_CHILD_LEAF_TYPES = new Set([
+  "label",
+  "button",
+  "link",
+  "input",
+  "text",
+  "password",
+  "textarea",
+  "select",
+  "image",
+  "video",
+  "webcam",
+  "style-sheet",
+  "xvm-view",
+  "circle",
+  "rect",
+  "ellipse",
+  "line",
+  "polyline",
+  "polygon",
+  "path",
+]);
 type XStudioTheme = typeof STUDIO_THEME_OPTIONS[number];
 type XStudioPortletId = "selected" | "prompt" | "conversation" | "runtime" | "inspector" | "json" | "modules";
-type XStudioExplorerSectionId = "object_tree" | "properties" | "raw_json";
+type XStudioExplorerSectionId = "app_explorer" | "object_tree" | "properties" | "raw_json";
+type XStudioAppExplorerArtifactType = "view" | "flow" | "entity" | "module";
+type XStudioAppExplorerCategoryId = "views" | "flows" | "entities" | "modules";
+type XStudioAppExplorerSectionId = "app" | XStudioAppExplorerCategoryId;
 
 const STUDIO_PORTLETS: Record<XStudioPortletId, {
   _object_id: string;
@@ -175,6 +223,12 @@ const STUDIO_EXPLORER_SECTIONS: Record<XStudioExplorerSectionId, {
   _toggle_id: string;
   _label: string;
 }> = {
+  app_explorer: {
+    _section_id: STUDIO_APP_EXPLORER_PORTLET_ID,
+    _body_id: STUDIO_APP_EXPLORER_BODY_ID,
+    _toggle_id: STUDIO_APP_EXPLORER_SECTION_TOGGLE_ID,
+    _label: "App Explorer",
+  },
   object_tree: {
     _section_id: STUDIO_OBJECT_TREE_PORTLET_ID,
     _body_id: STUDIO_OBJECT_TREE_BODY_ID,
@@ -196,9 +250,44 @@ const STUDIO_EXPLORER_SECTIONS: Record<XStudioExplorerSectionId, {
 };
 const STUDIO_EXPLORER_SECTION_IDS = Object.keys(STUDIO_EXPLORER_SECTIONS) as XStudioExplorerSectionId[];
 const STUDIO_DEFAULT_EXPLORER_SECTION_OPEN: Record<XStudioExplorerSectionId, boolean> = {
+  app_explorer: true,
   object_tree: true,
   properties: true,
   raw_json: false,
+};
+const STUDIO_APP_EXPLORER_CATEGORIES: Record<XStudioAppExplorerCategoryId, {
+  _label: string;
+  _artifact_type: XStudioAppExplorerArtifactType;
+  _empty_text: string;
+}> = {
+  views: {
+    _label: "Views",
+    _artifact_type: "view",
+    _empty_text: "No views",
+  },
+  flows: {
+    _label: "Flows",
+    _artifact_type: "flow",
+    _empty_text: "No flows",
+  },
+  entities: {
+    _label: "Entities",
+    _artifact_type: "entity",
+    _empty_text: "No entities",
+  },
+  modules: {
+    _label: "Modules",
+    _artifact_type: "module",
+    _empty_text: "No modules",
+  },
+};
+const STUDIO_APP_EXPLORER_CATEGORY_IDS = Object.keys(STUDIO_APP_EXPLORER_CATEGORIES) as XStudioAppExplorerCategoryId[];
+const STUDIO_DEFAULT_APP_EXPLORER_SECTION_OPEN: Record<XStudioAppExplorerSectionId, boolean> = {
+  app: true,
+  views: true,
+  flows: true,
+  entities: true,
+  modules: true,
 };
 const STUDIO_SELECTED_OBJECT_EDITOR_ACTION_CONTROL_IDS = [
   STUDIO_SELECTED_OBJECT_SAVE_FIELDS_ID,
@@ -411,7 +500,367 @@ type XStudioObjectTreeDuplicateTarget = {
   _label: string;
 };
 
+type XStudioAppExplorerArtifact = {
+  _id: string;
+  _title: string;
+  _type: XStudioAppExplorerArtifactType;
+  _raw: any;
+};
+
+type XStudioAppExplorerArtifacts = Record<XStudioAppExplorerCategoryId, XStudioAppExplorerArtifact[]>;
+
+type XStudioCreateViewTemplate = "blank" | "page" | "component";
+
+export type XStudioObjectPaletteOptions = {
+  onSelect?: (skill: XpellSkill) => void;
+};
+
+type XStudioObjectPaletteEntry = {
+  _id: string;
+  _title: string;
+  _category: string;
+  _search_text: string;
+  _skill: XpellSkill;
+};
+
+type XStudioObjectPaletteClassEntry = {
+  _name: string;
+  _class: any;
+};
+
+type XStudioObjectPaletteSession = {
+  resolve: (skill: XpellSkill | null) => void;
+  cleanup: () => void;
+  onSelect?: (skill: XpellSkill) => void;
+};
+
+type ServerCreateViewRes = {
+  _ok?: boolean;
+  _view_id?: string;
+  _path?: string;
+  _view?: Record<string, any>;
+  _result?: {
+    _view_id?: string;
+    _path?: string;
+    _view?: Record<string, any>;
+  };
+};
+
 const empty_selected_object_inspector_draft = (): XStudioSelectedObjectInspectorDraft => ({});
+
+let object_palette_session: XStudioObjectPaletteSession | null = null;
+
+const object_palette_text = (value: unknown) => String(value ?? "").trim();
+
+const object_palette_compare = (a: string, b: string) =>
+  a.localeCompare(b, undefined, { sensitivity: "base" });
+
+const object_palette_registered_classes = (): XStudioObjectPaletteClassEntry[] => {
+  const manager = (XUI as any)._object_manager;
+  const classes =
+    manager && typeof manager.getObjectClasses === "function"
+      ? manager.getObjectClasses()
+      : {};
+
+  return Object.entries(classes)
+    .map(([name, cls]) => ({ _name: name, _class: cls }))
+    .sort((a, b) => object_palette_compare(a._name, b._name));
+};
+
+const object_palette_entries = (): XStudioObjectPaletteEntry[] => {
+  const class_entries = object_palette_registered_classes();
+  const skipped_without_skill: string[] = [];
+  const skipped_without_palette: string[] = [];
+  const classes_with_skills: string[] = [];
+  const classes_with_palette: string[] = [];
+  const seen_skill_ids = new Set<string>();
+  const entries: XStudioObjectPaletteEntry[] = [];
+
+  class_entries.forEach(({ _name, _class }) => {
+    const skill = _class?._skill as XpellSkill | undefined;
+    if (!skill) {
+      skipped_without_skill.push(_name);
+      return;
+    }
+
+    classes_with_skills.push(_name);
+
+    const palette = skill._design?._palette;
+    if (!is_obj(palette)) {
+      skipped_without_palette.push(_name);
+      return;
+    }
+
+    classes_with_palette.push(_name);
+
+    const id = object_palette_text(skill._id);
+    if (!id || seen_skill_ids.has(id)) return;
+    seen_skill_ids.add(id);
+
+    const title =
+      object_palette_text(palette._title) ||
+      object_palette_text(skill._title) ||
+      id;
+    const category = object_palette_text(palette._category) || "Other";
+
+    entries.push({
+      _id: id,
+      _title: title,
+      _category: category,
+      _search_text: `${title}\n${id}\n${category}`.toLowerCase(),
+      _skill: skill,
+    });
+  });
+
+  _xlog.log("[xstudio] object palette registry", {
+    _registered_classes_count: class_entries.length,
+    _registered_classes: class_entries.map(entry => entry._name),
+    _classes_with_skills_count: classes_with_skills.length,
+    _classes_with_skills: classes_with_skills,
+    _classes_with_palette_count: classes_with_palette.length,
+    _classes_with_palette: classes_with_palette,
+    _skipped_without_skill_count: skipped_without_skill.length,
+    _skipped_without_skill: skipped_without_skill,
+    _skipped_without_palette_count: skipped_without_palette.length,
+    _skipped_without_palette: skipped_without_palette,
+  });
+
+  return entries.sort((a, b) => {
+    const category_order = object_palette_compare(a._category, b._category);
+    if (category_order !== 0) return category_order;
+    const title_order = object_palette_compare(a._title, b._title);
+    return title_order !== 0 ? title_order : object_palette_compare(a._id, b._id);
+  });
+};
+
+const object_palette_filter = (
+  entries: XStudioObjectPaletteEntry[],
+  query: string,
+) => {
+  const normalized = query.trim().toLowerCase();
+  if (!normalized) return entries;
+  return entries.filter(entry => entry._search_text.includes(normalized));
+};
+
+const object_palette_grouped_children = (
+  entries: XStudioObjectPaletteEntry[],
+  select_entry: (entry: XStudioObjectPaletteEntry, event?: Event) => void,
+) => {
+  if (entries.length === 0) {
+    return [
+      {
+        _type: "label",
+        _id: "xstudio-object-palette-empty",
+        class: "xstudio-object-palette-empty",
+        _text: "No objects",
+      },
+    ];
+  }
+
+  const children: Record<string, any>[] = [];
+  let current_category = "";
+  let current_group: Record<string, any> | null = null;
+
+  entries.forEach((entry, index) => {
+    if (entry._category !== current_category) {
+      current_category = entry._category;
+      current_group = {
+        _type: "view",
+        _id: `xstudio-object-palette-category-${index}`,
+        class: "xstudio-object-palette-category",
+        _children: [
+          {
+            _type: "label",
+            class: "xstudio-object-palette-category-title",
+            _text: current_category,
+          },
+        ],
+      };
+      children.push(current_group);
+    }
+
+    current_group?._children?.push({
+      _type: "button",
+      _id: `xstudio-object-palette-entry-${index}`,
+      type: "button",
+      class: "xstudio-object-palette-entry",
+      title: `${entry._title} [${entry._id}]`,
+      "data-xstudio-palette-id": entry._id,
+      _children: [
+        {
+          _type: "span",
+          class: "xstudio-object-palette-entry-title",
+          _text: entry._title,
+        },
+        {
+          _type: "span",
+          class: "xstudio-object-palette-entry-id",
+          _text: entry._id,
+        },
+      ],
+      _on: {
+        click: (event?: Event) => select_entry(entry, event),
+        dblclick: (event?: Event) => select_entry(entry, event),
+      },
+    });
+  });
+
+  return children;
+};
+
+const set_object_palette_visible = (visible: boolean) => {
+  const dialog = XUI.getObject(STUDIO_OBJECT_PALETTE_DIALOG_ID) as any;
+  if (!dialog) return false;
+
+  if (visible) {
+    dialog.show?.();
+  } else {
+    dialog.hide?.();
+  }
+
+  dialog._visible = visible;
+  dialog.dom?.setAttribute?.("aria-hidden", String(!visible));
+  return true;
+};
+
+const focus_object_palette_entry = (direction: 1 | -1) => {
+  if (typeof document === "undefined") return;
+
+  const entries = Array.from(
+    document.querySelectorAll<HTMLButtonElement>(".xstudio-object-palette-entry"),
+  );
+  if (entries.length === 0) return;
+
+  const active_index = entries.indexOf(document.activeElement as HTMLButtonElement);
+  const next_index =
+    active_index < 0
+      ? direction > 0 ? 0 : entries.length - 1
+      : (active_index + direction + entries.length) % entries.length;
+
+  entries[next_index]?.focus();
+};
+
+export function showObjectPalette(
+  options: XStudioObjectPaletteOptions = {},
+): Promise<XpellSkill | null> {
+  if (typeof document === "undefined") return Promise.resolve(null);
+
+  if (object_palette_session) {
+    const previous_session = object_palette_session;
+    object_palette_session = null;
+    previous_session.cleanup();
+    previous_session.resolve(null);
+  }
+  set_object_palette_visible(false);
+
+  const all_entries = object_palette_entries();
+  let visible_entries = all_entries;
+
+  return new Promise<XpellSkill | null>((resolve) => {
+    const search = XUI.getObject(STUDIO_OBJECT_PALETTE_SEARCH_ID) as any;
+    const results = XUI.getObject(STUDIO_OBJECT_PALETTE_RESULTS_ID) as any;
+    const close = XUI.getObject(STUDIO_OBJECT_PALETTE_CLOSE_ID) as any;
+
+    if (!search || !results || !set_object_palette_visible(true)) {
+      resolve(null);
+      return;
+    }
+
+    const finish = (skill: XpellSkill | null) => {
+      const session = object_palette_session;
+      if (!session) return;
+      object_palette_session = null;
+      session.cleanup();
+      set_object_palette_visible(false);
+
+      if (skill) {
+        _xlog.log("[xstudio] object palette selected", {
+          _id: skill._id,
+          _title: skill._title,
+          _category: skill._design?._palette?._category,
+        });
+        session.onSelect?.(skill);
+      }
+
+      session.resolve(skill);
+    };
+
+    const select_entry = (entry: XStudioObjectPaletteEntry, event?: Event) => {
+      event?.preventDefault?.();
+      event?.stopPropagation?.();
+      finish(entry._skill);
+    };
+
+    const render = () => {
+      const query = object_palette_text(search?.getValue?.() ?? search?.dom?.value);
+      visible_entries = object_palette_filter(all_entries, query);
+      results.update?.({
+        _children: object_palette_grouped_children(visible_entries, select_entry),
+      });
+    };
+
+    const on_input = () => render();
+    const on_keydown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        finish(null);
+        return;
+      }
+
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        focus_object_palette_entry(1);
+        return;
+      }
+
+      if (event.key === "ArrowUp") {
+        event.preventDefault();
+        focus_object_palette_entry(-1);
+        return;
+      }
+
+      if (
+        event.key === "Enter" &&
+        event.target === search.dom &&
+        visible_entries[0]
+      ) {
+        event.preventDefault();
+        finish(visible_entries[0]._skill);
+      }
+    };
+    const on_close = (event: Event) => {
+      event.preventDefault();
+      finish(null);
+    };
+
+    object_palette_session = {
+      resolve,
+      onSelect: options.onSelect,
+      cleanup: () => {
+        search.dom?.removeEventListener?.("input", on_input);
+        search.dom?.removeEventListener?.("keydown", on_keydown);
+        results.dom?.removeEventListener?.("keydown", on_keydown);
+        close?.dom?.removeEventListener?.("click", on_close);
+      },
+    };
+
+    search.dom?.addEventListener?.("input", on_input);
+    search.dom?.addEventListener?.("keydown", on_keydown);
+    results.dom?.addEventListener?.("keydown", on_keydown);
+    close?.dom?.addEventListener?.("click", on_close);
+
+    search.setValue?.("");
+    if (search.dom && "value" in search.dom) {
+      search.dom.value = "";
+    }
+    render();
+
+    queueMicrotask(() => {
+      search.dom?.focus?.();
+      search.dom?.select?.();
+    });
+  });
+}
 
 const GENERATION_STAGE_STATUS: Record<string, string> = {
   preparing: "Preparing generation...",
@@ -517,6 +966,17 @@ export class XStudioModule extends XModule {
   private _object_tree_expanded_node_keys = new Set<string>();
   private _object_tree_touched_expansion_node_keys = new Set<string>();
   private _object_tree_pending_duplicate: XStudioObjectTreeDuplicateTarget | null = null;
+  private _app_explorer_render_seq = 0;
+  private _app_explorer_selected_key = "";
+  private _app_explorer_artifacts: XStudioAppExplorerArtifacts = {
+    views: [],
+    flows: [],
+    entities: [],
+    modules: [],
+  };
+  private _app_explorer_section_open: Record<XStudioAppExplorerSectionId, boolean> = {
+    ...STUDIO_DEFAULT_APP_EXPLORER_SECTION_OPEN,
+  };
   private _studio_theme: XStudioTheme = STUDIO_THEME_DEFAULT;
   private _conversation_messages: XStudioConversationMessage[] = [];
   private _conversation_app_id = "";
@@ -576,6 +1036,7 @@ export class XStudioModule extends XModule {
       if (evt._app_id !== this._client().getActiveAppId()) return;
       if (evt._env !== this._client().getActiveEnv()) return;
       this._refresh_object_tree_for_current_view();
+      void this._refresh_app_explorer();
       void this._ensure_conversation_for_current_context();
     });
 
@@ -585,6 +1046,7 @@ export class XStudioModule extends XModule {
       if (evt._app_id !== this._client().getActiveAppId()) return;
       if (evt._env !== this._client().getActiveEnv()) return;
       this._refresh_object_tree_for_current_view();
+      this._render_cached_app_explorer();
     });
 
     _xem.on("studio:save-view", async () => {
@@ -630,6 +1092,35 @@ export class XStudioModule extends XModule {
       }
 
       this._toggle_explorer_section(section_id);
+    });
+
+    _xem.on("studio:app-explorer:section-toggle", (payload: any) => {
+      const evt = this._normalize_event_payload(payload);
+      const section_id = this._normalize_app_explorer_section_id(
+        is_obj(evt) ? evt._section ?? evt.section ?? evt._id ?? evt.id : evt,
+      );
+      if (!section_id) {
+        this._log("app explorer section toggle ignored", { _payload: evt });
+        return;
+      }
+
+      this._toggle_app_explorer_section(section_id);
+    });
+
+    _xem.on("studio:app-explorer:add-view-open", () => {
+      this._open_add_view_dialog();
+    });
+
+    _xem.on("studio:app-explorer:add-view-cancel", () => {
+      this._hide_add_view_dialog();
+    });
+
+    _xem.on("studio:app-explorer:add-view-input", () => {
+      this._validate_add_view_dialog(false);
+    });
+
+    _xem.on("studio:app-explorer:add-view-create", async () => {
+      await this._create_view_from_add_view_dialog();
     });
 
     _xem.on("studio:object-tree-search", (payload: any) => {
@@ -741,6 +1232,8 @@ export class XStudioModule extends XModule {
     _xem.on("studio:close", async () => {
       await this._close_studio();
     });
+
+    this._render_cached_app_explorer();
   }
 
   register_shortcuts() {
@@ -813,6 +1306,7 @@ export class XStudioModule extends XModule {
   handle_xvm_update(update: StudioXVMUpdateEvt) {
     this._complete_generation_from_update(update);
     this._refresh_object_tree_for_current_view();
+    void this._refresh_app_explorer();
   }
 
   private _can_edit(ctx?: Pick<StudioRuntimeAppContext, "_app_id" | "_edit">) {
@@ -2991,6 +3485,14 @@ export class XStudioModule extends XModule {
       : "";
   }
 
+  private _normalize_app_explorer_section_id(value: any): XStudioAppExplorerSectionId | "" {
+    const section_id = String(value ?? "").trim().toLowerCase().replace(/-/g, "_");
+    if (section_id === "app") return "app";
+    return (STUDIO_APP_EXPLORER_CATEGORY_IDS as readonly string[]).includes(section_id)
+      ? (section_id as XStudioAppExplorerCategoryId)
+      : "";
+  }
+
   private _apply_dock_state() {
     this._set_shell_class_enabled("xstudio-left-collapsed", this._left_dock_collapsed);
     this._set_shell_class_enabled("xstudio-right-collapsed", this._right_dock_collapsed);
@@ -3028,10 +3530,178 @@ export class XStudioModule extends XModule {
     const open = !this._explorer_section_is_open(section_id);
     this._explorer_section_open[section_id] = open;
     this._apply_explorer_section_state();
-    this._log("explorer section toggled", {
+    this._log(
+      section_id === "app_explorer"
+        ? "app explorer section toggled"
+        : "explorer section toggled",
+      {
+        _section: section_id,
+        _open: open,
+      },
+    );
+  }
+
+  private _app_explorer_section_is_open(section_id: XStudioAppExplorerSectionId) {
+    return this._app_explorer_section_open[section_id] === true;
+  }
+
+  private _toggle_app_explorer_section(section_id: XStudioAppExplorerSectionId) {
+    const open = !this._app_explorer_section_is_open(section_id);
+    this._app_explorer_section_open[section_id] = open;
+    this._render_cached_app_explorer();
+    this._log("app explorer section toggled", {
       _section: section_id,
       _open: open,
     });
+  }
+
+  private _normalize_create_view_template(value: any): XStudioCreateViewTemplate {
+    const template = String(value ?? "").trim().toLowerCase();
+    return template === "page" || template === "component" ? template : "blank";
+  }
+
+  private _set_add_view_error(message: string) {
+    this._set_studio_label(STUDIO_APP_EXPLORER_ADD_VIEW_ERROR_ID, message);
+    this._set_object_class_token(
+      STUDIO_APP_EXPLORER_ADD_VIEW_ERROR_ID,
+      "xstudio-add-view-error-visible",
+      Boolean(message),
+    );
+    this._set_object_attribute(
+      STUDIO_APP_EXPLORER_ADD_VIEW_ID_INPUT_ID,
+      "aria-invalid",
+      String(Boolean(message)),
+    );
+  }
+
+  private _set_add_view_dialog_busy(busy: boolean) {
+    this._set_studio_control_disabled(STUDIO_APP_EXPLORER_ADD_VIEW_ID_INPUT_ID, busy);
+    this._set_studio_control_disabled(STUDIO_APP_EXPLORER_ADD_VIEW_TITLE_INPUT_ID, busy);
+    this._set_studio_control_disabled(STUDIO_APP_EXPLORER_ADD_VIEW_TEMPLATE_SELECT_ID, busy);
+    this._set_studio_control_disabled(STUDIO_APP_EXPLORER_ADD_VIEW_CANCEL_ID, busy);
+    this._set_studio_control_disabled(STUDIO_APP_EXPLORER_ADD_VIEW_CREATE_ID, busy);
+  }
+
+  private _add_view_dialog_values(show_errors: boolean) {
+    const view_id = this._read_studio_control_value(STUDIO_APP_EXPLORER_ADD_VIEW_ID_INPUT_ID).trim();
+    const title = this._read_studio_control_value(STUDIO_APP_EXPLORER_ADD_VIEW_TITLE_INPUT_ID).trim();
+    const template = this._normalize_create_view_template(
+      this._read_studio_control_value(STUDIO_APP_EXPLORER_ADD_VIEW_TEMPLATE_SELECT_ID),
+    );
+    let error = "";
+
+    if (!view_id) {
+      error = show_errors ? "View ID is required." : "";
+    } else if (!/^[a-z0-9_-]+$/.test(view_id)) {
+      error = "Use lowercase letters, numbers, hyphen, or underscore only.";
+    }
+
+    return {
+      _ok: !error && Boolean(view_id),
+      _view_id: view_id,
+      _title: title,
+      _template: template,
+      _error: error,
+    };
+  }
+
+  private _validate_add_view_dialog(show_errors: boolean) {
+    const result = this._add_view_dialog_values(show_errors);
+    this._set_add_view_error(result._error);
+    return result;
+  }
+
+  private _open_add_view_dialog() {
+    this._set_studio_control_value(STUDIO_APP_EXPLORER_ADD_VIEW_ID_INPUT_ID, "");
+    this._set_studio_control_value(STUDIO_APP_EXPLORER_ADD_VIEW_TITLE_INPUT_ID, "");
+    this._set_studio_control_value(STUDIO_APP_EXPLORER_ADD_VIEW_TEMPLATE_SELECT_ID, "blank");
+    this._set_add_view_error("");
+    this._set_add_view_dialog_busy(false);
+
+    const dialog = XUI.getObject(STUDIO_APP_EXPLORER_ADD_VIEW_DIALOG_ID) as any;
+    dialog?.show?.();
+    queueMicrotask(() => {
+      const input = XUI.getObject(STUDIO_APP_EXPLORER_ADD_VIEW_ID_INPUT_ID) as any;
+      input?.dom?.focus?.();
+    });
+    this._log("add view dialog opened");
+  }
+
+  private _hide_add_view_dialog() {
+    this._set_add_view_dialog_busy(false);
+    this._set_add_view_error("");
+    const dialog = XUI.getObject(STUDIO_APP_EXPLORER_ADD_VIEW_DIALOG_ID) as any;
+    dialog?.hide?.();
+  }
+
+  private _created_view_id(result: ServerCreateViewRes, fallback: string) {
+    const direct = typeof result?._view_id === "string" ? result._view_id.trim() : "";
+    const nested = typeof result?._result?._view_id === "string" ? result._result._view_id.trim() : "";
+    return direct || nested || fallback;
+  }
+
+  private async _create_view_from_add_view_dialog() {
+    const form = this._validate_add_view_dialog(true);
+    if (!form._ok) return;
+
+    const app_id = this._client().getActiveAppId();
+    const env = this._client().getActiveEnv();
+
+    if (!app_id) {
+      this._set_add_view_error("No active app selected.");
+      return;
+    }
+
+    if (!env) {
+      this._set_add_view_error("No active environment selected.");
+      return;
+    }
+
+    this._set_add_view_dialog_busy(true);
+    this._write_studio_status(`Creating ${form._view_id}...`);
+    this._log("create view requested", {
+      _app_id: app_id,
+      _env: env,
+      _view_id: form._view_id,
+      _template: form._template,
+    });
+
+    try {
+      const result = await this._send_server_xvm_command("create-view", {
+        _app_id: app_id,
+        _env: env,
+        _view_id: form._view_id,
+        _title: form._title,
+        _template: form._template,
+      }) as ServerCreateViewRes;
+      const view_id = this._created_view_id(result, form._view_id);
+
+      this._app_explorer_section_open.app = true;
+      this._app_explorer_section_open.views = true;
+      await this._refresh_app_explorer();
+      this._app_explorer_selected_key = this._app_explorer_artifact_key("view", view_id);
+      this._render_cached_app_explorer();
+      this._hide_add_view_dialog();
+      this._write_studio_status(`Created ${view_id}`);
+      this._log("create view completed", {
+        _app_id: app_id,
+        _env: env,
+        _view_id: view_id,
+        _template: form._template,
+      });
+    } catch (err) {
+      const message = `Create view failed: ${to_err(err)}`;
+      this._set_add_view_error(message);
+      this._write_studio_status(message);
+      this._error("create view failed", {
+        _app_id: app_id,
+        _env: env,
+        _view_id: form._view_id,
+        _template: form._template,
+        _error: to_err(err),
+      });
+      this._set_add_view_dialog_busy(false);
+    }
   }
 
   private async _toggle_studio() {
@@ -3447,6 +4117,384 @@ export class XStudioModule extends XModule {
     this._render_object_tree_nodes(this._filter_object_tree_nodes(this._object_tree_nodes));
   }
 
+  private _app_explorer_artifact_key(type: XStudioAppExplorerArtifactType, id: string) {
+    return `${type}:${id}`;
+  }
+
+  private _normalize_app_explorer_artifact(
+    item: any,
+    type: XStudioAppExplorerArtifactType,
+  ): XStudioAppExplorerArtifact | null {
+    const fallback = type === "module"
+      ? this._get_studio_module_name(item)
+      : this._format_studio_list_item(item);
+    const id =
+      typeof item === "string" && item.trim()
+        ? item.trim()
+        : is_obj(item) && typeof item._id === "string" && item._id.trim()
+          ? item._id.trim()
+          : is_obj(item) && typeof item.id === "string" && item.id.trim()
+            ? item.id.trim()
+            : fallback.trim();
+
+    if (!id) return null;
+
+    const title =
+      type === "module"
+        ? this._format_studio_module_list_item(item)
+        : this._format_studio_list_item(item);
+
+    return {
+      _id: id,
+      _title: title || id,
+      _type: type,
+      _raw: item,
+    };
+  }
+
+  private _normalize_app_explorer_artifacts(
+    items: any[],
+    type: XStudioAppExplorerArtifactType,
+  ) {
+    if (!Array.isArray(items)) return [];
+    return items
+      .map((item) => this._normalize_app_explorer_artifact(item, type))
+      .filter((item): item is XStudioAppExplorerArtifact => item !== null)
+      .sort((a, b) => a._id.localeCompare(b._id));
+  }
+
+  private _app_explorer_current_view_id() {
+    try {
+      return this._resolve_studio_target_view_id();
+    } catch {
+      return this._xvm_client?.get_current_view_id?.() ?? "";
+    }
+  }
+
+  private _select_app_explorer_artifact(artifact: XStudioAppExplorerArtifact) {
+    this._app_explorer_selected_key = this._app_explorer_artifact_key(artifact._type, artifact._id);
+    this._render_cached_app_explorer();
+    this._log("app explorer artifact selected", {
+      _type: artifact._type,
+      _id: artifact._id,
+    });
+
+    if (artifact._type === "view") {
+      this._log("app explorer view selected", {
+        _view_id: artifact._id,
+        _current_view_id: this._app_explorer_current_view_id(),
+        _loaded: false,
+      });
+    }
+  }
+
+  private _app_explorer_label_children(
+    primary: string,
+    secondary: string,
+    type?: XStudioAppExplorerArtifactType,
+  ) {
+    const children: Record<string, any>[] = [
+      {
+        _type: "span",
+        class: "xstudio-object-tree-label-primary",
+        _text: primary,
+      },
+    ];
+
+    if (secondary) {
+      children.push({
+        _type: "span",
+        class: "xstudio-object-tree-label-secondary",
+        _text: secondary,
+      });
+    }
+
+    if (type) {
+      children.push({
+        _type: "span",
+        class: "xstudio-object-tree-type-tag xstudio-app-explorer-type-tag",
+        _text: `[${type}]`,
+      });
+    }
+
+    return children;
+  }
+
+  private _app_explorer_toggle_row(
+    row_id: string,
+    section_id: XStudioAppExplorerSectionId,
+    label: string,
+    depth: number,
+    secondary = "",
+  ) {
+    const expanded = this._app_explorer_section_is_open(section_id);
+    const children: Record<string, any>[] = [
+      {
+        _type: "button",
+        _id: `${row_id}-toggle`,
+        type: "button",
+        class: "xstudio-object-tree-chevron",
+        title: expanded ? "Collapse" : "Expand",
+        "aria-expanded": String(expanded),
+        _text: expanded ? "▾" : "▸",
+        _on: {
+          click: (event?: Event) => {
+            event?.preventDefault?.();
+            event?.stopPropagation?.();
+            this._toggle_app_explorer_section(section_id);
+          },
+        },
+      },
+      {
+        _type: "button",
+        _id: `${row_id}-label`,
+        type: "button",
+        class: "xstudio-object-tree-label xstudio-app-explorer-label",
+        title: label,
+        _children: this._app_explorer_label_children(label, secondary),
+        _on: {
+          click: (event?: Event) => {
+            event?.preventDefault?.();
+            event?.stopPropagation?.();
+            this._toggle_app_explorer_section(section_id);
+          },
+        },
+      },
+    ];
+
+    if (section_id === "views") {
+      children.push({
+        _type: "button",
+        _id: STUDIO_APP_EXPLORER_ADD_VIEW_BUTTON_ID,
+        type: "button",
+        class: "xstudio-explorer-section-action xstudio-app-explorer-add-view-button",
+        title: "Add View",
+        _text: "+ Add View",
+        _on: {
+          click: {
+            _module: "xem",
+            _op: "fire",
+            _params: {
+              event: "studio:app-explorer:add-view-open",
+            },
+          },
+        },
+      });
+    }
+
+    return {
+      _type: "view",
+      _id: row_id,
+      class: "xstudio-object-tree-row xstudio-app-explorer-row xstudio-app-explorer-section-row",
+      _style: {
+        "--xstudio-tree-indent": `${depth * 14}px`,
+      },
+      _children: children,
+    };
+  }
+
+  private _app_explorer_artifact_row(
+    row_id: string,
+    artifact: XStudioAppExplorerArtifact,
+    depth: number,
+  ) {
+    const key = this._app_explorer_artifact_key(artifact._type, artifact._id);
+    const selected = key === this._app_explorer_selected_key;
+    const current = artifact._type === "view" && artifact._id === this._app_explorer_current_view_id();
+    const secondary = artifact._title && artifact._title !== artifact._id ? artifact._title : "";
+
+    return {
+      _type: "view",
+      _id: row_id,
+      class: [
+        "xstudio-object-tree-row",
+        "xstudio-app-explorer-row",
+        selected ? "xstudio-app-explorer-row-selected" : "",
+        current ? "xstudio-app-explorer-row-current" : "",
+      ].filter(Boolean).join(" "),
+      title: artifact._title || artifact._id,
+      _style: {
+        "--xstudio-tree-indent": `${depth * 14}px`,
+      },
+      _children: [
+        {
+          _type: "view",
+          _id: `${row_id}-toggle`,
+          class: "xstudio-object-tree-chevron xstudio-object-tree-chevron-spacer",
+        },
+        {
+          _type: "button",
+          _id: `${row_id}-label`,
+          type: "button",
+          class: "xstudio-object-tree-label xstudio-app-explorer-label",
+          title: artifact._title || artifact._id,
+          _children: this._app_explorer_label_children(artifact._id, secondary, artifact._type),
+          _on: {
+            click: (event?: Event) => {
+              event?.preventDefault?.();
+              event?.stopPropagation?.();
+              this._select_app_explorer_artifact(artifact);
+            },
+          },
+        },
+      ],
+    };
+  }
+
+  private _render_app_explorer_category(
+    category_id: XStudioAppExplorerCategoryId,
+    seq: number,
+  ) {
+    const config = STUDIO_APP_EXPLORER_CATEGORIES[category_id];
+    const artifacts = this._app_explorer_artifacts[category_id] ?? [];
+    const row_id = `xstudio-app-explorer-${category_id}-${seq}`;
+    const children: Record<string, any>[] = [
+      this._app_explorer_toggle_row(row_id, category_id, config._label, 1),
+    ];
+
+    if (this._app_explorer_section_is_open(category_id)) {
+      if (artifacts.length === 0) {
+        children.push({
+          _type: "view",
+          _id: `${row_id}-empty`,
+          class: "xstudio-object-tree-placeholder-row xstudio-app-explorer-empty-row",
+          _style: {
+            "--xstudio-tree-indent": "28px",
+          },
+          _children: [
+            {
+              _type: "view",
+              class: "xstudio-object-tree-chevron xstudio-object-tree-chevron-spacer",
+            },
+            {
+              _type: "label",
+              class: "xstudio-object-tree-placeholder-label",
+              _text: config._empty_text,
+            },
+          ],
+        });
+      } else {
+        artifacts.forEach((artifact, index) => {
+          children.push(this._app_explorer_artifact_row(
+            `${row_id}-artifact-${index}`,
+            artifact,
+            2,
+          ));
+        });
+      }
+    }
+
+    return {
+      _type: "view",
+      _id: `${row_id}-item`,
+      class: "xstudio-object-tree-item xstudio-app-explorer-category",
+      _children: children,
+    };
+  }
+
+  private _render_cached_app_explorer() {
+    const target = XUI.getObject(STUDIO_APP_EXPLORER_RESULTS_ID) as any;
+    if (!target) return;
+
+    this._app_explorer_render_seq += 1;
+    const seq = this._app_explorer_render_seq;
+    const app_id = this._xvm_client?.getActiveAppId?.() ?? "";
+    const app_secondary = app_id && app_id !== "App" ? app_id : "";
+    const root_children: Record<string, any>[] = [
+      this._app_explorer_toggle_row(
+        `xstudio-app-explorer-app-${seq}`,
+        "app",
+        "App",
+        0,
+        app_secondary,
+      ),
+    ];
+
+    if (this._app_explorer_section_is_open("app")) {
+      for (const category_id of STUDIO_APP_EXPLORER_CATEGORY_IDS) {
+        root_children.push(this._render_app_explorer_category(category_id, seq));
+      }
+    }
+
+    target.update?.({ _children: root_children });
+  }
+
+  async _refresh_app_explorer() {
+    const app_id = this._xvm_client?.getActiveAppId?.() ?? "";
+    const env = this._xvm_client?.getActiveEnv?.() ?? "";
+
+    if (!app_id) {
+      this._app_explorer_artifacts = {
+        views: [],
+        flows: [],
+        entities: [],
+        modules: [],
+      };
+      this._render_cached_app_explorer();
+      return false;
+    }
+
+    const params = { _app_id: app_id, _env: env };
+    const empty = {
+      _views: [],
+      _flows: [],
+      _entities: [],
+      _modules: [],
+    };
+    const [views_res, flows_res, entities_res, modules_res] = await Promise.all([
+      (this._send_server_xvm_command("list-views", params) as Promise<ServerListViewsRes>)
+        .catch((err) => {
+          this._error("app explorer list views failed", { _error: to_err(err) });
+          return empty;
+        }),
+      (this._send_server_xvm_command("list-flows", params) as Promise<ServerListFlowsRes>)
+        .catch((err) => {
+          this._error("app explorer list flows failed", { _error: to_err(err) });
+          return empty;
+        }),
+      (this._send_server_xvm_command("list-entities", params) as Promise<ServerListEntitiesRes>)
+        .catch((err) => {
+          this._error("app explorer list entities failed", { _error: to_err(err) });
+          return empty;
+        }),
+      (this._send_server_xvm_command("list-generated-modules", {}) as Promise<ServerListGeneratedModulesRes>)
+        .catch((err) => {
+          this._error("app explorer list modules failed", { _error: to_err(err) });
+          return empty;
+        }),
+    ]);
+
+    this._app_explorer_artifacts = {
+      views: this._normalize_app_explorer_artifacts(
+        Array.isArray(views_res?._views) ? views_res._views : [],
+        "view",
+      ),
+      flows: this._normalize_app_explorer_artifacts(
+        Array.isArray(flows_res?._flows) ? flows_res._flows : [],
+        "flow",
+      ),
+      entities: this._normalize_app_explorer_artifacts(
+        Array.isArray(entities_res?._entities) ? entities_res._entities : [],
+        "entity",
+      ),
+      modules: this._normalize_app_explorer_artifacts(
+        Array.isArray(modules_res?._modules) ? modules_res._modules : [],
+        "module",
+      ),
+    };
+
+    this._render_cached_app_explorer();
+    this._log("app explorer loaded", {
+      _app_id: app_id,
+      _env: env,
+      _views: this._app_explorer_artifacts.views.length,
+      _flows: this._app_explorer_artifacts.flows.length,
+      _entities: this._app_explorer_artifacts.entities.length,
+      _modules: this._app_explorer_artifacts.modules.length,
+    });
+    return true;
+  }
+
   private _object_tree_label_children(node: XStudioObjectTreeNode) {
     const children: Record<string, any>[] = [
       {
@@ -3628,9 +4676,62 @@ export class XStudioModule extends XModule {
     return !this._selected_object_is_root_view(meta);
   }
 
+  private _object_tree_child_capability(node: XStudioObjectTreeNode, log = false) {
+    const meta = node._meta;
+    const object_id = meta?._json_id?.trim() || meta?._id?.trim() || "";
+    const type = meta?._type?.trim() ?? "";
+    const normalized_type = type.toLowerCase();
+    const skill = type ? this._resolve_selected_object_skill(type) : null;
+    const design_allowed_raw = skill?._design?._children?._allowed;
+    const design_allowed = design_allowed_raw === true;
+    const design_disallowed = design_allowed_raw === false;
+    const has_children_array = Array.isArray(node._object?._children);
+    const leaf_type = STUDIO_OBJECT_TREE_CHILD_LEAF_TYPES.has(normalized_type);
+    const fallback_allowed =
+      !leaf_type &&
+      STUDIO_OBJECT_TREE_CHILD_CONTAINER_FALLBACK_TYPES.has(normalized_type);
+    const allowed =
+      !leaf_type &&
+      (
+        has_children_array ||
+        (!design_disallowed && (design_allowed || fallback_allowed))
+      );
+
+    if (log) {
+      this._log("object tree child capability resolved", {
+        _object_id: object_id,
+        _object_type: type,
+        _skill_found: Boolean(skill),
+        _design_children_allowed: design_allowed,
+        _design_children_disallowed: design_disallowed,
+        _has_children_array: has_children_array,
+        _fallback_allowed: fallback_allowed,
+        _leaf_type: leaf_type,
+        _allowed: allowed,
+      });
+    }
+
+    return {
+      _allowed: allowed,
+      _object_id: object_id,
+      _object_type: type,
+      _skill: skill,
+      _skill_found: Boolean(skill),
+      _design_children_allowed: design_allowed,
+      _design_children_disallowed: design_disallowed,
+      _has_children_array: has_children_array,
+      _fallback_allowed: fallback_allowed,
+      _leaf_type: leaf_type,
+    };
+  }
+
+  private _object_tree_node_can_add_child(node: XStudioObjectTreeNode) {
+    return this._object_tree_child_capability(node)._allowed;
+  }
+
   private _object_tree_quick_action_button(
     row_id: string,
-    action: "move-up" | "move-down" | "duplicate",
+    action: "move-up" | "move-down" | "duplicate" | "add-child",
     text: string,
     title: string,
     disabled: boolean,
@@ -3660,54 +4761,112 @@ export class XStudioModule extends XModule {
   }
 
   private _object_tree_action_buttons(node: XStudioObjectTreeNode, row_id: string) {
+    const child_capability = this._object_tree_child_capability(node, true);
+    const can_add_child = child_capability._allowed;
     const can_move_up = this._object_tree_node_can_move(node, "up");
     const can_move_down = this._object_tree_node_can_move(node, "down");
     const can_duplicate = this._object_tree_node_can_duplicate(node);
+    const children: Record<string, any>[] = [];
+
+    if (can_add_child) {
+      children.push(
+        this._object_tree_quick_action_button(
+          row_id,
+          "add-child",
+          "+",
+          `Add child to ${node._label}`,
+          false,
+          (event?: Event) => {
+            event?.preventDefault?.();
+            event?.stopPropagation?.();
+            void this._open_object_tree_add_child_palette(node);
+          },
+        ),
+      );
+    }
+
+    children.push(
+      this._object_tree_quick_action_button(
+        row_id,
+        "move-up",
+        "↑",
+        can_move_up ? `Move up ${node._label}` : "Object cannot move up",
+        !can_move_up,
+        (event?: Event) => {
+          event?.preventDefault?.();
+          event?.stopPropagation?.();
+          void this._apply_object_tree_node_move(node, "up");
+        },
+      ),
+      this._object_tree_quick_action_button(
+        row_id,
+        "move-down",
+        "↓",
+        can_move_down ? `Move down ${node._label}` : "Object cannot move down",
+        !can_move_down,
+        (event?: Event) => {
+          event?.preventDefault?.();
+          event?.stopPropagation?.();
+          void this._apply_object_tree_node_move(node, "down");
+        },
+      ),
+      this._object_tree_quick_action_button(
+        row_id,
+        "duplicate",
+        "⧉",
+        can_duplicate ? `Duplicate ${node._label}` : "Object cannot be duplicated",
+        !can_duplicate,
+        (event?: Event) => {
+          event?.preventDefault?.();
+          event?.stopPropagation?.();
+          this._request_object_tree_node_duplicate(node);
+        },
+      ),
+      this._object_tree_visibility_button(node, row_id),
+    );
 
     return {
       _type: "view",
       _id: `${row_id}-actions`,
-      class: "xstudio-object-tree-actions",
-      _children: [
-        this._object_tree_quick_action_button(
-          row_id,
-          "move-up",
-          "↑",
-          can_move_up ? `Move up ${node._label}` : "Object cannot move up",
-          !can_move_up,
-          (event?: Event) => {
-            event?.preventDefault?.();
-            event?.stopPropagation?.();
-            void this._apply_object_tree_node_move(node, "up");
-          },
-        ),
-        this._object_tree_quick_action_button(
-          row_id,
-          "move-down",
-          "↓",
-          can_move_down ? `Move down ${node._label}` : "Object cannot move down",
-          !can_move_down,
-          (event?: Event) => {
-            event?.preventDefault?.();
-            event?.stopPropagation?.();
-            void this._apply_object_tree_node_move(node, "down");
-          },
-        ),
-        this._object_tree_quick_action_button(
-          row_id,
-          "duplicate",
-          "⧉",
-          can_duplicate ? `Duplicate ${node._label}` : "Object cannot be duplicated",
-          !can_duplicate,
-          (event?: Event) => {
-            event?.preventDefault?.();
-            event?.stopPropagation?.();
-            this._request_object_tree_node_duplicate(node);
-          },
-        ),
-        this._object_tree_visibility_button(node, row_id),
-      ],
+      class: [
+        "xstudio-object-tree-actions",
+        can_add_child ? "xstudio-object-tree-actions-has-add-child" : "",
+      ].filter(Boolean).join(" "),
+      _children: children,
     };
+  }
+
+  private async _open_object_tree_add_child_palette(node: XStudioObjectTreeNode) {
+    const meta = node._meta;
+    if (!meta || !this._object_tree_node_can_add_child(node)) return;
+
+    this._log("object tree add child palette opened", {
+      _target_id: meta._json_id || meta._id,
+      _target_type: meta._type,
+      _source_view_id: meta._source_view_id,
+      _path: meta._path,
+    });
+
+    const selected_skill = await showObjectPalette();
+
+    if (!selected_skill) {
+      this._log("object tree add child palette cancelled", {
+        _target_id: meta._json_id || meta._id,
+        _target_type: meta._type,
+        _source_view_id: meta._source_view_id,
+      });
+      return;
+    }
+
+    this._log("object tree add child palette selected", {
+      _target_id: meta._json_id || meta._id,
+      _target_type: meta._type,
+      _source_view_id: meta._source_view_id,
+      _skill_id: selected_skill._id,
+      _skill_type: selected_skill._type,
+      _skill_title: selected_skill._title,
+      _default_object: selected_skill._design?._palette?._default_object ?? null,
+    });
   }
 
   private async _request_object_tree_structured_edit_refresh(

@@ -154,7 +154,8 @@ export type { XVMView, XVMViewData, XVMViewPack, XVMViewResolver } from "./XVM/X
 /* XStudio                                                                    */
 /* -------------------------------------------------------------------------- */
 
-export { XStudioModule } from "./XStudio/XStudioModule";
+export { XStudioModule, showObjectPalette } from "./XStudio/XStudioModule";
+export type { XStudioObjectPaletteOptions } from "./XStudio/XStudioModule";
 export { _XD_KEYS } from "./XStudio/XStudioTypes";
 export type {
   ServerGetViewRes,

@@ -94,6 +94,14 @@ type ActiveMap = Record<string, string | null>;
 
 const XD_XVM_IGNORE_HASH_CHANGE = "xvm:ignore-hash-change";
 
+type XVMBrowserHistoryState = {
+  _xvm: true;
+  _view_id: string;
+  _route_id?: string;
+  _region?: string;
+  _container_id: string;
+};
+
 export const XVMEvents = {
   container_added: "xvm-container-added",
   app_loaded: "xvm-app-loaded",
@@ -346,6 +354,7 @@ class _XVM extends XModule {
   private _defaultRegion: RegionName = "main";
   private _xvm_view_pack_loaded = false;
   private _xvm_view_resolver_bound = false;
+  private _restoring_browser_history = false;
 
   constructor() {
     super({ _name: _XVM._module_name });
@@ -354,6 +363,137 @@ class _XVM extends XModule {
   private log(...args: any[]) {
     if (!this._debug) return;
     _xlog.log("XVM", ...args);
+  }
+
+  private canUseBrowserWindow() {
+    return typeof window !== "undefined" && !!window.location;
+  }
+
+  private getBrowserHistory(): History | null {
+    if (!this.canUseBrowserWindow()) return null;
+    const history_api = window.history;
+    if (!history_api) return null;
+    if (typeof history_api.pushState !== "function") return null;
+    if (typeof history_api.replaceState !== "function") return null;
+    return history_api;
+  }
+
+  private isBrowserHistoryState(value: any): value is XVMBrowserHistoryState {
+    return (
+      value?._xvm === true &&
+      typeof value._view_id === "string" &&
+      value._view_id.trim().length > 0 &&
+      typeof value._container_id === "string" &&
+      value._container_id.trim().length > 0
+    );
+  }
+
+  private isSameBrowserHistoryState(a: any, b: XVMBrowserHistoryState) {
+    if (!this.isBrowserHistoryState(a)) return false;
+    return (
+      a._view_id === b._view_id &&
+      a._route_id === b._route_id &&
+      a._region === b._region &&
+      a._container_id === b._container_id
+    );
+  }
+
+  private createBrowserHistoryState(input: {
+    viewId: string;
+    routeId?: string;
+    region?: string;
+    containerId: string;
+  }): XVMBrowserHistoryState {
+    const state: XVMBrowserHistoryState = {
+      _xvm: true,
+      _view_id: input.viewId,
+      _region: input.region,
+      _container_id: input.containerId,
+    };
+
+    if (input.routeId) {
+      state._route_id = input.routeId;
+    }
+
+    return state;
+  }
+
+  private browserHistoryUrl(hashTarget?: string) {
+    if (!this.canUseBrowserWindow() || !hashTarget) return undefined;
+    return "#" + hashTarget;
+  }
+
+  private writeBrowserHistoryState(
+    mode: "push" | "replace",
+    state: XVMBrowserHistoryState,
+    hashTarget?: string
+  ) {
+    if (this._restoring_browser_history) return false;
+
+    const history_api = this.getBrowserHistory();
+    if (!history_api) return false;
+
+    try {
+      const url = this.browserHistoryUrl(hashTarget);
+      if (mode === "push" && this.isSameBrowserHistoryState(history_api.state, state)) {
+        return true;
+      }
+
+      if (mode === "replace") {
+        history_api.replaceState(state, "", url);
+        _xlog.log("[xvm] browser history replaced", state);
+      } else {
+        history_api.pushState(state, "", url);
+        _xlog.log("[xvm] browser history pushed", state);
+      }
+      return true;
+    } catch (err) {
+      _xlog.error(err);
+      return false;
+    }
+  }
+
+  private replaceBrowserHistoryFromTarget(
+    targetId: string,
+    opts: {
+      route?: XVMRouteSpec;
+      viewId: string;
+      region?: string;
+      containerId: string;
+      hashSync?: boolean;
+    }
+  ) {
+    const state = this.createBrowserHistoryState({
+      viewId: opts.viewId,
+      routeId: opts.route?._id,
+      region: opts.region,
+      containerId: opts.containerId,
+    });
+
+    const hashTarget = opts.hashSync === false ? undefined : targetId;
+    const replaced = this.writeBrowserHistoryState("replace", state, hashTarget);
+    if (replaced) {
+      _xlog.log("[xvm] browser history initialized", state);
+    }
+    return replaced;
+  }
+
+  private async restoreBrowserHistoryState(state: XVMBrowserHistoryState) {
+    this._restoring_browser_history = true;
+
+    try {
+      await this.show(state._route_id ?? state._view_id, {
+        containerId: state._container_id,
+        region: state._region,
+        allowCreateFromRaw: true,
+        allowCreateFromFactory: true,
+      });
+      _xlog.log("[xvm] browser history restored", state);
+    } catch (err) {
+      _xlog.error(err);
+    } finally {
+      this._restoring_browser_history = false;
+    }
   }
 
   private async registerXVMViewSupport() {
@@ -451,6 +591,7 @@ class _XVM extends XModule {
     this._active = {};
     this._regions = {};
     this._defaultRegion = "main";
+    this._restoring_browser_history = false;
 
     this.log("App runtime reset");
   }
@@ -837,18 +978,29 @@ class _XVM extends XModule {
       ...(route ? { _params: (opts as any)._params } : {}),
     } as any);
 
-    if (!opts.silent && policy.hashSync) {
-      _xd.set(XD_XVM_IGNORE_HASH_CHANGE, true, { source: "xvm:navigate" });
+    if (!opts.silent && !this._restoring_browser_history) {
+      const viewId = route?._view_id ?? id;
+      const state = this.createBrowserHistoryState({
+        viewId,
+        routeId: route?._id,
+        region: t.region,
+        containerId: t.containerId,
+      });
+      const hashTarget = policy.hashSync ? (route ? route._id : id) : undefined;
+      const wroteHistory = this.writeBrowserHistoryState(opts.replace ? "replace" : "push", state, hashTarget);
 
-      const next_hash = "#" + (route ? route._id : id);
+      if (!wroteHistory && policy.hashSync && this.canUseBrowserWindow()) {
+        _xd.set(XD_XVM_IGNORE_HASH_CHANGE, true, { source: "xvm:navigate" });
 
-      if (opts.replace) window.location.replace(next_hash);
-      else window.location.hash = next_hash.replace("#", "");
+        const next_hash = "#" + (route ? route._id : id);
 
-      setTimeout(() => {
-        _xd.set(XD_XVM_IGNORE_HASH_CHANGE, false, { source: "xvm:navigate" });
-      }, 0);
+        if (opts.replace) window.location.replace(next_hash);
+        else window.location.hash = next_hash.replace("#", "");
 
+        setTimeout(() => {
+          _xd.set(XD_XVM_IGNORE_HASH_CHANGE, false, { source: "xvm:navigate" });
+        }, 0);
+      }
     }
   }
 
@@ -889,8 +1041,8 @@ class _XVM extends XModule {
     const t = this.resolveTarget(opts);
     const policy = this.regionPolicy(t.region);
 
-    if (!policy.hashSync) {
-      this.log("initRouter skipped: region has hashSync=false", t.region);
+    if (!this.canUseBrowserWindow() || typeof window.addEventListener !== "function") {
+      this.log("initRouter skipped: browser window unavailable");
       return;
     }
 
@@ -899,12 +1051,21 @@ class _XVM extends XModule {
     const runHash = async () => {
       if (_xd.get(XD_XVM_IGNORE_HASH_CHANGE) === true) return;
 
+      if (!policy.hashSync) return;
 
       const id = (window.location.hash || "").replace("#", "");
       if (!id) {
         if (fallbackViewId) {
           try {
             await this.navigate("#" + fallbackViewId, { containerId: t.containerId, region: t.region, replace: true } as any);
+            const fallbackRoute = this._routes[fallbackViewId];
+            this.replaceBrowserHistoryFromTarget(fallbackViewId, {
+              route: fallbackRoute,
+              viewId: fallbackRoute?._view_id ?? fallbackViewId,
+              containerId: t.containerId,
+              region: t.region,
+              hashSync: policy.hashSync,
+            });
           } catch (e) {
             _xlog.error(e);
           }
@@ -914,11 +1075,27 @@ class _XVM extends XModule {
 
       try {
         await this.show(id, { containerId: t.containerId, region: t.region });
+        const route = this._routes[id];
+        this.replaceBrowserHistoryFromTarget(id, {
+          route,
+          viewId: route?._view_id ?? id,
+          containerId: t.containerId,
+          region: t.region,
+          hashSync: policy.hashSync,
+        });
       } catch (e) {
         _xlog.error(e);
         if (fallbackViewId) {
           try {
             await this.navigate("#" + fallbackViewId, { containerId: t.containerId, region: t.region, replace: true } as any);
+            const fallbackRoute = this._routes[fallbackViewId];
+            this.replaceBrowserHistoryFromTarget(fallbackViewId, {
+              route: fallbackRoute,
+              viewId: fallbackRoute?._view_id ?? fallbackViewId,
+              containerId: t.containerId,
+              region: t.region,
+              hashSync: policy.hashSync,
+            });
           } catch (err) {
             _xlog.error(err);
           }
@@ -927,9 +1104,24 @@ class _XVM extends XModule {
     };
 
     void runHash();
+
     const on_hash_change = () => void runHash();
-    window.addEventListener("hashchange", on_hash_change);
-    this._routerCleanups.push(() => window.removeEventListener("hashchange", on_hash_change));
+    const on_pop_state = (event: PopStateEvent) => {
+      _xlog.log("[xvm] browser popstate", event.state);
+      if (!this.isBrowserHistoryState(event.state)) return;
+      void this.restoreBrowserHistoryState(event.state);
+    };
+
+    if (policy.hashSync) {
+      window.addEventListener("hashchange", on_hash_change);
+    } else {
+      this.log("initRouter hash sync skipped: region has hashSync=false", t.region);
+    }
+    window.addEventListener("popstate", on_pop_state);
+    this._routerCleanups.push(() => {
+      if (policy.hashSync) window.removeEventListener("hashchange", on_hash_change);
+      window.removeEventListener("popstate", on_pop_state);
+    });
 
     this.log("Router initialized for container:", t.containerId, "region:", t.region);
   }
