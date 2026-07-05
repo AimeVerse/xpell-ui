@@ -13,6 +13,18 @@ import {
   create_studio_editor_view,
   studio_editor_views,
 } from "./XSEditor";
+import {
+  EXECUTION_GRAPH_ARTIFACT_TYPE,
+  create_xstudio_artifact_request_view,
+  normalize_xstudio_artifact_request_event_payload,
+  xstudio_artifact_request_success_message,
+} from "./Conversation/XStudioArtifactCards";
+import {
+  create_xstudio_conversation_message_list,
+  type XStudioConversationMessage,
+  type XStudioConversationRenderMessage,
+  type XStudioIntentActionView,
+} from "./Conversation/XStudioConversation";
 import conversation_view from "./views/conversation.json";
 import object_tree_view from "./views/object-tree.json";
 import selected_object_inspector_view from "./views/selected-object-inspector.json";
@@ -374,6 +386,8 @@ type XStudioClientRuntime = {
     _version?: number;
     _result?: any;
   }): Promise<Record<string, any> | void>;
+  isWormholeReady?(): boolean;
+  isServerReady?(): boolean;
   sendXcmd(xcmd: any): Promise<any>;
 };
 
@@ -462,35 +476,11 @@ type XStudioSelectedObjectClickInteractionDraft = {
   _uses_legacy_view_id?: boolean;
 };
 
-type XStudioConversationMessage = {
-  _role: "user" | "assistant" | "system" | "tool";
-  _text: string;
-  _created_at: string;
-  _id?: string;
-  _intent?: Record<string, any>;
-};
-
 type XStudioIntentActionLocalStatus =
   | typeof STUDIO_INTENT_ACTION_STATUS_DISMISSED
   | typeof STUDIO_INTENT_ACTION_STATUS_RUNNING
   | typeof STUDIO_INTENT_ACTION_STATUS_DONE
   | typeof STUDIO_INTENT_ACTION_STATUS_FAILED;
-
-type XStudioIntentActionView = {
-  _key: string;
-  _render_key: string;
-  _id: string;
-  _message_id: string;
-  _action_index: number;
-  _title: string;
-  _description: string;
-  _action_type: string;
-  _confidence: string;
-  _status: string;
-  _requires_approval?: boolean;
-  _params: Record<string, any> | null;
-  _error: string;
-};
 
 type XStudioIntentActionParamsResult = {
   _ok: boolean;
@@ -1050,8 +1040,12 @@ export class XStudioModule extends XModule {
   private _conversation_id = "";
   private _conversation_list: XStudioConversationSummary[] = [];
   private _conversation_ready: Promise<void> | null = null;
+  private _pending_app_explorer_refresh = false;
+  private _pending_conversation_load = false;
+  private _flushing_pending_server_ready = false;
   private _conversation_action_status: Record<string, XStudioIntentActionLocalStatus> = {};
   private _conversation_action_error: Record<string, string> = {};
+  private _conversation_action_result: Record<string, any> = {};
   private _portlet_visibility: Record<XStudioPortletId, boolean> = {
     ...STUDIO_DEFAULT_PORTLET_VISIBILITY,
   };
@@ -1079,6 +1073,39 @@ export class XStudioModule extends XModule {
     return this._xvm_client;
   }
 
+  private _server_ready() {
+    if (typeof this._xvm_client?.isServerReady === "function") {
+      return this._xvm_client.isServerReady() === true;
+    }
+    if (typeof this._xvm_client?.isWormholeReady === "function") {
+      return this._xvm_client.isWormholeReady() === true;
+    }
+    return Wormholes._ready === true;
+  }
+
+  private _mark_pending_server_refresh(refresh: "app-explorer" | "conversation" | "both") {
+    if (refresh === "app-explorer" || refresh === "both") this._pending_app_explorer_refresh = true;
+    if (refresh === "conversation" || refresh === "both") this._pending_conversation_load = true;
+  }
+
+  private async _flush_pending_server_refreshes() {
+    if (this._flushing_pending_server_ready || !this._server_ready()) return;
+    if (!this._pending_app_explorer_refresh && !this._pending_conversation_load) return;
+
+    this._flushing_pending_server_ready = true;
+    const refresh_app_explorer = this._pending_app_explorer_refresh;
+    const load_conversation = this._pending_conversation_load;
+    this._pending_app_explorer_refresh = false;
+    this._pending_conversation_load = false;
+
+    try {
+      if (refresh_app_explorer) await this._refresh_app_explorer();
+      if (load_conversation) await this._ensure_conversation_for_current_context();
+    } finally {
+      this._flushing_pending_server_ready = false;
+    }
+  }
+
   bind_events() {
     if (this._events_bound) return;
     this._events_bound = true;
@@ -1094,6 +1121,14 @@ export class XStudioModule extends XModule {
 
     _xem.on("studio:load-current-view", async () => {
       await this._load_studio_current_view_json();
+    });
+
+    _xem.on("xvm:connection-change", (payload: any) => {
+      const evt = this._normalize_event_payload(payload);
+      if (!is_obj(evt) || evt._connected !== true) return;
+      if (evt._app_id !== this._client().getActiveAppId()) return;
+      if (evt._env !== this._client().getActiveEnv()) return;
+      void this._flush_pending_server_refreshes();
     });
 
     _xem.on("xvm:view-rendered", (payload: any) => {
@@ -1251,6 +1286,14 @@ export class XStudioModule extends XModule {
 
     _xem.on("studio:intent-action-dismiss", (payload: any) => {
       void this._dismiss_conversation_intent_action(payload);
+    });
+
+    _xem.on("studio:artifact-request-apply", (payload: any) => {
+      void this._apply_conversation_artifact_request(payload);
+    });
+
+    _xem.on("studio:artifact-request-dismiss", (payload: any) => {
+      void this._dismiss_conversation_artifact_request(payload);
     });
 
     _xem.on("studio:apply-request", () => {
@@ -1847,7 +1890,8 @@ export class XStudioModule extends XModule {
   private _reset_conversation_action_transient_state() {
     this._conversation_action_status = {};
     this._conversation_action_error = {};
-    this._log("conversation action transient state reset", {
+    this._conversation_action_result = {};
+    this._debug_log("conversation action transient state reset", {
       _app_id: this._conversation_app_id,
       _env: this._conversation_env,
       _conversation_id: this._conversation_id,
@@ -2175,6 +2219,10 @@ export class XStudioModule extends XModule {
 
   private async _ensure_conversation_for_current_context() {
     if (!this._can_edit()) return;
+    if (!this._server_ready()) {
+      this._mark_pending_server_refresh("conversation");
+      return;
+    }
 
     if (this._conversation_ready) {
       await this._conversation_ready;
@@ -2289,96 +2337,6 @@ export class XStudioModule extends XModule {
     }
   }
 
-  private _conversation_intent_summary(message: XStudioConversationMessage) {
-    if (!is_obj(message._intent)) return message._text;
-
-    return message._text || "Intent analyzed.";
-  }
-
-  private _conversation_intent_value(intent: Record<string, any>, key: string) {
-    return intent[`_${key}`] ?? intent[key];
-  }
-
-  private _conversation_debug_value(value: any) {
-    if (value === undefined || value === null || value === "") return "-";
-    if (typeof value === "string") return value;
-    if (typeof value === "number" || typeof value === "boolean") return String(value);
-    return _xu.safe_compact_inline_json(value, 4000) || String(value);
-  }
-
-  private _conversation_debug_json(value: any) {
-    if (value === undefined || value === null || value === "") return "-";
-    try {
-      return _xu.compact_json(value, 6000);
-    } catch {
-      return _xu.safe_compact_inline_json(value, 6000) || String(value);
-    }
-  }
-
-  private _conversation_raw_action_params(intent: Record<string, any>) {
-    const raw_actions = intent._actions ?? intent.actions;
-    if (!Array.isArray(raw_actions)) return null;
-
-    const params = raw_actions
-      .map((raw_action) => is_obj(raw_action) && is_obj(raw_action._params) ? raw_action._params : null)
-      .filter((raw_params): raw_params is Record<string, any> => raw_params !== null);
-
-    if (params.length === 0) return null;
-    return params.length === 1 ? params[0] : params;
-  }
-
-  private _conversation_debug_row(label: string, value: any, block = false) {
-    return {
-      _type: "view",
-      class: `xstudio-conversation-debug-row${block ? " xstudio-conversation-debug-row-block" : ""}`,
-      _children: [
-        {
-          _type: "label",
-          class: "xstudio-conversation-debug-label",
-          _text: `${label}:`,
-        },
-        {
-          _type: "label",
-          class: "xstudio-conversation-debug-value",
-          _text: block ? this._conversation_debug_json(value) : this._conversation_debug_value(value),
-        },
-      ],
-    };
-  }
-
-  private _conversation_intent_debug_view(message: XStudioConversationMessage, index: number) {
-    if (!is_obj(message._intent)) return null;
-
-    const intent = message._intent;
-    return {
-      _type: "xhtml",
-      _html_tag: "details",
-      _id: `xstudio-conversation-debug-${index}`,
-      class: "xstudio-conversation-debug",
-      _children: [
-        {
-          _type: "xhtml",
-          _html_tag: "summary",
-          class: "xstudio-conversation-debug-summary",
-          _text: "Debug ▼",
-        },
-        {
-          _type: "view",
-          class: "xstudio-conversation-debug-content",
-          _children: [
-            this._conversation_debug_row("processor", this._conversation_intent_value(intent, "processor")),
-            this._conversation_debug_row("processor_chain", this._conversation_intent_value(intent, "processor_chain")),
-            this._conversation_debug_row("message_type", this._conversation_intent_value(intent, "message_type")),
-            this._conversation_debug_row("execution_level", this._conversation_intent_value(intent, "execution_level")),
-            this._conversation_debug_row("confidence", this._conversation_intent_value(intent, "confidence")),
-            this._conversation_debug_row("raw intent", intent, true),
-            this._conversation_debug_row("raw action params", this._conversation_raw_action_params(intent), true),
-          ],
-        },
-      ],
-    };
-  }
-
   private _conversation_message_key(message: XStudioConversationMessage, index: number) {
     const message_id = typeof message._id === "string" && message._id.trim()
       ? message._id.trim()
@@ -2489,15 +2447,6 @@ export class XStudioModule extends XModule {
       .filter((action): action is XStudioIntentActionView => action !== null);
   }
 
-  private _intent_action_event_payload(action: XStudioIntentActionView) {
-    return {
-      _action_key: action._key,
-      _action_id: action._id,
-      _action_title: action._title,
-      _action_type: action._action_type,
-    };
-  }
-
   private _normalize_intent_action_event_payload(payload?: any) {
     if (!is_obj(payload)) return null;
     const action_key = typeof payload._action_key === "string" ? payload._action_key.trim() : "";
@@ -2597,6 +2546,9 @@ export class XStudioModule extends XModule {
       this._conversation_action_error[action_key] = error;
     } else {
       delete this._conversation_action_error[action_key];
+    }
+    if (status !== STUDIO_INTENT_ACTION_STATUS_DONE) {
+      delete this._conversation_action_result[action_key];
     }
 
     this._render_conversation_messages();
@@ -3261,219 +3213,553 @@ export class XStudioModule extends XModule {
     });
   }
 
-  private _conversation_intent_action_card(action: XStudioIntentActionView, message_index: number, action_index: number) {
-    const is_running = action._status === STUDIO_INTENT_ACTION_STATUS_RUNNING;
-    const is_done = action._status === STUDIO_INTENT_ACTION_STATUS_DONE;
-    const is_failed = action._status === STUDIO_INTENT_ACTION_STATUS_FAILED;
-    const execute_state = this._intent_action_card_execute_state(action);
-    const is_apply_disabled = !execute_state._can_execute;
-    const status_class = _xu.normalize_id(action._status) ?? "unknown";
-    const action_payload = this._intent_action_event_payload(action);
-    const apply_text = is_running ? "Running" : is_done ? "✓ Applied" : is_failed ? "Retry" : "Apply";
-    const apply_title = is_running
-      ? "Action is running"
-      : is_done
-        ? "Action completed"
-        : is_failed
-          ? execute_state._disabled_reason || "Retry action"
-          : execute_state._disabled_reason || "Execute approved action";
-    const edit_action = this._intent_action_edit_action(action);
-    this._log("intent action card state", {
-      _action_id: action._id,
-      _action_type: action._action_type,
-      _status: action._status,
-      _requires_approval: action._requires_approval,
-      _has_params: is_obj(action._params),
-      _edit_action: edit_action,
-      _can_execute: execute_state._can_execute,
-      _disabled_reason: execute_state._disabled_reason,
-    });
+  private _conversation_artifact_request_key(message: XStudioConversationMessage, index: number) {
+    const parts = [
+      this._conversation_app_id || "no-app",
+      this._conversation_env || "no-env",
+      this._conversation_id || "no-conversation",
+      this._conversation_message_id(message, index),
+      "artifact-request",
+    ].map((part) => this._conversation_action_key_part(part));
 
-    if (is_done) {
+    return parts.join(":");
+  }
+
+  private _conversation_artifact_request(message: XStudioConversationMessage, index: number) {
+    return create_xstudio_artifact_request_view(message as any, {
+      _key: this._conversation_artifact_request_key(message, index),
+      _message_id: this._conversation_message_id(message, index),
+    });
+  }
+
+  private _normalize_artifact_request_event_payload(payload?: any) {
+    return normalize_xstudio_artifact_request_event_payload(payload);
+  }
+
+  private _format_artifact_request_failure(result: any) {
+    const error =
+      typeof result?._error === "string" && result._error.trim()
+        ? result._error.trim()
+        : typeof result?._error?._message === "string" && result._error._message.trim()
+          ? result._error._message.trim()
+        : typeof result?._result?._error === "string" && result._result._error.trim()
+          ? result._result._error.trim()
+          : typeof result?._result?._error?._message === "string" && result._result._error._message.trim()
+            ? result._result._error._message.trim()
+          : typeof result?._message === "string" && result._message.trim()
+            ? result._message.trim()
+            : "";
+
+    return error || "Artifact request failed.";
+  }
+
+  private _artifact_request_field(source: Record<string, any>, key: string) {
+    return source[`_${key}`] ?? source[key];
+  }
+
+  private _prepare_execution_graph_params(request: {
+    _artifact_request: Record<string, any> | null;
+  }): XStudioIntentActionParamsResult {
+    if (!is_obj(request._artifact_request)) {
       return {
-        _type: "view",
-        _id: `xstudio-intent-action-${message_index}-${action_index}`,
-        class: `xstudio-intent-action-card xstudio-intent-action-card-${status_class} xstudio-intent-action-card-compact`,
-        _children: [
-          {
-            _type: "label",
-            class: "xstudio-intent-action-success",
-            _text: `✓ Applied${action._title ? `: ${action._title}` : ""}`,
-          },
-        ],
+        _ok: false,
+        _error: "Execution graph request payload is missing.",
+        _params: null,
       };
     }
 
-    const button_children = [
-      {
-        _type: "button",
-        _id: `xstudio-intent-action-apply-${message_index}-${action_index}`,
-        type: "button",
-        class: `xstudio-intent-action-button xstudio-intent-action-apply${is_done ? " xstudio-intent-action-applied" : ""}`,
-        _text: apply_text,
-        title: apply_title,
-        ...(is_apply_disabled ? { disabled: true } : {}),
-        _on: {
-          click: {
-            _module: "xem",
-            _op: "fire",
-            _params: {
-              event: "studio:intent-action-apply",
-              data: action_payload,
-            },
-          },
-        },
-      },
-      ...(!is_done && !is_running
-        ? [
-          {
-            _type: "button",
-            _id: `xstudio-intent-action-dismiss-${message_index}-${action_index}`,
-            type: "button",
-            class: "xstudio-intent-action-button xstudio-intent-action-dismiss",
-            _text: "Dismiss",
-            title: "Dismiss action",
-            _on: {
-              click: {
-                _module: "xem",
-                _op: "fire",
-                _params: {
-                  event: "studio:intent-action-dismiss",
-                  data: action_payload,
-                },
-              },
-            },
-          },
-        ]
-        : []),
-    ];
+    const graph_type = String(
+      this._artifact_request_field(request._artifact_request, "graph_type") ?? "",
+    ).trim();
+    if (!graph_type) {
+      return {
+        _ok: false,
+        _error: "Execution graph request is missing _graph_type.",
+        _params: null,
+      };
+    }
+    if (graph_type !== "crud") {
+      return {
+        _ok: false,
+        _error: "Execution graph type is not supported.",
+        _params: null,
+      };
+    }
+
+    const entity_name = String(
+      this._artifact_request_field(request._artifact_request, "entity_name") ?? "",
+    ).trim();
+    if (!entity_name) {
+      return {
+        _ok: false,
+        _error: "Execution graph request is missing _entity_name.",
+        _params: null,
+      };
+    }
+
+    const params: Record<string, any> = {
+      _app_id: this._conversation_app_id,
+      _env: this._conversation_env,
+      _graph_type: graph_type,
+      _entity_name: entity_name,
+    };
+    const execution_graph = this._artifact_request_field(
+      request._artifact_request,
+      "execution_graph",
+    );
+    if (is_obj(execution_graph)) {
+      params._execution_graph = execution_graph;
+    }
 
     return {
-      _type: "view",
-      _id: `xstudio-intent-action-${message_index}-${action_index}`,
-      class: `xstudio-intent-action-card xstudio-intent-action-card-${status_class}`,
-      _children: [
-        {
-          _type: "view",
-          class: "xstudio-intent-action-content",
-          _children: [
-            {
-              _type: "label",
-              class: "xstudio-intent-action-title",
-              _text: action._title,
-            },
-            ...(action._description
-              ? [
-                {
-                  _type: "label",
-                  class: "xstudio-intent-action-description",
-                  _text: action._description,
-                },
-              ]
-              : []),
-            ...(action._error
-              ? [
-                {
-                  _type: "label",
-                  class: "xstudio-intent-action-error",
-                  _text: action._error,
-                },
-              ]
-              : []),
-          ],
-        },
-        {
-          _type: "view",
-          class: "xstudio-intent-action-buttons",
-          _children: button_children,
-        },
-      ],
+      _ok: true,
+      _error: "",
+      _params: params,
     };
   }
 
-  private _conversation_intent_actions_view(message: XStudioConversationMessage, message_index: number) {
-    const actions = this._conversation_intent_actions(message, message_index)
+  private async _continue_conversation_execution_graph(
+    request: {
+      _request_key: string;
+      _message_id: string;
+      _artifact_type: string;
+      _operation: string;
+      _artifact_name: string;
+      _artifact_request: Record<string, any> | null;
+    },
+  ) {
+    if (!this._conversation_app_id || !this._conversation_env || !this._conversation_id) {
+      const message = "No active conversation selected.";
+      this._set_conversation_action_status(
+        request._request_key,
+        STUDIO_INTENT_ACTION_STATUS_FAILED,
+        message,
+      );
+      this._write_studio_status(message);
+      this._error("execution graph execution failed", {
+        _message_id: request._message_id,
+        _error: message,
+      });
+      return;
+    }
+
+    const prepared = this._prepare_execution_graph_params(request);
+    this._set_conversation_action_status(request._request_key, STUDIO_INTENT_ACTION_STATUS_RUNNING);
+    this._write_studio_status("Executing execution graph...");
+    this._log("execution graph continue requested", {
+      _message_id: request._message_id,
+      _artifact_type: request._artifact_type,
+      _operation: request._operation,
+      _artifact_name: request._artifact_name,
+      ...(prepared._params
+        ? {
+          _app_id: prepared._params._app_id,
+          _env: prepared._params._env,
+          _graph_type: prepared._params._graph_type,
+          _entity_name: prepared._params._entity_name,
+        }
+        : {}),
+    });
+
+    if (!prepared._ok || !prepared._params) {
+      this._set_conversation_action_status(
+        request._request_key,
+        STUDIO_INTENT_ACTION_STATUS_FAILED,
+        prepared._error,
+      );
+      this._write_studio_status(prepared._error);
+      this._error("execution graph execution failed", {
+        _message_id: request._message_id,
+        _artifact_type: request._artifact_type,
+        _operation: request._operation,
+        _artifact_name: request._artifact_name,
+        _error: prepared._error,
+      });
+      await this._persist_conversation_artifact_status_and_reload(
+        request,
+        STUDIO_INTENT_ACTION_STATUS_FAILED,
+        prepared._error,
+      );
+      return;
+    }
+
+    try {
+      const result = await this._send_xvibe_command(
+        "execute-execution-graph",
+        prepared._params,
+      );
+      if (!is_obj(result) || result._ok !== true) {
+        const message = this._format_artifact_request_failure(result);
+        this._set_conversation_action_status(
+          request._request_key,
+          STUDIO_INTENT_ACTION_STATUS_FAILED,
+          message,
+        );
+        this._write_studio_status(message);
+        this._error("execution graph execution failed", {
+          _message_id: request._message_id,
+          _artifact_type: request._artifact_type,
+          _operation: request._operation,
+          _artifact_name: request._artifact_name,
+          _result: result,
+        });
+        await this._persist_conversation_artifact_status_and_reload(
+          request,
+          STUDIO_INTENT_ACTION_STATUS_FAILED,
+          message,
+        );
+        return;
+      }
+
+      this._conversation_action_result[request._request_key] = result;
+      this._set_conversation_action_status(
+        request._request_key,
+        STUDIO_INTENT_ACTION_STATUS_DONE,
+      );
+      this._write_studio_status("Execution graph completed");
+      this._log("execution graph execution completed", {
+        _message_id: request._message_id,
+        _artifact_type: request._artifact_type,
+        _operation: request._operation,
+        _artifact_name: request._artifact_name,
+        _summary: result._summary,
+      });
+      await this._persist_conversation_artifact_status_and_reload(
+        request,
+        STUDIO_INTENT_ACTION_STATUS_DONE,
+        "",
+        result,
+      );
+      try {
+        await this._refresh_app_explorer();
+      } catch (refresh_err) {
+        this._error("artifact request app explorer refresh failed", {
+          _message_id: request._message_id,
+          _artifact_type: request._artifact_type,
+          _operation: request._operation,
+          _artifact_name: request._artifact_name,
+          _error: to_err(refresh_err),
+        });
+      }
+    } catch (err) {
+      const message = to_err(err) || "Execution graph failed.";
+      this._set_conversation_action_status(
+        request._request_key,
+        STUDIO_INTENT_ACTION_STATUS_FAILED,
+        message,
+      );
+      this._write_studio_status(message);
+      this._error("execution graph execution failed", {
+        _message_id: request._message_id,
+        _artifact_type: request._artifact_type,
+        _operation: request._operation,
+        _artifact_name: request._artifact_name,
+        _error: to_err(err),
+      });
+      await this._persist_conversation_artifact_status_and_reload(
+        request,
+        STUDIO_INTENT_ACTION_STATUS_FAILED,
+        message,
+      );
+    }
+  }
+
+  private async _persist_conversation_artifact_status_and_reload(
+    request: {
+      _request_key: string;
+      _message_id: string;
+      _artifact_type: string;
+      _operation: string;
+      _artifact_name: string;
+      _artifact_request: Record<string, any> | null;
+    },
+    status: XStudioIntentActionLocalStatus,
+    error = "",
+    artifact_result?: any,
+  ) {
+    if (!this._conversation_app_id || !this._conversation_env || !this._conversation_id) {
+      const message = "No active conversation selected.";
+      this._set_conversation_action_status(
+        request._request_key,
+        STUDIO_INTENT_ACTION_STATUS_FAILED,
+        message,
+      );
+      this._write_studio_status(message);
+      this._error("artifact request status persist skipped", {
+        _message_id: request._message_id,
+        _artifact_type: request._artifact_type,
+        _operation: request._operation,
+        _name: request._artifact_name,
+        _artifact_status: status,
+        _error: message,
+      });
+      return false;
+    }
+
+    const params: Record<string, any> = {
+      _app_id: this._conversation_app_id,
+      _env: this._conversation_env,
+      _conversation_id: this._conversation_id,
+      _message_id: request._message_id,
+      _artifact_type: request._artifact_type,
+      _artifact_request: request._artifact_request,
+      _artifact_status: status,
+    };
+
+    if (error) params._artifact_error = error;
+    if (artifact_result !== undefined) params._artifact_result = artifact_result;
+
+    this._log("artifact request status persist requested", {
+      _message_id: request._message_id,
+      _artifact_type: request._artifact_type,
+      _operation: request._operation,
+      _name: request._artifact_name,
+      _artifact_status: status,
+      ...(error ? { _artifact_error: error } : {}),
+      _has_result: artifact_result !== undefined,
+    });
+
+    try {
+      const result = await this._send_xvibe_command("update-conversation-artifact", params);
+      this._log("artifact request status persisted", {
+        _message_id: request._message_id,
+        _artifact_type: request._artifact_type,
+        _operation: request._operation,
+        _name: request._artifact_name,
+        _artifact_status: status,
+        _result: result,
+      });
+      await this._load_conversation_messages();
+      return true;
+    } catch (err) {
+      this._error("artifact request status persist failed", {
+        _message_id: request._message_id,
+        _artifact_type: request._artifact_type,
+        _operation: request._operation,
+        _name: request._artifact_name,
+        _artifact_status: status,
+        _error: to_err(err),
+      });
+      return false;
+    }
+  }
+
+  private async _apply_conversation_artifact_request(payload?: any) {
+    const request = this._normalize_artifact_request_event_payload(payload);
+    if (!request) return;
+
+    if (this._conversation_action_status[request._request_key] === STUDIO_INTENT_ACTION_STATUS_RUNNING) {
+      return;
+    }
+
+    if (request._artifact_type === EXECUTION_GRAPH_ARTIFACT_TYPE) {
+      await this._continue_conversation_execution_graph(request);
+      return;
+    }
+
+    if (!this._conversation_app_id || !this._conversation_env || !this._conversation_id) {
+      const message = "No active conversation selected.";
+      this._set_conversation_action_status(
+        request._request_key,
+        STUDIO_INTENT_ACTION_STATUS_FAILED,
+        message,
+      );
+      this._write_studio_status(message);
+      this._error("artifact request apply failed", {
+        _message_id: request._message_id,
+        _artifact_type: request._artifact_type,
+        _operation: request._operation,
+        _artifact_name: request._artifact_name,
+        _error: message,
+      });
+      return;
+    }
+
+    if (!is_obj(request._artifact_request)) {
+      const message = "Artifact request payload is missing.";
+      this._set_conversation_action_status(
+        request._request_key,
+        STUDIO_INTENT_ACTION_STATUS_FAILED,
+        message,
+      );
+      this._write_studio_status(message);
+      this._error("artifact request apply failed", {
+        _message_id: request._message_id,
+        _artifact_type: request._artifact_type,
+        _operation: request._operation,
+        _artifact_name: request._artifact_name,
+        _error: message,
+      });
+      return;
+    }
+
+    this._set_conversation_action_status(request._request_key, STUDIO_INTENT_ACTION_STATUS_RUNNING);
+    this._write_studio_status(`Applying ${request._artifact_type} artifact request...`);
+    this._log("artifact request apply requested", {
+      _message_id: request._message_id,
+      _artifact_type: request._artifact_type,
+      _operation: request._operation,
+      _artifact_name: request._artifact_name,
+    });
+
+    const params = {
+      _app_id: this._conversation_app_id,
+      _env: this._conversation_env,
+      _artifact_type: request._artifact_type,
+      _artifact_request: request._artifact_request,
+      _conversation_id: this._conversation_id,
+      _message_id: request._message_id,
+    };
+
+    try {
+      const result = await this._send_xvibe_command("apply-artifact-request", params);
+      if (!is_obj(result) || result._ok !== true) {
+        const message = this._format_artifact_request_failure(result);
+        this._set_conversation_action_status(
+          request._request_key,
+          STUDIO_INTENT_ACTION_STATUS_FAILED,
+          message,
+        );
+        this._write_studio_status(message);
+        this._error("artifact request apply failed", {
+          _message_id: request._message_id,
+          _artifact_type: request._artifact_type,
+          _operation: request._operation,
+          _artifact_name: request._artifact_name,
+          _result: result,
+        });
+        await this._persist_conversation_artifact_status_and_reload(
+          request,
+          STUDIO_INTENT_ACTION_STATUS_FAILED,
+          message,
+        );
+        return;
+      }
+
+      const success = xstudio_artifact_request_success_message(request);
+      this._conversation_action_result[request._request_key] = success;
+      this._set_conversation_action_status(request._request_key, STUDIO_INTENT_ACTION_STATUS_DONE);
+      this._write_studio_status(success);
+      this._log("artifact request apply completed", {
+        _artifact_type: request._artifact_type,
+        _operation: request._operation,
+        _name: request._artifact_name,
+        _ok: true,
+      });
+      await this._persist_conversation_artifact_status_and_reload(
+        request,
+        STUDIO_INTENT_ACTION_STATUS_DONE,
+        "",
+        result,
+      );
+      try {
+        await this._refresh_app_explorer();
+      } catch (refresh_err) {
+        this._error("artifact request app explorer refresh failed", {
+          _message_id: request._message_id,
+          _artifact_type: request._artifact_type,
+          _operation: request._operation,
+          _artifact_name: request._artifact_name,
+          _error: to_err(refresh_err),
+        });
+      }
+    } catch (err) {
+      const message = "Artifact request failed.";
+      this._set_conversation_action_status(
+        request._request_key,
+        STUDIO_INTENT_ACTION_STATUS_FAILED,
+        message,
+      );
+      this._write_studio_status(message);
+      this._error("artifact request apply failed", {
+        _message_id: request._message_id,
+        _artifact_type: request._artifact_type,
+        _operation: request._operation,
+        _artifact_name: request._artifact_name,
+        _error: to_err(err),
+      });
+      await this._persist_conversation_artifact_status_and_reload(
+        request,
+        STUDIO_INTENT_ACTION_STATUS_FAILED,
+        message,
+      );
+    }
+  }
+
+  private async _dismiss_conversation_artifact_request(payload?: any) {
+    const request = this._normalize_artifact_request_event_payload(payload);
+    if (!request) return;
+
+    this._set_conversation_action_status(
+      request._request_key,
+      STUDIO_INTENT_ACTION_STATUS_DISMISSED,
+    );
+    this._log("artifact request dismissed", {
+      _message_id: request._message_id,
+      _artifact_type: request._artifact_type,
+      _operation: request._operation,
+      _artifact_name: request._artifact_name,
+    });
+    await this._persist_conversation_artifact_status_and_reload(
+      request,
+      STUDIO_INTENT_ACTION_STATUS_DISMISSED,
+    );
+  }
+
+  private _conversation_intent_render_actions(message: XStudioConversationMessage, message_index: number) {
+    return this._conversation_intent_actions(message, message_index)
       .filter((action) =>
         action._status !== STUDIO_INTENT_ACTION_STATUS_DISMISSED,
-      );
+      )
+      .map((action) => {
+        const execute_state = this._intent_action_card_execute_state(action);
+        const edit_action = this._intent_action_edit_action(action);
+        this._log("intent action card state", {
+          _action_id: action._id,
+          _action_type: action._action_type,
+          _status: action._status,
+          _requires_approval: action._requires_approval,
+          _has_params: is_obj(action._params),
+          _edit_action: edit_action,
+          _can_execute: execute_state._can_execute,
+          _disabled_reason: execute_state._disabled_reason,
+        });
 
-    if (actions.length === 0) return null;
-
-    return {
-      _type: "view",
-      _id: `xstudio-intent-actions-${message_index}`,
-      class: "xstudio-intent-actions",
-      _children: [
-        {
-          _type: "label",
-          class: "xstudio-intent-actions-title",
-          _text: "Suggested actions:",
-        },
-        ...actions.map((action, action_index) =>
-          this._conversation_intent_action_card(action, message_index, action_index),
-        ),
-      ],
-    };
+        return {
+          ...action,
+          _execute_state: execute_state,
+        };
+      });
   }
 
-  private _conversation_message_view(message: XStudioConversationMessage, index: number) {
-    const role =
-      message._role === "assistant" ||
-        message._role === "system" ||
-        message._role === "tool"
-        ? message._role
-        : "user";
-    const label =
-      role === "user"
-        ? "You"
-        : role === "assistant"
-          ? "Assistant"
-          : role === "system"
-            ? "System"
-            : "Tool";
-    const created_at = this._format_conversation_time(message._created_at);
-    const actions_view = this._conversation_intent_actions_view(message, index);
-    const debug_view = this._conversation_intent_debug_view(message, index);
+  private _conversation_render_message(message: XStudioConversationMessage, index: number): XStudioConversationRenderMessage {
+    const artifact_request = this._conversation_artifact_request(message, index);
+    const artifact_status = artifact_request
+      ? (this._conversation_action_status[artifact_request._key] ?? artifact_request._status) || ""
+      : "";
+    const artifact_visible = artifact_request &&
+      artifact_status !== STUDIO_INTENT_ACTION_STATUS_DISMISSED;
+    const artifact_error = artifact_request
+      ? this._conversation_action_error[artifact_request._key] || artifact_request._error || ""
+      : "";
+    const artifact_result = artifact_request
+      ? this._conversation_action_result[artifact_request._key] ?? artifact_request._result
+      : undefined;
+    const artifact_success = artifact_request
+      ? (typeof artifact_result === "string"
+        ? artifact_result
+        : xstudio_artifact_request_success_message(artifact_request))
+      : "";
 
     return {
-      _type: "view",
-      _id: `xstudio-conversation-message-${index}`,
-      class: `xstudio-conversation-message xstudio-conversation-message-${role}`,
-      _children: [
-        {
-          _type: "view",
-          class: "xstudio-conversation-meta",
-          _children: [
-            {
-              _type: "label",
-              class: "xstudio-conversation-role",
-              _text: label,
-            },
-            {
-              _type: "label",
-              class: "xstudio-conversation-time",
-              _text: created_at,
-            },
-          ],
-        },
-        {
-          _type: "label",
-          class: "xstudio-conversation-bubble",
-          _text: this._conversation_intent_summary(message),
-        },
-        ...(debug_view ? [debug_view] : []),
-        ...(actions_view ? [actions_view] : []),
-      ],
+      ...message,
+      _actions: this._conversation_intent_render_actions(message, index),
+      _artifact_request: artifact_visible ? artifact_request : null,
+      _artifact_status: artifact_status,
+      _artifact_error: artifact_error,
+      _artifact_success: artifact_success,
+      _artifact_result: artifact_result,
     };
-  }
-
-  private _format_conversation_time(value: string) {
-    const date = new Date(value);
-    if (!Number.isFinite(date.getTime())) return "";
-    return date.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
   }
 
   private _scroll_conversation_to_bottom() {
@@ -3487,17 +3773,9 @@ export class XStudioModule extends XModule {
     const list = XUI.getObject(STUDIO_CONVERSATION_MESSAGES_ID) as any;
     if (!list) return;
 
-    const messages = this._conversation_messages.map((message) => ({ ...message }));
-    const children = messages.length > 0
-      ? messages.map((message, index) => this._conversation_message_view(message, index))
-      : [
-        {
-          _id: "xstudio-conversation-empty",
-          _type: "label",
-          class: "xstudio-conversation-empty",
-          _text: "No messages yet.",
-        },
-      ];
+    const messages = this._conversation_messages
+      .map((message, index) => this._conversation_render_message({ ...message }, index));
+    const children = create_xstudio_conversation_message_list(messages);
 
     list.update?.({ _children: children });
     queueMicrotask(() => this._scroll_conversation_to_bottom());
@@ -4283,9 +4561,26 @@ export class XStudioModule extends XModule {
       "";
   }
 
+  private _apply_app_explorer_selection_to_dom() {
+    if (typeof document === "undefined") return;
+
+    const rows = Array.from(
+      document.querySelectorAll<HTMLElement>("[data-xstudio-artifact-key]"),
+    );
+
+    for (const row of rows) {
+      const selected = row.dataset.xstudioArtifactKey === this._app_explorer_selected_key;
+      row.classList.toggle("xstudio-app-explorer-row-selected", selected);
+      row.setAttribute("aria-selected", String(selected));
+      if (selected) {
+        row.scrollIntoView({ block: "nearest", inline: "nearest" });
+      }
+    }
+  }
+
   private _select_app_explorer_artifact(artifact: XStudioAppExplorerArtifact) {
     this._app_explorer_selected_key = this._app_explorer_artifact_key(artifact._type, artifact._id);
-    this._render_cached_app_explorer();
+    this._apply_app_explorer_selection_to_dom();
     this._log("app explorer artifact selected", {
       _type: artifact._type,
       _id: artifact._id,
@@ -4475,8 +4770,24 @@ export class XStudioModule extends XModule {
         current ? "xstudio-app-explorer-row-current" : "",
       ].filter(Boolean).join(" "),
       title: artifact._title || artifact._id,
+      "data-xstudio-artifact-key": key,
+      "data-xstudio-artifact-type": artifact._type,
+      "data-xstudio-artifact-id": artifact._id,
+      "aria-selected": String(selected),
       _style: {
         "--xstudio-tree-indent": `${depth * 14}px`,
+      },
+      _on: {
+        click: (event?: Event) => {
+          event?.preventDefault?.();
+          event?.stopPropagation?.();
+          this._select_app_explorer_artifact(artifact);
+        },
+        dblclick: (event?: Event) => {
+          event?.preventDefault?.();
+          event?.stopPropagation?.();
+          void this._open_app_explorer_view(artifact);
+        },
       },
       _children: [
         {
@@ -4584,6 +4895,7 @@ export class XStudioModule extends XModule {
     }
 
     target.update?.({ _children: root_children });
+    this._apply_app_explorer_selection_to_dom();
   }
 
   async _refresh_app_explorer() {
@@ -4602,6 +4914,11 @@ export class XStudioModule extends XModule {
         this._selected_object_inspector_draft,
         this._selected_object !== null,
       );
+      return false;
+    }
+
+    if (!this._server_ready()) {
+      this._mark_pending_server_refresh("app-explorer");
       return false;
     }
 
@@ -4873,7 +5190,7 @@ export class XStudioModule extends XModule {
       );
 
     if (log) {
-      this._log("object tree child capability resolved", {
+      this._debug_log("object tree child capability resolved", {
         _object_id: object_id,
         _object_type: type,
         _skill_found: Boolean(skill),
@@ -5634,7 +5951,7 @@ export class XStudioModule extends XModule {
     const results = (tree_results?.dom ?? renderTarget.dom ?? null) as HTMLElement | null;
     const filtered_count = this._flatten_object_tree_nodes(nodes).length;
 
-    this._log("object tree render", {
+    this._debug_log("object tree render", {
       _filtered_nodes: filtered_count,
       _search: search,
       _render_target: renderTarget._id ?? renderTarget.dom?.id ?? "",
@@ -5651,7 +5968,7 @@ export class XStudioModule extends XModule {
           },
         ],
       });
-      this._log("object tree rendered", {
+      this._debug_log("object tree rendered", {
         _children_rendered: renderTarget.dom?.children?.length ?? 0,
         "results.clientHeight": results?.clientHeight ?? null,
         "results.scrollHeight": results?.scrollHeight ?? null,
@@ -5749,7 +6066,7 @@ export class XStudioModule extends XModule {
 
     this._selected_tree_row_id = selected_row_id;
     renderTarget.update?.({ _children: children });
-    this._log("object tree rendered", {
+    this._debug_log("object tree rendered", {
       _children_rendered: renderTarget.dom?.children?.length ?? 0,
       "results.clientHeight": results?.clientHeight ?? null,
       "results.scrollHeight": results?.scrollHeight ?? null,
@@ -6068,7 +6385,7 @@ export class XStudioModule extends XModule {
         ] as XStudioSelectedObjectInspectorSectionId[]
         : [...STUDIO_SELECTED_OBJECT_FALLBACK_INSPECTOR_SECTIONS];
 
-    this._log("inspector sections resolved", {
+    this._debug_log("inspector sections resolved", {
       _type: type,
       _skill_id: skill?._id ?? "",
       _source: has_sections_metadata ? "design" : "fallback",
@@ -8387,7 +8704,7 @@ export class XStudioModule extends XModule {
     this._object_tree_nodes = nodes;
     this._sync_object_tree_expansion_defaults(nodes);
     const flat_nodes = this._flatten_object_tree_nodes(nodes);
-    this._log("object tree cache", { _total_nodes: flat_nodes.length });
+    this._debug_log("object tree cache", { _total_nodes: flat_nodes.length });
 
     const previous_selected = this._selected_object;
     const pending_select_id = this._selected_object_pending_select_id.trim();
@@ -8425,6 +8742,23 @@ export class XStudioModule extends XModule {
     _xlog.log(LOG, ...args);
   }
 
+  private _debug_enabled() {
+    if (typeof window === "undefined") return false;
+    const global_debug = (window as any).__XSTUDIO_DEBUG === true;
+    let stored_debug = false;
+    try {
+      stored_debug = window.localStorage?.getItem("xstudio:debug") === "true";
+    } catch {
+      stored_debug = false;
+    }
+    return global_debug || stored_debug;
+  }
+
+  private _debug_log(...args: any[]) {
+    if (!this._debug_enabled()) return;
+    _xlog.debug(LOG, ...args);
+  }
+
   private _error(...args: any[]) {
     _xlog.error(LOG, ...args);
   }
@@ -8435,12 +8769,15 @@ export class XStudioModule extends XModule {
 
   private async _send_command(_module: string, _op: string, _params: Record<string, any>) {
     const req_id = ++this._cmd_seq;
-    this._log(`-> ${_module}.${_op}`, { _req_id: req_id, _params });
+    this._debug_log(`-> ${_module}.${_op}`, { _req_id: req_id, _params });
+    if ((_module === "server-xvm" || _module === "xvibe") && !this._server_ready()) {
+      throw { _code: "E_XSTUDIO_SERVER_NOT_READY", _module, _op };
+    }
     try {
       const raw = await this._client().sendXcmd({ _module, _op, _params });
-      this._log(`<- ${_module}.${_op} raw`, { _req_id: req_id, _raw: raw });
+      this._debug_log(`<- ${_module}.${_op} raw`, { _req_id: req_id, _raw: raw });
       const result = to_result(raw);
-      this._log(`<- ${_module}.${_op} result`, { _req_id: req_id, _result: result });
+      this._debug_log(`<- ${_module}.${_op} result`, { _req_id: req_id, _result: result });
       return result;
     } catch (err: any) {
       this._error(`xx ${_module}.${_op} failed`, { _req_id: req_id, _error: to_err(err) });

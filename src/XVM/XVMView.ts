@@ -107,6 +107,7 @@ export class XVMView extends XUIObject {
   private _resolved = false;
   private _resolving = false;
   private _cache_listener_bound = false;
+  private _missing_view_warn_timer: number | null = null;
   private _explicit_id = false;
   private _referenced_root_patch: Record<string, any> | null = null;
 
@@ -138,6 +139,11 @@ export class XVMView extends XUIObject {
     if (this._referenced_root_patch) {
       this.applyDomRootPatch(this._referenced_root_patch);
     }
+  }
+
+  override async dispose() {
+    this.clearMissingViewWarning();
+    await super.dispose();
   }
 
   private bindViewCacheRetry() {
@@ -235,12 +241,14 @@ export class XVMView extends XUIObject {
 
       const view = XVMView.view_resolver?.(this._view_id) ?? null;
       if (!view || !Array.isArray(view._children)) {
-        _xlog.warn("[XVMView] view not available yet", {
+        _xlog.debug("[XVMView] view not available yet", {
           _view_id: this._view_id,
         });
+        this.scheduleMissingViewWarning(this._view_id);
         return;
       }
 
+      this.clearMissingViewWarning();
       this.applyReferencedRoot(view);
 
       const children = this.applyParams(this.clone(view._children));
@@ -259,6 +267,35 @@ export class XVMView extends XUIObject {
     } finally {
       this._resolving = false;
     }
+  }
+
+  private scheduleMissingViewWarning(view_id: string) {
+    if (this._missing_view_warn_timer !== null) return;
+    if (typeof window === "undefined") return;
+
+    this._missing_view_warn_timer = window.setTimeout(() => {
+      this._missing_view_warn_timer = null;
+      if (this._resolved) return;
+      if (this._view_id !== view_id) return;
+
+      const view = XVMView.view_resolver?.(view_id) ?? null;
+      if (view && Array.isArray(view._children)) {
+        void this.resolveView();
+        return;
+      }
+
+      _xlog.warn("[XVMView] referenced view still missing after hydration", {
+        _view_id: view_id,
+      });
+    }, 3000);
+  }
+
+  private clearMissingViewWarning() {
+    if (this._missing_view_warn_timer === null) return;
+    if (typeof window !== "undefined") {
+      window.clearTimeout(this._missing_view_warn_timer);
+    }
+    this._missing_view_warn_timer = null;
   }
 
   private applyReferencedRoot(view: Record<string, any>) {

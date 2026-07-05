@@ -559,7 +559,7 @@ body {
     gap: 0;
     padding: 0;
     min-height: 0;
-    overflow: hidden;
+    overflow-y: auto;
 }
 
 .xstudio-left-dock .xstudio-explorer-section-collapsed {
@@ -711,7 +711,7 @@ body {
     max-height: 100%;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    overflow-y: auto;
     padding: 4px 6px;
 }
 
@@ -719,8 +719,10 @@ body {
     flex: 1 1 0;
     overflow-x: hidden;
     overflow-y: auto;
-    padding-right: 2px;
+    padding: 0 2px 18px 0;
+    scroll-padding-bottom: 18px;
     scrollbar-gutter: stable;
+    overscroll-behavior: contain;
 }
 
 .xstudio-object-tree-portlet {
@@ -812,6 +814,14 @@ body {
     overflow: hidden;
 }
 
+.xstudio-app-explorer-row {
+    cursor: pointer;
+}
+
+.xstudio-app-explorer-row .xstudio-app-explorer-label {
+    pointer-events: auto;
+}
+
 .xstudio-object-tree-chevron,
 .xstudio-object-tree-visibility-action,
 .xstudio-object-tree-quick-action {
@@ -868,6 +878,71 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
     cursor: pointer;
+}
+
+.xui-flow-running {
+    cursor: wait;
+    opacity: 0.72;
+}
+
+.xui-flow-running[disabled],
+.xui-flow-running[aria-busy="true"] {
+    pointer-events: none;
+}
+
+.xui-flow-running::after {
+    content: "";
+    width: 0.75em;
+    height: 0.75em;
+    margin-left: 0.5em;
+    border: 1px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: xui-flow-spin 0.8s linear infinite;
+}
+
+.xui-flow-error {
+    border-color: color-mix(in srgb, #d94b4b 70%, var(--xstudio-border, currentColor)) !important;
+}
+
+.xui-flow-error::after {
+    content: attr(data-xflow-error);
+    margin-left: 0.6em;
+    color: #d94b4b;
+    font-size: 0.86em;
+    line-height: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.xui-flow-success {
+    border-color: color-mix(in srgb, #21875b 70%, var(--xstudio-border, currentColor)) !important;
+}
+
+.xui-flow-status {
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.2em;
+    margin-left: 0.6em;
+    color: #21875b;
+    font-size: 0.9em;
+    line-height: 1.2;
+    letter-spacing: 0;
+}
+
+.xui-flow-running + .xui-flow-status {
+    color: inherit;
+    opacity: 0.78;
+}
+
+.xui-flow-error + .xui-flow-status {
+    color: #d94b4b;
+}
+
+@keyframes xui-flow-spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .xstudio-object-tree-label-primary,
@@ -2168,6 +2243,195 @@ body {
     color: var(--xstudio-text-muted);
     white-space: pre-wrap;
     overflow-wrap: anywhere;
+}
+
+.xstudio-artifact-request-card {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+    border: 1px solid color-mix(in srgb, var(--xstudio-accent) 64%, var(--xstudio-border));
+    border-radius: var(--xstudio-radius-md);
+    background: color-mix(in srgb, var(--xstudio-accent) 9%, var(--xstudio-surface));
+}
+
+.xstudio-artifact-request-card-compact {
+    gap: 0;
+    padding: 5px 8px;
+}
+
+.xstudio-artifact-request-card-running {
+    border-color: color-mix(in srgb, var(--x-warning) 58%, var(--xstudio-border));
+    background: color-mix(in srgb, var(--x-warning) 8%, var(--xstudio-surface));
+}
+
+.xstudio-artifact-request-card-done {
+    border-color: color-mix(in srgb, var(--x-success) 58%, var(--xstudio-border));
+    background: color-mix(in srgb, var(--x-success) 8%, var(--xstudio-surface));
+}
+
+.xstudio-artifact-request-card-failed {
+    border-color: color-mix(in srgb, var(--x-danger) 62%, var(--xstudio-border));
+    background: color-mix(in srgb, var(--x-danger) 8%, var(--xstudio-surface));
+}
+
+.xstudio-artifact-request-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.xstudio-artifact-request-label {
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 15px;
+    letter-spacing: 0;
+}
+
+.xstudio-artifact-request-title {
+    color: var(--xstudio-text);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 16px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-artifact-request-details-label {
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 15px;
+    letter-spacing: 0;
+}
+
+.xstudio-artifact-request-detail {
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    line-height: 15px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-artifact-request-error {
+    color: color-mix(in srgb, var(--x-danger) 86%, var(--xstudio-text));
+    font-size: 11px;
+    line-height: 15px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-artifact-request-success {
+    color: color-mix(in srgb, var(--x-success) 86%, var(--xstudio-text));
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 15px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-artifact-request-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 6px;
+}
+
+.xstudio-execution-graph-card {
+    border-color: color-mix(in srgb, var(--xstudio-accent) 58%, var(--xstudio-border));
+    background: color-mix(in srgb, var(--xstudio-accent) 7%, var(--xstudio-surface));
+}
+
+.xstudio-execution-graph-card-compact {
+    gap: 5px;
+}
+
+.xstudio-execution-graph-content {
+    gap: 5px;
+}
+
+.xstudio-execution-graph-summary {
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    line-height: 15px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-execution-graph-nodes-label {
+    margin-top: 2px;
+}
+
+.xstudio-execution-graph-node {
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: 14px minmax(54px, max-content) minmax(0, 1fr);
+    gap: 7px;
+    align-items: baseline;
+    padding-left: calc(var(--xstudio-execution-graph-depth, 0) * 14px);
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    line-height: 16px;
+    letter-spacing: 0;
+    min-width: 0;
+}
+
+.xstudio-execution-graph-node-existing {
+    color: color-mix(in srgb, var(--x-success) 84%, var(--xstudio-text));
+}
+
+.xstudio-execution-graph-node-missing {
+    color: color-mix(in srgb, var(--xstudio-text-muted) 88%, var(--xstudio-text));
+}
+
+.xstudio-execution-graph-node-icon {
+    color: inherit;
+    font-size: 11px;
+    line-height: 16px;
+    letter-spacing: 0;
+}
+
+.xstudio-execution-graph-node-type {
+    color: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 16px;
+    letter-spacing: 0;
+    white-space: nowrap;
+}
+
+.xstudio-execution-graph-node-name {
+    min-width: 0;
+    color: var(--xstudio-text);
+    font-size: 11px;
+    line-height: 16px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-execution-graph-node-missing .xstudio-execution-graph-node-name {
+    color: color-mix(in srgb, var(--xstudio-text-muted) 88%, var(--xstudio-text));
+}
+
+.xstudio-execution-graph-result {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+    gap: 4px 10px;
+    align-items: center;
+}
+
+.xstudio-execution-graph-result-row {
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    line-height: 15px;
+    letter-spacing: 0;
+    white-space: nowrap;
 }
 
 .xstudio-intent-actions {

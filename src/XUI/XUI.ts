@@ -173,7 +173,7 @@ export class XUIModule extends XModule {
 
 
   loadSVGPack() {
-    _xlog.log("[XUI] Registering XUI SVG object pack...");
+    _xlog.debug("[XUI] Registering XUI SVG object pack...");
     this.importObjectPack(XUISVGObjectPack);
   }
 

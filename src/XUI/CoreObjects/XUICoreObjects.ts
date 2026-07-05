@@ -890,6 +890,280 @@ export class XHTML extends XUIObject {
     }
 }
 
+type XTableColumn = {
+    _key?: string;
+    key?: string;
+    _label?: string;
+    label?: string;
+    _title?: string;
+    title?: string;
+};
+
+export class XTable extends XUIObject {
+    static _xtype = "table";
+
+    static _skill: XpellSkill = {
+        _id: "table",
+        _title: "XTable",
+        _version: "1.0.0",
+        _active: true,
+        _type: "view-skill",
+        _requires: ["xuiobject", "entity-client"],
+
+        _description:
+            "Table UI object rendered from _columns and _rows or an entity records data source.",
+
+        _fields: {
+            _columns: "Column definitions. Each column uses _key for row lookup.",
+            _rows: "Optional local row array.",
+            _data_source: "Optional data source. Supports <entity>:records.",
+            _empty_text: "Text shown when there are no rows."
+        },
+
+        _core_rules: [
+            "Use _columns[*]._key for table cell values.",
+            "Use _data_source:'<entity>:records' to load records through entity-client.",
+            "Do not call entity-manager directly from table UI code."
+        ],
+
+        _canonical_examples: [
+            {
+                _type: "table",
+                _data_source: "company:records",
+                _columns: [
+                    { _key: "name", _label: "Name" },
+                    { _key: "email", _label: "Email" }
+                ]
+            }
+        ]
+    };
+
+    private _table_rows: any[] = [];
+    private _entity_source_loaded = false;
+
+    constructor(data: XUIObjectData) {
+        const defaults = {
+            _type: XTable._xtype,
+            class: "xtable",
+            _html_tag: "table"
+        };
+
+        super(data, defaults, true);
+        this.parse(data);
+        this._table_rows = this.normalizeRows((this as any)._rows);
+    }
+
+    override getDOMObject(): HTMLElement {
+        const dom = super.getDOMObject();
+        this.renderTable();
+        return dom;
+    }
+
+    override async onMount() {
+        if ((this as any)._mounted) return;
+
+        await super.onMount();
+        void this.loadEntityDataSource();
+    }
+
+    private normalizeColumns(): Array<{ key: string; label: string }> {
+        const columns = (this as any)._columns;
+        if (!Array.isArray(columns)) return [];
+
+        return columns
+            .map((column: XTableColumn) => {
+                const key = String(column?._key ?? column?.key ?? "").trim();
+                const label = String(
+                    column?._label ??
+                    column?.label ??
+                    column?._title ??
+                    column?.title ??
+                    key
+                ).trim();
+
+                return key ? { key, label: label || key } : null;
+            })
+            .filter(Boolean) as Array<{ key: string; label: string }>;
+    }
+
+    private normalizeRows(value: any): any[] {
+        if (Array.isArray(value)) return value;
+        if (!value || typeof value !== "object") return [];
+
+        if (Array.isArray(value._records?._data)) return value._records._data;
+        if (Array.isArray(value._records)) return value._records;
+        if (Array.isArray(value.records?._data)) return value.records._data;
+        if (Array.isArray(value.records)) return value.records;
+        if (Array.isArray(value._rows)) return value._rows;
+        if (Array.isArray(value.rows)) return value.rows;
+
+        return [];
+    }
+
+    private readEntityDataSource(): string | undefined {
+        const dataSource = (this as any)._data_source;
+        if (typeof dataSource !== "string") return undefined;
+
+        const match = dataSource.trim().match(/^([^:]+):records$/);
+        const entity = match?.[1]?.trim();
+
+        return entity || undefined;
+    }
+
+    private extractRecords(res: any): any[] {
+        return this.normalizeRows(
+            res?._result ??
+            res?._records ??
+            res?.records ??
+            res
+        );
+    }
+
+    private logDataSourceDiagnostics() {
+        const dataSource = (this as any)._data_source;
+
+        _xlog.log("[xui-table] datasource", {
+            _table_id:
+                this._id,
+            _data_source:
+                dataSource
+        });
+
+        if (
+            typeof dataSource !== "string" ||
+            !dataSource.trim() ||
+            !_xd.has(dataSource)
+        ) {
+            _xlog.log("[xui-table] datasource missing", {
+                _table_id:
+                    this._id,
+                _data_source:
+                    dataSource
+            });
+            return;
+        }
+
+        const rows =
+            this.normalizeRows(
+                _xd.get(dataSource)
+            );
+
+        _xlog.log("[xui-table] datasource resolved", {
+            _table_id:
+                this._id,
+            _data_source:
+                dataSource,
+            _rows:
+                rows.length
+        });
+    }
+
+    private async loadEntityDataSource() {
+        const entity = this.readEntityDataSource();
+        if (!entity || this._entity_source_loaded) return;
+
+        this._entity_source_loaded = true;
+
+        _xlog.log("[xui-table] entity data source loading", {
+            _id: this._id,
+            _entity: entity,
+            _data_source: (this as any)._data_source
+        });
+
+        try {
+            const res = await _x.execute({
+                _module: "entity-client",
+                _op: "find",
+                _params: {
+                    _entity: entity,
+                    _filter: {}
+                }
+            });
+
+            const records = this.extractRecords(res);
+            this._table_rows = records;
+            (this as any)._rows = records;
+            this.renderTable();
+
+            _xlog.log("[xui-table] entity data source loaded", {
+                _id: this._id,
+                _entity: entity,
+                _records: records.length
+            });
+        } catch (err) {
+            this._entity_source_loaded = false;
+            _xlog.error("[xui-table] entity data source failed", err);
+        }
+    }
+
+    private renderTable() {
+        const table = this._dom_object as HTMLTableElement | undefined | null;
+        if (!(table instanceof HTMLTableElement)) return;
+
+        this.logDataSourceDiagnostics();
+
+        table.replaceChildren();
+
+        const columns = this.normalizeColumns();
+        const rows = this._table_rows.length > 0
+            ? this._table_rows
+            : this.normalizeRows((this as any)._rows);
+        const columnCount = Math.max(1, columns.length);
+
+        const thead = document.createElement("thead");
+        const headerRow = document.createElement("tr");
+
+        for (const column of columns) {
+            const th = document.createElement("th");
+            th.textContent = column.label;
+            headerRow.appendChild(th);
+        }
+
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+
+        const tbody = document.createElement("tbody");
+
+        if (!rows.length) {
+            const tr = document.createElement("tr");
+            const td = document.createElement("td");
+            td.colSpan = columnCount;
+            td.textContent = String((this as any)._empty_text ?? "No data");
+            tr.appendChild(td);
+            tbody.appendChild(tr);
+            table.appendChild(tbody);
+            _xlog.log("[xui-table] rendered", {
+                _table_id:
+                    this._id,
+                _rows_rendered:
+                    rows.length
+            });
+            return;
+        }
+
+        for (const row of rows) {
+            const tr = document.createElement("tr");
+
+            for (const column of columns) {
+                const td = document.createElement("td");
+                const value = row?.[column.key];
+                td.textContent = value == null ? "" : String(value);
+                tr.appendChild(td);
+            }
+
+            tbody.appendChild(tr);
+        }
+
+        table.appendChild(tbody);
+        _xlog.log("[xui-table] rendered", {
+            _table_id:
+                this._id,
+            _rows_rendered:
+                rows.length
+        });
+    }
+}
+
 
 
 
@@ -916,6 +1190,7 @@ export class XUIObjectPack extends XObjectPack {
             [XLabel._xtype]: XLabel, //"label"
             [XLink._xtype]: XLink, //"link"
             [XButton._xtype]: XButton, //"button"
+            [XTable._xtype]: XTable, //"table"
             [XTextField._xtype]: XTextField, //"text"
             [XPassword._xtype]: XPassword, //"password"
             [XInput._xtype]: XInput, //"input"
@@ -947,4 +1222,3 @@ export class XUISVGObjectPack extends XObjectPack {
     }
 }
 export default XUIObjectPack
-

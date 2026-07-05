@@ -77,6 +77,7 @@ export type XVMClientOptions = {
   _region?: string;
   _fallback_view_id?: string;
   _theme?: string | Record<string, string>;
+  _debug?: boolean;
   onViewRendered?: (view_id: string) => void;
   onConnectionChange?: (payload: XVMClientConnectionChange) => void;
   onError?: (error: any) => void;
@@ -130,6 +131,8 @@ export class XVMClient {
   _has_rendered_view = false;
   _app_needs_refresh = false;
   _connected = false;
+  _subscribed = false;
+  _debug = false;
   _theme?: string | Record<string, string>;
   _cache_key_app: string;
   _cache_key_version: string;
@@ -150,6 +153,7 @@ export class XVMClient {
     this._on_error = typeof opts.onError === "function" ? opts.onError : undefined;
     this._on_app_mounted = typeof opts.onAppMounted === "function" ? opts.onAppMounted : undefined;
     this._theme = opts._theme;
+    this._debug = opts._debug === true;
 
     this._cache_key_app = `xvm:last_app:${this._env}:${this._app_id}`;
     this._cache_key_version = `xvm:version:${this._env}:${this._app_id}`;
@@ -294,6 +298,11 @@ export class XVMClient {
     _xlog.log(LOG, ...args);
   }
 
+  _debug_log(...args: any[]) {
+    if (!this._debug) return;
+    _xlog.debug(LOG, ...args);
+  }
+
   _error(...args: any[]) {
     _xlog.error(LOG, ...args);
   }
@@ -357,7 +366,7 @@ export class XVMClient {
       acc[key] = _xd.get(key);
       return acc;
     }, {} as Record<string, any>);
-    this._log(`view payload (${source})`, {
+    this._debug_log(`view payload (${source})`, {
       _view_id: view_id,
       _data_sources_count: list.length,
       _data_sources_sample: list.slice(0, 8),
@@ -368,6 +377,7 @@ export class XVMClient {
   _set_connection_status(status: XVMClientConnectionChange["_status"], source?: string) {
     const connected = status === "connected";
     this._connected = connected;
+    if (!connected) this._subscribed = false;
     const payload: XVMClientConnectionChange = {
       _status: status,
       _connected: connected,
@@ -520,6 +530,7 @@ export class XVMClient {
     this._app_needs_refresh = true;
     this._app_mounted = false;
     this._has_rendered_view = false;
+    this._subscribed = false;
     this._xstudio.clear_active_generation();
   }
 
@@ -543,10 +554,10 @@ export class XVMClient {
 
   async _send_cmd(_op: string, _params: Record<string, any>) {
     const req_id = ++this._cmd_seq;
-    this._log(`-> [${req_id}] server-xvm.${_op}`, _params);
+    this._debug_log(`-> [${req_id}] server-xvm.${_op}`, _params);
     try {
       const raw = await Wormholes.sendXcmd({ _module: "server-xvm", _op, _params });
-      this._log(`<- [${req_id}] server-xvm.${_op} raw`, raw);
+      this._debug_log(`<- [${req_id}] server-xvm.${_op} raw`, raw);
       const result = to_result(raw);
 
       if (is_obj(result)) {
@@ -554,7 +565,7 @@ export class XVMClient {
           const app_obj = is_obj((result as any)._app) ? (result as any)._app : {};
           const view_ids = this._normalize_view_ids((result as any)._view_ids);
           const views_obj = is_obj((result as any)._views) ? (result as any)._views : {};
-          this._log(`<- [${req_id}] server-xvm.${_op} summary`, {
+          this._debug_log(`<- [${req_id}] server-xvm.${_op} summary`, {
             _app_id: (app_obj as any)._app_id,
             _env: (app_obj as any)._env,
             _version: (app_obj as any)?._meta?._version,
@@ -562,17 +573,17 @@ export class XVMClient {
             _views_count: Object.keys(views_obj).length,
           });
         } else if (_op === "get-view") {
-          this._log(`<- [${req_id}] server-xvm.${_op} summary`, {
+          this._debug_log(`<- [${req_id}] server-xvm.${_op} summary`, {
             _app_id: (result as any)._app_id,
             _env: (result as any)._env,
             _version: (result as any)._version,
             _view_id: (result as any)?._view?._id,
           });
         } else {
-          this._log(`<- [${req_id}] server-xvm.${_op} result`, result);
+          this._debug_log(`<- [${req_id}] server-xvm.${_op} result`, result);
         }
       } else {
-        this._log(`<- [${req_id}] server-xvm.${_op} result`, result);
+        this._debug_log(`<- [${req_id}] server-xvm.${_op} result`, result);
       }
       return result;
     } catch (err: any) {
@@ -1053,10 +1064,10 @@ export class XVMClient {
   }
 
   async _navigate_view(view_id: string, region: string) {
-    this._log("navigate:try", { _signature: "positional", _view_id: view_id, _region: region });
+    this._debug_log("navigate:try", { _signature: "positional", _view_id: view_id, _region: region });
     try {
       await (XVM as any).navigate(view_id, { _region: region });
-      this._log("navigate:ok", { _signature: "positional", _view_id: view_id, _region: region });
+      this._debug_log("navigate:ok", { _signature: "positional", _view_id: view_id, _region: region });
     } catch (err: any) {
       this._error("navigate:failed", {
         _signature: "positional",
@@ -1406,6 +1417,7 @@ export class XVMClient {
       }
 
       await this._send_cmd("subscribe", { _app_id: this._app_id, _env: this._env });
+      this._subscribed = true;
       this._set_connection_status("connected", "subscribe");
       this._log(
         `boot complete cache=${used_cache ? "yes" : "no"} server_version=${app_apply._version || 0} current=${this._current_version} entry='${entry}'`
@@ -1435,6 +1447,14 @@ export class XVMClient {
 
   async sendXcmd(xcmd: any) {
     return await Wormholes.sendXcmd(xcmd);
+  }
+
+  isWormholeReady() {
+    return Wormholes._ready === true && this._connected === true;
+  }
+
+  isServerReady() {
+    return this.isWormholeReady() && this._subscribed === true;
   }
 
 
@@ -1533,6 +1553,7 @@ export class XVMClient {
 
       stage = "subscribe";
       await this._send_cmd("subscribe", { _app_id: target_app_id, _env: target_env });
+      this._subscribed = true;
       this._set_connection_status("connected", "load-server-app");
       this._log("load_server_app subscribed", {
         _app_id: target_app_id,

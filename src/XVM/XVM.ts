@@ -441,10 +441,10 @@ class _XVM extends XModule {
 
       if (mode === "replace") {
         history_api.replaceState(state, "", url);
-        _xlog.log("[xvm] browser history replaced", state);
+        this.log("[xvm] browser history replaced", state);
       } else {
         history_api.pushState(state, "", url);
-        _xlog.log("[xvm] browser history pushed", state);
+        this.log("[xvm] browser history pushed", state);
       }
       return true;
     } catch (err) {
@@ -473,7 +473,7 @@ class _XVM extends XModule {
     const hashTarget = opts.hashSync === false ? undefined : targetId;
     const replaced = this.writeBrowserHistoryState("replace", state, hashTarget);
     if (replaced) {
-      _xlog.log("[xvm] browser history initialized", state);
+      this.log("[xvm] browser history initialized", state);
     }
     return replaced;
   }

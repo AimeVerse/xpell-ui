@@ -4,6 +4,7 @@ import {
     XResponseError,
     XResponseOK,
     _xd,
+    _xlog,
     type XpellSkill,
     type XpellSkillCommand
 } from "@xpell/core";
@@ -38,6 +39,7 @@ export class EntityClient extends XModule {
             _filter: "Entity query filter.",
             _updates: "Update payload object.",
             data: "Record data for add operation.",
+            _output: "Optional XData key to write successful operation output into.",
             _env: "Optional environment.",
             _app_id: "Optional application id."
         }
@@ -52,6 +54,7 @@ export class EntityClient extends XModule {
             _params: {
                 _entity: "Entity name.",
                 data: "Record data object.",
+                _output: "Optional XData key to write successful operation output into.",
                 _env: "Optional environment.",
                 _app_id: "Optional application id."
             },
@@ -75,6 +78,7 @@ export class EntityClient extends XModule {
             _params: {
                 _entity: "Entity name.",
                 _filter: "Query filter object.",
+                _output: "Optional XData key to write successful operation output into.",
                 _env: "Optional environment.",
                 _app_id: "Optional application id."
             }
@@ -89,6 +93,7 @@ export class EntityClient extends XModule {
                 _entity: "Entity name.",
                 _filter: "Query filter object.",
                 _updates: "Update payload object.",
+                _output: "Optional XData key to write successful operation output into.",
                 _env: "Optional environment.",
                 _app_id: "Optional application id."
             }
@@ -102,6 +107,7 @@ export class EntityClient extends XModule {
             _params: {
                 _entity: "Entity name.",
                 _filter: "Query filter object.",
+                _output: "Optional XData key to write successful operation output into.",
                 _env: "Optional environment.",
                 _app_id: "Optional application id."
             }
@@ -114,6 +120,7 @@ export class EntityClient extends XModule {
                 "Synchronize entity records from the server into the local runtime cache.",
             _params: {
                 _entity: "Entity name.",
+                _output: "Optional XData key to write successful operation output into.",
                 _env: "Optional environment.",
                 _app_id: "Optional application id."
             }
@@ -125,7 +132,8 @@ export class EntityClient extends XModule {
             _description:
                 "Return locally cached entity records.",
             _params: {
-                _entity: "Entity name."
+                _entity: "Entity name.",
+                _output: "Optional XData key to write successful operation output into."
             }
         }
     };
@@ -208,6 +216,245 @@ export class EntityClient extends XModule {
         return entity;
     }
 
+    private getOutputKey(
+        params: any
+    ) {
+
+        const output =
+            params?._output;
+
+        return typeof output === "string" && output.trim()
+            ? output.trim()
+            : undefined;
+    }
+
+    private getOutputResult(
+        res: any
+    ) {
+
+        const result =
+            res?._result ?? res;
+
+        if (
+            result &&
+            typeof result === "object"
+        ) {
+
+            if (result._records !== undefined) {
+                return result._records;
+            }
+
+            if (result._record !== undefined) {
+                return result._record;
+            }
+        }
+
+        return result;
+    }
+
+    private getCount(
+        value: any
+    ) {
+
+        if (Array.isArray(value)) {
+            return value.length;
+        }
+
+        if (
+            value &&
+            typeof value === "object"
+        ) {
+            return Object.keys(value).length;
+        }
+
+        return undefined;
+    }
+
+    private getFindRowsCandidate(
+        value: any
+    ) {
+
+        if (Array.isArray(value)) {
+            return value;
+        }
+
+        if (
+            value &&
+            typeof value === "object"
+        ) {
+
+            if (Array.isArray(value._data)) {
+                return value._data;
+            }
+
+            if (Array.isArray(value.data)) {
+                return value.data;
+            }
+        }
+
+        return undefined;
+    }
+
+    private normalizeFindRows(
+        res: any
+    ) {
+
+        const result =
+            res?._result;
+
+        const candidates = [
+            res?._data,
+            res?._records,
+            res?.records,
+            result?._data,
+            result?._records,
+            result?.records,
+            result
+        ];
+
+        for (const candidate of candidates) {
+            const rows =
+                this.getFindRowsCandidate(candidate);
+
+            if (rows) {
+                return rows;
+            }
+        }
+
+        return [];
+    }
+
+    private hasFindRowsShape(
+        res: any
+    ) {
+
+        const result =
+            res?._result;
+
+        return [res, result].some(value => (
+            value &&
+            typeof value === "object" &&
+            (
+                Object.prototype.hasOwnProperty.call(value, "_data") ||
+                Object.prototype.hasOwnProperty.call(value, "_records") ||
+                Object.prototype.hasOwnProperty.call(value, "records")
+            )
+        ));
+    }
+
+    private isSuccessfulFindResponse(
+        res: any
+    ) {
+
+        if (res?._ok === false) {
+            return false;
+        }
+
+        return res?._ok === true || this.hasFindRowsShape(res);
+    }
+
+    private writeFindOutput(
+        params: any,
+        res: any,
+        diagnostics?: boolean
+    ) {
+
+        const output =
+            this.getOutputKey(params);
+
+        const success =
+            this.isSuccessfulFindResponse(res);
+
+        if (!output || !success) {
+            if (
+                diagnostics &&
+                !output &&
+                success
+            ) {
+                _xlog.log("[xentity] output skipped", {
+                    _reason:
+                        "no_output"
+                });
+            }
+
+            return;
+        }
+
+        const rows =
+            this.normalizeFindRows(res);
+
+        _xd.set(
+            output,
+            rows,
+            {
+                source:
+                    "entity-client"
+            }
+        );
+
+        if (diagnostics) {
+            _xlog.log("[xentity] output written", {
+                _path:
+                    output,
+                _count:
+                    rows.length
+            });
+        }
+    }
+
+    private writeOutput(
+        params: any,
+        res: any,
+        diagnostics?: boolean
+    ) {
+
+        const output =
+            this.getOutputKey(params);
+
+        if (!output || res?._ok !== true) {
+            if (
+                diagnostics &&
+                !output &&
+                res?._ok === true
+            ) {
+                _xlog.log("[xentity] output skipped", {
+                    _reason:
+                        "no_output"
+                });
+            }
+
+            return;
+        }
+
+        const result =
+            this.getOutputResult(res);
+
+        const value =
+            result &&
+                typeof result === "object" &&
+                Object.prototype.hasOwnProperty.call(result, "_data")
+                ? result._data
+                : result;
+
+        _xd.set(
+            output,
+            value,
+            {
+                source:
+                    "entity-client"
+            }
+        );
+
+        if (diagnostics) {
+            _xlog.log("[xentity] output written", {
+                _path:
+                    output,
+                _count:
+                    this.getCount(value)
+            });
+        }
+    }
+
     /* -------------------------------------------------- */
     /* START                                              */
     /* -------------------------------------------------- */
@@ -249,6 +496,11 @@ export class EntityClient extends XModule {
                     params.data ?? {}
                 );
 
+            this.writeOutput(
+                params,
+                res
+            );
+
             return res;
 
         } catch (err) {
@@ -276,15 +528,66 @@ export class EntityClient extends XModule {
                 params
             );
 
+            const filter =
+                params._filter ?? params.filter ?? {};
+
+            const output =
+                this.getOutputKey(params);
+
+            _xlog.log("[xentity] find request", {
+                _entity:
+                    entity,
+                _filter:
+                    filter,
+                _output:
+                    output
+            });
+
             const res =
                 await this._sync.find(
                     entity,
-                    params._filter ?? params.filter ?? {}
+                    filter
                 );
+
+            if (this.isSuccessfulFindResponse(res)) {
+                const rows =
+                    this.normalizeFindRows(res);
+
+                _xlog.log("[xentity] find response", {
+                    _entity:
+                        entity,
+                    _count:
+                        rows.length,
+                    _has_output:
+                        !!output,
+                    _output:
+                        output
+                });
+            } else {
+                _xlog.error("[xentity] find failed", {
+                    _entity:
+                        entity,
+                    _error:
+                        res?._error ?? res?._result ?? res
+                });
+            }
+
+            this.writeFindOutput(
+                params,
+                res,
+                true
+            );
 
             return res;
 
         } catch (err) {
+
+            _xlog.error("[xentity] find failed", {
+                _entity:
+                    xcmd?._params?._entity,
+                _error:
+                    err
+            });
 
             return new XResponseError(
                 err
@@ -315,6 +618,11 @@ export class EntityClient extends XModule {
                     params._filter ?? params.filter ?? {},
                     params._updates ?? params.updates ?? {}
                 );
+
+            this.writeOutput(
+                params,
+                res
+            );
 
             return res;
 
@@ -349,6 +657,11 @@ export class EntityClient extends XModule {
                     params._filter ?? params.filter ?? {}
                 );
 
+            this.writeOutput(
+                params,
+                res
+            );
+
             return res;
 
         } catch (err) {
@@ -381,10 +694,17 @@ export class EntityClient extends XModule {
                     entity
                 );
 
-            return new XResponseOK({
+            const res = new XResponseOK({
                 _records:
                     records
             }).toXData();
+
+            this.writeOutput(
+                params,
+                res
+            );
+
+            return res;
 
         } catch (err) {
 
@@ -411,7 +731,7 @@ export class EntityClient extends XModule {
                 params
             );
 
-            return new XResponseOK({
+            const res = new XResponseOK({
 
                 _records:
                     this._sync.getLocalRecords(
@@ -419,6 +739,13 @@ export class EntityClient extends XModule {
                     )
 
             }).toXData();
+
+            this.writeOutput(
+                params,
+                res
+            );
+
+            return res;
 
         } catch (err) {
 

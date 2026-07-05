@@ -1,5 +1,6 @@
 import { XModule, type XCommand, _x, _xu, _xlog, _xd } from "@xpell/core";
 import { _xem } from "../XEM/XEventManager";
+import { XUI } from "../XUI/XUI";
 import { XUIRuntime } from "../XUI/XUIRuntime";
 import type {
     XpellSkill,
@@ -28,9 +29,18 @@ type XFlowTriggerPayload = {
     _flow_id: string;
     _event_name?: string;
     _event_payload?: object;
+    _object_id?: string;
+    _success_view?: string;
     _app_id?: string;
     _env?: string;
     _source?: "ui" | "event";
+};
+
+type XFlowUiState = {
+    _key: string;
+    _ignored?: boolean;
+    _object?: any;
+    _success_view?: string;
 };
 
 /* -------------------------------------------------------------------------- */
@@ -189,6 +199,7 @@ export class FlowManagerClient extends XModule {
     private _bindings: XFlowBinding[] = [];
     private _bound_events: Set<string> = new Set();
     private _ui_listener_bound = false;
+    private _ui_flows_in_flight: Set<string> = new Set();
 
     constructor() {
         super({ _name: FlowManagerClient._name });
@@ -218,6 +229,8 @@ export class FlowManagerClient extends XModule {
                 _flow_id: payload._flow_id,
                 _event_name: typeof payload._event_name === "string" ? payload._event_name : undefined,
                 _event_payload: (payload.hasOwnProperty("_event_payload") && typeof payload._event_payload === "object" && payload._event_payload !== null) ? payload._event_payload : undefined,
+                _object_id: typeof payload._object_id === "string" ? payload._object_id : undefined,
+                _success_view: typeof payload._success_view === "string" ? payload._success_view : undefined,
                 _app_id: payload._app_id ?? client?._app_id,
                 _env: payload._env ?? client?._env,
                 _source: payload._source === "ui" || payload._source === "event" ? payload._source : "ui"
@@ -289,10 +302,220 @@ export class FlowManagerClient extends XModule {
             _flow_id: _xu.ensure_string(params._flow_id, "_flow_id"),
             _event_name: typeof params._event_name === "string" ? params._event_name : undefined,
             _event_payload: typeof params._event_payload === "object" && params._event_payload !== null ? params._event_payload : {},
+            _object_id: typeof params._object_id === "string" ? params._object_id : undefined,
+            _success_view: typeof params._success_view === "string" ? params._success_view : undefined,
             _app_id: typeof params._app_id === "string" ? params._app_id : undefined,
             _env: typeof params._env === "string" ? params._env : undefined,
             _source: params._source === "ui" || params._source === "event" ? params._source : undefined
         };
+    }
+
+    private ui_flow_key(
+        normalized: XFlowTriggerPayload,
+        app_id: string,
+        env?: string
+    ) {
+        return [
+            app_id,
+            env ?? "default",
+            normalized._object_id ?? "",
+            normalized._flow_id,
+        ].join(":");
+    }
+
+    private read_success_view_from_ui_object(
+        obj: any,
+        normalized: XFlowTriggerPayload
+    ): string | undefined {
+        const candidates: any[] = [
+            normalized._success_view,
+            obj?._success_view,
+            obj?._submit?._success_view,
+            obj?._flow?._success_view,
+        ];
+
+        let parent = obj?.ui_parent;
+        while (parent) {
+            candidates.push(
+                parent?._success_view,
+                parent?._submit?._success_view,
+                parent?._flow?._success_view,
+            );
+            parent = parent?.ui_parent;
+        }
+
+        const dom_form_id = obj?.dom?.closest?.("form")?.id;
+        if (typeof dom_form_id === "string" && dom_form_id) {
+            const form = XUI.getObject(dom_form_id) as any;
+            candidates.push(form?._submit?._success_view, form?._success_view);
+        }
+
+        const success_view = candidates.find(
+            (candidate) => typeof candidate === "string" && candidate.trim(),
+        );
+        return typeof success_view === "string" ? success_view.trim() : undefined;
+    }
+
+    private set_ui_flow_state(
+        obj: any,
+        state: "running" | "success" | "error",
+        error?: string
+    ) {
+        if (!obj?.dom) return;
+
+        const dom = obj.dom as HTMLElement;
+        const button = dom instanceof HTMLButtonElement ? dom : null;
+        const statusNode = this.get_ui_flow_status_node(obj, dom);
+        const original = (obj as any).__xflow_submit_original ?? {
+            _text: typeof obj._text === "string" ? obj._text : dom.textContent ?? "",
+            _disabled: button?.disabled === true || dom.getAttribute("disabled") !== null,
+            _title: dom.getAttribute("title") ?? "",
+        };
+        (obj as any).__xflow_submit_original = original;
+
+        if (state === "running") {
+            dom.removeAttribute("data-xflow-error");
+            dom.removeAttribute("data-xflow-success");
+            dom.removeAttribute("aria-invalid");
+            dom.setAttribute("aria-busy", "true");
+            dom.setAttribute("disabled", "true");
+            if (button) button.disabled = true;
+            if (button) obj.setText?.("Submitting...");
+            this.apply_ui_flow_classes(dom, state);
+            this.set_ui_flow_status(statusNode, "Saving...");
+            return;
+        }
+
+        dom.removeAttribute("aria-busy");
+
+        if (original._disabled) {
+            dom.setAttribute("disabled", "true");
+            if (button) button.disabled = true;
+        } else {
+            dom.removeAttribute("disabled");
+            if (button) button.disabled = false;
+        }
+
+        if (state === "error") {
+            const message = error || "Flow failed";
+            dom.removeAttribute("data-xflow-success");
+            dom.setAttribute("data-xflow-error", message);
+            dom.setAttribute("aria-invalid", "true");
+            dom.setAttribute("title", message);
+            if (button) obj.setText?.("Retry");
+            this.apply_ui_flow_classes(dom, state);
+            this.set_ui_flow_status(statusNode, message);
+            return;
+        }
+
+        dom.removeAttribute("data-xflow-error");
+        dom.removeAttribute("aria-invalid");
+        if (original._title) dom.setAttribute("title", original._title);
+        else dom.removeAttribute("title");
+        dom.setAttribute("data-xflow-success", "Saved");
+        dom.setAttribute("title", original._title || "Saved");
+        if (button) obj.setText?.("Saved");
+        this.apply_ui_flow_classes(dom, state);
+        this.set_ui_flow_status(statusNode, "Saved");
+    }
+
+    private apply_ui_flow_classes(
+        dom: HTMLElement,
+        state: "running" | "success" | "error"
+    ) {
+        dom.classList.toggle("xui-flow-running", state === "running");
+        dom.classList.toggle("xui-flow-error", state === "error");
+        dom.classList.toggle("xui-flow-success", state === "success");
+    }
+
+    private get_ui_flow_status_node(obj: any, dom: HTMLElement) {
+        const owner_id =
+            typeof obj?._id === "string" && obj._id
+                ? obj._id
+                : dom.id || undefined;
+
+        if (owner_id) {
+            const existing = Array
+                .from(document.querySelectorAll("[data-xflow-status-for]"))
+                .find((node) =>
+                    node instanceof HTMLElement &&
+                    node.getAttribute("data-xflow-status-for") === owner_id
+                );
+
+            if (existing instanceof HTMLElement) {
+                return existing;
+            }
+        }
+
+        const statusNode = document.createElement("span");
+        statusNode.className = "xui-flow-status";
+        statusNode.setAttribute("role", "status");
+        statusNode.setAttribute("aria-live", "polite");
+
+        if (owner_id) {
+            statusNode.setAttribute("data-xflow-status-for", owner_id);
+        }
+
+        if (dom.parentElement) {
+            dom.insertAdjacentElement("afterend", statusNode);
+        } else {
+            dom.appendChild(statusNode);
+        }
+
+        return statusNode;
+    }
+
+    private set_ui_flow_status(node: HTMLElement | undefined, message: string) {
+        if (!node) return;
+        node.textContent = message;
+    }
+
+    private begin_ui_flow(
+        normalized: XFlowTriggerPayload,
+        app_id: string,
+        env?: string
+    ): XFlowUiState | null {
+        if (normalized._source !== "ui" || !normalized._object_id) return null;
+
+        const key = this.ui_flow_key(normalized, app_id, env);
+        if (this._ui_flows_in_flight.has(key)) {
+            log_debug("[flow-client] ui flow ignored while running", {
+                _flow_id: normalized._flow_id,
+                _object_id: normalized._object_id,
+            });
+            return { _key: key, _ignored: true };
+        }
+
+        const obj = XUI.getObject(normalized._object_id) as any;
+        this._ui_flows_in_flight.add(key);
+        this.set_ui_flow_state(obj, "running");
+
+        return {
+            _key: key,
+            _object: obj,
+            _success_view: this.read_success_view_from_ui_object(obj, normalized),
+        };
+    }
+
+    private async complete_ui_flow(
+        state: XFlowUiState | null,
+        status: "success" | "error",
+        client?: any,
+        error?: string
+    ) {
+        if (!state) return;
+        this._ui_flows_in_flight.delete(state._key);
+        this.set_ui_flow_state(state._object, status, error);
+
+        if (status === "success" && state._success_view) {
+            if (typeof client?.render_view === "function") {
+                await client.render_view(state._success_view);
+            } else {
+                _xlog.warn("[flow-client] success view navigation unavailable", {
+                    _success_view: state._success_view,
+                });
+            }
+        }
     }
 
     private async trigger_flow(
@@ -350,6 +573,16 @@ export class FlowManagerClient extends XModule {
             }
         );
 
+        const ui_state = this.begin_ui_flow(normalized, app_id, env);
+        if (ui_state?._ignored) {
+            return {
+                _ok: true,
+                _ignored: true,
+                _running: true,
+                _flow_id: normalized._flow_id
+            };
+        }
+
         /* -------------------------------------------------- */
         /* SEND (NON-BLOCKING)                                */
         /* -------------------------------------------------- */
@@ -397,6 +630,17 @@ export class FlowManagerClient extends XModule {
                     const flow =
                         res?._flow ??
                         res?._result?._flow;
+
+                    const failed =
+                        res?._ok === false ||
+                        res?._result?._ok === false ||
+                        flow?._last?._ok === false;
+                    const failure_message =
+                        flow?._last?._error?._message ??
+                        flow?._last?._result?._message ??
+                        res?._error?._message ??
+                        res?._result?._error?._message ??
+                        "Flow failed";
 
                     const flow_definition =
                         client?._flows?.get(
@@ -496,6 +740,13 @@ export class FlowManagerClient extends XModule {
                         _result: res
                     });
 
+                    await this.complete_ui_flow(
+                        ui_state,
+                        failed ? "error" : "success",
+                        client,
+                        failed ? failure_message : undefined
+                    );
+
                     if (
                         typeof generated_app_id === "string" &&
                         generated_app_id.trim().length > 0 &&
@@ -522,6 +773,12 @@ export class FlowManagerClient extends XModule {
                         "FLOW SEND ERROR",
                         err
                     );
+                    void this.complete_ui_flow(
+                        ui_state,
+                        "error",
+                        client,
+                        err instanceof Error ? err.message : String(err)
+                    );
 
                 });
 
@@ -530,6 +787,12 @@ export class FlowManagerClient extends XModule {
             _xlog.error(
                 "FLOW SEND ERROR",
                 err
+            );
+            await this.complete_ui_flow(
+                ui_state,
+                "error",
+                client,
+                err instanceof Error ? err.message : String(err)
             );
 
             throw err;

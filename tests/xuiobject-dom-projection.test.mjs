@@ -74,8 +74,18 @@ class FakeClassList {
     }
   }
 
-  toggle(token) {
+  toggle(token, force) {
     const value = String(token);
+    if (force === true) {
+      this.el._classTokens.add(value);
+      return true;
+    }
+
+    if (force === false) {
+      this.el._classTokens.delete(value);
+      return false;
+    }
+
     if (this.el._classTokens.has(value)) {
       this.el._classTokens.delete(value);
       return false;
@@ -229,6 +239,25 @@ class FakeElement {
   remove() {
     this.parentElement?.removeChild(this);
   }
+
+  insertAdjacentElement(position, element) {
+    if (String(position).toLowerCase() !== "afterend" || !this.parentElement) {
+      return null;
+    }
+
+    const idx = this.parentElement.childNodes.indexOf(this);
+    element.parentElement = this.parentElement;
+    this.parentElement.childNodes.splice(idx + 1, 0, element);
+    return element;
+  }
+}
+
+class FakeTableElement extends FakeElement {}
+class FakeButtonElement extends FakeElement {
+  constructor(tagName) {
+    super(tagName);
+    this.disabled = false;
+  }
 }
 
 const storage = new Map();
@@ -249,21 +278,46 @@ globalThis.window = {
 };
 
 globalThis.document = {
-  createElement: tagName => new FakeElement(tagName),
+  createElement: tagName => {
+    const tag = String(tagName).toLowerCase();
+    if (tag === "table") return new FakeTableElement(tagName);
+    if (tag === "button") return new FakeButtonElement(tagName);
+    return new FakeElement(tagName);
+  },
   createElementNS: (_ns, tagName) => new FakeElement(tagName),
   createTextNode: text => new FakeTextNode(text),
   getElementById: () => null,
+  querySelector: () => null,
+  querySelectorAll: selector => {
+    const matches = [];
+    const wantsFlowStatus = selector === "[data-xflow-status-for]";
+
+    const visit = node => {
+      if (wantsFlowStatus && node instanceof FakeElement && node.hasAttribute("data-xflow-status-for")) {
+        matches.push(node);
+      }
+
+      if (Array.isArray(node?.childNodes)) {
+        node.childNodes.forEach(visit);
+      }
+    };
+
+    visit(globalThis.document.body);
+    return matches;
+  },
   body: new FakeElement("body")
 };
 
 globalThis.HTMLElement = FakeElement;
+globalThis.HTMLTableElement = FakeTableElement;
+globalThis.HTMLButtonElement = FakeButtonElement;
 globalThis.Node = FakeTextNode;
 globalThis.getComputedStyle = el => ({
   getPropertyValue: name => el.style.getPropertyValue(name)
 });
 
 const ui = await import("../dist/xpell-ui.es.js");
-const { _x, XButton, XUI, XUIObject, XVM, XView } = ui;
+const { _x, _xd, FlowManagerClient, XButton, XTable, XUI, XUIObject, XUIRuntime, XVM, XView } = ui;
 
 assert.equal("XVMView" in ui, false);
 
@@ -455,4 +509,142 @@ function assertNoObjectStyle(el) {
   assert.equal(dom.classList.contains("xbutton--variant-primary"), false);
   assert.equal(dom.classList.contains("xbutton--tone-danger"), false);
   assertClass(dom, "xbutton");
+}
+
+{
+  const table = new XTable({
+    _id: "company-table",
+    _data_source: "company:records",
+    _columns: [
+      { _key: "name", _label: "Name" },
+      { _key: "domain", _label: "Domain" }
+    ]
+  });
+  const dom = table.getDOMObject();
+  const originalExecute = _x.execute;
+  let command;
+
+  _x.execute = async xcmd => {
+    command = xcmd;
+    return {
+      _ok: true,
+      _result: {
+        _records: {
+          _data: [
+            { name: "Acme", domain: "acme.test" }
+          ]
+        }
+      }
+    };
+  };
+
+  try {
+    await table.loadEntityDataSource();
+  } finally {
+    _x.execute = originalExecute;
+  }
+
+  assert.equal(command?._module, "entity-client");
+  assert.equal(command?._op, "find");
+  assert.equal(command?._params?._entity, "company");
+  assert.equal(command?._params?._filter && Object.keys(command._params._filter).length, 0);
+  assert.equal(dom.textContent.includes("Acme"), true);
+  assert.equal(dom.textContent.includes("acme.test"), true);
+  assert.equal(dom.textContent.includes("No data"), false);
+}
+
+{
+  const flowClient = new FlowManagerClient();
+  const button = new XButton({ _id: "save-company", _text: "Create" });
+  const dom = button.getDOMObject();
+  document.body.appendChild(dom);
+
+  flowClient.set_ui_flow_state(button, "success");
+
+  assert.equal(dom.textContent, "Saved");
+  assertClass(dom, "xui-flow-success");
+
+  const status = document
+    .querySelectorAll("[data-xflow-status-for]")
+    .find(node => node.getAttribute("data-xflow-status-for") === "save-company");
+
+  assert.equal(status?.textContent, "Saved");
+}
+
+{
+  await XUIRuntime.loadModules({
+    _auto_start: false,
+    _load_auth_client: false,
+    _load_entity_client: true,
+    _load_flow: false,
+    _load_studio: false,
+    _load_xai_client: false,
+    _load_xvm: false
+  });
+
+  const entityClient = _x.getModule("entity-client");
+
+  const assertFindOutput = async (responseShape, expectedRows, outputPath) => {
+    entityClient._sync = {
+      subscribe() {},
+      async find() {
+        return responseShape;
+      }
+    };
+
+    _xd.delete(outputPath);
+
+    const response = await _x.execute({
+      _module: "entity-client",
+      _op: "find",
+      _params: {
+        _entity: "company",
+        _filter: {},
+        _output: outputPath
+      }
+    });
+
+    assert.equal(response, responseShape);
+    assert.deepEqual(_xd.get(outputPath), expectedRows);
+  };
+
+  const records = [{ _id: "company-1", name: "Acme" }];
+  const alternateRecords = [{ _id: "company-2", name: "Globex" }];
+  const serverRecords = [{ _id: "company-3", name: "Initech" }];
+
+  await assertFindOutput(
+    {
+      _ok: true,
+      _result: {
+        _records: {
+          _data: records
+        }
+      }
+    },
+    records,
+    "company.records"
+  );
+
+  await assertFindOutput(
+    {
+      _ok: true,
+      _result: {
+        records: {
+          _data: alternateRecords
+        }
+      }
+    },
+    alternateRecords,
+    "company.alternate_records"
+  );
+
+  await assertFindOutput(
+    {
+      _records: {
+        _data: serverRecords
+      }
+    },
+    serverRecords,
+    "company.server_records"
+  );
 }

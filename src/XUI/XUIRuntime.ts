@@ -33,6 +33,7 @@ export type XUIRuntimeAppOptions = XVMClientOptions & {
 
 export class XUIRuntime {
   private static _client: XVMClient | null = null;
+  // TODO: client apps should provide /favicon.ico or a favicon link in their HTML shell.
 
   /* ---------------------------------------------------------------------- */
   /* LOAD MODULES                                                           */
@@ -112,7 +113,7 @@ export class XUIRuntime {
 
     if (Array.isArray(opts._object_packs)) {
       for (const pack of opts._object_packs) {
-        if(opts._debug) _xlog.log("[XUIRuntime] Importing object pack", pack.getObjects());
+        if(opts._debug) _xlog.debug("[XUIRuntime] Importing object pack", pack.getObjects());
         xui.importObjectPack(pack);
       }
     }
@@ -133,7 +134,8 @@ export class XUIRuntime {
       onConnectionChange: opts.onConnectionChange,
       onError: opts.onError,
       onAppMounted: opts.onAppMounted,
-      _theme: opts._theme
+      _theme: opts._theme,
+      _debug: opts._debug === true,
     });
 
     this._client = client;
