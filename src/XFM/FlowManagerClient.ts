@@ -752,17 +752,37 @@ export class FlowManagerClient extends XModule {
                         generated_app_id.trim().length > 0 &&
                         generated_app_id !== app_id
                     ) {
+                        const target_app_id = generated_app_id.trim();
+                        const target_env = env ?? "default";
                         log_debug("[flow-client] generated app detected", {
-                            _app_id: generated_app_id
+                            _app_id: target_app_id
                         });
 
-                        _xd.set("xvibe.active_app", generated_app_id, {
+                        _xd.set("xvibe.active_app", target_app_id, {
                             source: "flow-client"
                         });
 
+                        if (
+                            client &&
+                            typeof client.load_server_app === "function"
+                        ) {
+                            try {
+                                await client.load_server_app(
+                                    target_app_id,
+                                    target_env
+                                );
+                                return;
+                            } catch (error) {
+                                _xlog.error(
+                                    "[flow-client] generated app switch failed",
+                                    error
+                                );
+                            }
+                        }
+
                         _xem.fire("studio:open-app", {
-                            _app_id: generated_app_id,
-                            _env: env ?? "default"
+                            _app_id: target_app_id,
+                            _env: target_env
                         });
                     }
 

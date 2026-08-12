@@ -46,6 +46,7 @@
 import XUIObject from "./XUIObject";
 
 import {
+  _xd,
   _xlog,
   XModule,
   type XModuleData,
@@ -63,6 +64,15 @@ import type {
 import "./Style/xui.css";
 
 export const FIRST_USER_GESTURE = "first-user-gesture";
+const XUI_THEME_STORAGE_KEY = "xpell.theme";
+const XUI_THEME_XD_KEY = "xui.theme";
+type XUIThemeSource = "user" | "persisted" | "view-default" | "framework-default";
+type XUIApplyThemeOptions = {
+  _persist?: boolean;
+  _respect_persisted?: boolean;
+  _source?: XUIThemeSource;
+  _view_theme?: string | Record<string, string>;
+};
 
 const XUI_SKILL: XpellSkill = {
   _id: "xui",
@@ -112,6 +122,15 @@ export class XUIModule extends XModule {
       }
     },
 
+    "set-theme": {
+      _name: "set-theme",
+      _scope: "module",
+      _description: "Alias for apply-theme.",
+      _params: {
+        _theme: "Theme name or CSS variable token map."
+      }
+    },
+
     "create-player": {
       _name: "create-player",
       _scope: "module",
@@ -155,6 +174,55 @@ export class XUIModule extends XModule {
   private _themes: Record<string, Record<string, string>> = {};
   private _active_theme?: string;
 
+  private _readPersistedTheme() {
+    if (typeof window === "undefined") return "";
+
+    try {
+      const theme = window.localStorage?.getItem(XUI_THEME_STORAGE_KEY);
+      return typeof theme === "string" ? theme.trim() : "";
+    } catch (err) {
+      _xlog.debug("[XUI] Theme persistence read skipped", err);
+      return "";
+    }
+  }
+
+  private _persistTheme(theme: string) {
+    if (typeof window === "undefined") return;
+
+    try {
+      window.localStorage?.setItem(XUI_THEME_STORAGE_KEY, theme);
+    } catch (err) {
+      _xlog.debug("[XUI] Theme persistence write skipped", err);
+    }
+  }
+
+  private _syncDocumentThemeClass(theme: string) {
+    if (typeof document === "undefined") return;
+
+    const root = document.documentElement;
+    Array
+      .from(root.classList)
+      .filter(cls => cls.startsWith("xtheme-"))
+      .forEach(cls => root.classList.remove(cls));
+
+    root.setAttribute("data-theme", theme);
+    root.classList.add(`xtheme-${theme}`);
+  }
+
+  private _debugThemeSourceResolved(
+    persisted_theme: string,
+    view_theme: string,
+    resolved_theme: string,
+    source: XUIThemeSource,
+  ) {
+    _xlog.debug("[xui] theme source resolved", {
+      _persisted_theme: persisted_theme,
+      _view_theme: view_theme,
+      _resolved_theme: resolved_theme,
+      _source: source,
+    });
+  }
+
   _events = {
     _loaded: "xui-loaded",
   };
@@ -181,6 +249,15 @@ export class XUIModule extends XModule {
   async onLoad() {
     // Set the XEventManager instance for the entire app (DOM adapter)
     setXEventManager(_xem);
+    const persisted_theme = this._readPersistedTheme();
+    if (persisted_theme) {
+      this.applyTheme(persisted_theme, undefined, {
+        _persist: false,
+        _source: "persisted",
+      });
+    } else {
+      this._debugThemeSourceResolved("", "", "", "framework-default");
+    }
     _xem.fire(this._events._loaded);
   }
 
@@ -207,7 +284,8 @@ export class XUIModule extends XModule {
 
   applyTheme(
     theme: string | Record<string, string>,
-    root?: HTMLElement
+    root?: HTMLElement,
+    opts: XUIApplyThemeOptions = {},
   ) {
 
     const target =
@@ -228,15 +306,48 @@ export class XUIModule extends XModule {
      Named theme (CSS driven)
     ------------------------------------------------------------ */
     if (typeof theme === "string") {
-      this._active_theme = theme;
+      const view_theme = typeof opts._view_theme === "string"
+        ? opts._view_theme.trim()
+        : theme.trim();
+      const requested_theme = theme.trim();
+      if (!requested_theme) return;
+      const persisted_theme = opts._respect_persisted
+        ? this._readPersistedTheme()
+        : "";
+      const resolved_theme = persisted_theme || requested_theme;
+      const source: XUIThemeSource = persisted_theme
+        ? "persisted"
+        : opts._source ?? "user";
+      const should_persist = opts._persist ?? source === "user";
+
+      this._debugThemeSourceResolved(
+        persisted_theme,
+        view_theme,
+        resolved_theme,
+        source,
+      );
+
+      if (
+        this._active_theme === resolved_theme &&
+        target.getAttribute("data-theme") === resolved_theme
+      ) {
+        return;
+      }
+
+      this._active_theme = resolved_theme;
       target.setAttribute(
         "data-theme",
-        theme
+        resolved_theme
       );
       target.classList.add(
-        `xtheme-${theme}`
+        `xtheme-${resolved_theme}`
       );
-      _xlog.log("Applied CSS theme", theme);
+      this._syncDocumentThemeClass(resolved_theme);
+      if (should_persist) this._persistTheme(resolved_theme);
+      _xd.set(XUI_THEME_XD_KEY, resolved_theme, {
+        source: `xui.theme.${source}`,
+      });
+      _xlog.log("Applied CSS theme", resolved_theme);
       return;
     }
 
@@ -249,6 +360,23 @@ export class XUIModule extends XModule {
     }
 
     _xlog.log("Applied inline token theme", theme);
+  }
+
+  applyDefaultTheme(
+    theme: string | Record<string, string>,
+    root?: HTMLElement,
+  ) {
+    if (typeof theme === "string") {
+      this.applyTheme(theme, root, {
+        _persist: false,
+        _respect_persisted: true,
+        _source: "view-default",
+        _view_theme: theme,
+      });
+      return;
+    }
+
+    this.applyTheme(theme, root);
   }
 
   /**
@@ -487,7 +615,7 @@ export class XUIModule extends XModule {
     }
 
     if (theme) {
-      this.applyTheme(theme, div);
+      this.applyDefaultTheme(theme, div);
     }
     return div;
   }
@@ -570,6 +698,10 @@ export class XUIModule extends XModule {
 
     this.applyTheme(theme);
     return { _ok: true, _result: { _theme: theme } };
+  }
+
+  async _set_theme(cmd: any) {
+    return this._apply_theme(cmd);
   }
 
   async _create_player(cmd: any) {

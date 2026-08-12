@@ -15,7 +15,9 @@
 
     /* Project structure */
     "rootDir": "./src",
-    "baseUrl": "./",
+    "paths": {
+      "*": ["./*"]
+    },
 
     /* No JS emit from tsc — Vite handles bundling, vpd handles types */
     "noEmit": true

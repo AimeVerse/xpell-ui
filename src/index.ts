@@ -148,7 +148,8 @@ export type {
 } from "./XVM/XVM";
 export { XVMClient } from "./XVM/XVMClient";
 export type { XVMClientOptions, XVMClientConnectionChange } from "./XVM/XVMClient";
-export type { XVMView, XVMViewData, XVMViewPack, XVMViewResolver } from "./XVM/XVMView";
+export { XVMView, XVMViewPack, registerXVMViewSupport } from "./XVM/XVMView";
+export type { XVMViewData, XVMViewResolver, XVMViewSupportOptions } from "./XVM/XVMView";
 
 /* -------------------------------------------------------------------------- */
 /* XStudio                                                                    */
@@ -156,6 +157,16 @@ export type { XVMView, XVMViewData, XVMViewPack, XVMViewResolver } from "./XVM/X
 
 export { XStudioModule, showObjectPalette } from "./XStudio/XStudioModule";
 export type { XStudioObjectPaletteOptions } from "./XStudio/XStudioModule";
+export {
+  CAPABILITY_GUIDANCE_ARTIFACT_TYPE,
+  MUTATION_PLAN_ARTIFACT_TYPE,
+  PROJECT_PLAN_ARTIFACT_TYPE,
+  create_xstudio_artifact_request_card,
+  create_xstudio_artifact_request_view,
+} from "./XStudio/Conversation/XStudioArtifactCards";
+export {
+  create_xstudio_conversation_message_list,
+} from "./XStudio/Conversation/XStudioConversation";
 export { _XD_KEYS } from "./XStudio/XStudioTypes";
 export type {
   ServerGetViewRes,
@@ -196,5 +207,10 @@ export type {
 export { XEventManager, XEventManager as _xem } from "./XEM/XEventManager";
 
 export { FlowManagerClient, XFM, _xfm } from "./XFM/FlowManagerClient";
+export {
+  ProjectMemoryClient,
+  ProjectMemory,
+  _project_memory,
+} from "./XProjectMemory/ProjectMemoryClient";
 export { XUIRuntime ,type XUIRuntimeOptions, type XUIRuntimeAppOptions} from "./XUI/XUIRuntime";
 export * from "./XUI/CoreObjects/index";

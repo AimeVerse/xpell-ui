@@ -1,4 +1,4 @@
-import { resolve } from "path";
+import { resolve } from "node:path";
 import dts from "vite-plugin-dts";
 import { defineConfig } from "vite";
 
@@ -20,13 +20,16 @@ export default defineConfig(() => {
       outDir: "dist",
       rollupOptions: {
         external: ["xpell-core","animate.css"], // keep animate.css here only if it's a peer dep + you really want it external
-        output: { exports: "named" },
+        output: {
+          exports: "named",
+          codeSplitting: false,
+        },
       },
     },
 
     resolve: {
       alias: DEV_ALIAS
-        ? { "xpell-ui": resolve(__dirname, "src/index.ts") }
+        ? { "xpell-ui": resolve(import.meta.dirname, "src/index.ts") }
         : {},
     },
 

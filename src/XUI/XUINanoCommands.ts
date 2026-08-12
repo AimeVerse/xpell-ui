@@ -3,7 +3,7 @@ import {
   XObject,
   _xd,
   XD_FRAME_NUMBER,
-  createNanoCommandWithSkill
+  createNanoCommandWithSkill, _xu
 } from "@xpell/core";
 import { XUI } from "./XUI";
 
@@ -51,7 +51,43 @@ export const _xuiobject_basic_nano_commands: XNanoCommandPack = {
       }
     }
   ),
+  "set-xattribute": createNanoCommandWithSkill(
+    (cmd, obj?: XObject) => {
+      if (!obj) return;
 
+      const params =
+        _xu.ensure_params((cmd as any)._params);
+
+      const key =
+        _xu.ensure_string(params._key, "_key");
+
+      const value =
+        params._value;
+
+      if (
+        typeof (obj as XUIObject).setDOMAttribute !== "function"
+      ) {
+        return;
+      }
+
+      (obj as XUIObject).setDOMAttribute(
+        key,
+        value
+      );
+    },
+    {
+      _name: "set-xattribute",
+      _scope: "ui-object",
+      _description:
+        "Set an arbitrary property/attribute on the current UI object and update its DOM attribute when mounted.",
+      _params: {
+        _key:
+          "Property/attribute name to set, such as href, src, title, target, placeholder.",
+        _value:
+          "Value to assign."
+      }
+    }
+  ),
   set: createNanoCommandWithSkill(
     (cmd, obj?: XObject) => {
       if (!obj || !cmd._params) return;

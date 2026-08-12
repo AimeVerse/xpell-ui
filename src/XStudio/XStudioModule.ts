@@ -3,7 +3,7 @@ import {
   type XpellSkill,
   type XpellSkillCommand,
 } from "@xpell/core";
-import { _xd, _xlog, XUtils as _xu } from "@xpell/core";
+import { _x, _xd, _xlog, XUtils as _xu } from "@xpell/core";
 
 import { _xem } from "../XEM/XEventManager";
 import Wormholes from "../Wormholes/Wormholes";
@@ -14,16 +14,24 @@ import {
   studio_editor_views,
 } from "./XSEditor";
 import {
+  CRUD_FIELD_SUGGESTION_ARTIFACT_TYPE,
   EXECUTION_GRAPH_ARTIFACT_TYPE,
+  MUTATION_PLAN_ARTIFACT_TYPE,
+  PROJECT_PLAN_ARTIFACT_TYPE,
+  type XStudioArtifactRequestView,
+  type XStudioMutationPlanExecutionState,
   create_xstudio_artifact_request_view,
   normalize_xstudio_artifact_request_event_payload,
   xstudio_artifact_request_success_message,
+  xstudio_project_plan_current_question_key,
 } from "./Conversation/XStudioArtifactCards";
 import {
   create_xstudio_conversation_message_list,
+  create_xstudio_crud_recommendation_card,
   type XStudioConversationMessage,
   type XStudioConversationRenderMessage,
   type XStudioIntentActionView,
+  type XStudioPlanningGreetingQuickStart,
 } from "./Conversation/XStudioConversation";
 import conversation_view from "./views/conversation.json";
 import object_tree_view from "./views/object-tree.json";
@@ -41,6 +49,7 @@ import {
   type ServerListViewsRes,
   type VibeGenerationState,
 } from "./XStudioTypes";
+import "./xstudio.css";
 
 const LOG = "[xstudio]";
 const VIBE_LOG = "[vibe-client]";
@@ -50,13 +59,76 @@ const STUDIO_CONTAINER_ID = "region-studio";
 const STUDIO_SHELL_ID = "xstudio-shell";
 const STUDIO_TOPBAR_ID = "xstudio-topbar";
 const STUDIO_CANVAS_ID = "xstudio-canvas";
+const STUDIO_GUIDE_CARD_ID = "xstudio-guide-card";
+const STUDIO_GUIDE_TOGGLE_ID = "xstudio-guide-toggle";
+const STUDIO_GUIDE_BODY_ID = "xstudio-guide-body";
+const STUDIO_GUIDE_GOAL_ID = "xstudio-guide-goal";
+const STUDIO_GUIDE_FOCUS_ID = "xstudio-guide-focus";
+const STUDIO_GUIDE_COUNTS_ID = "xstudio-guide-counts";
+const STUDIO_GUIDE_UNAVAILABLE_ID = "xstudio-guide-unavailable";
+const STUDIO_GUIDE_UNAVAILABLE_DETAIL_ID = "xstudio-guide-unavailable-detail";
+const STUDIO_GUIDE_READY_MESSAGE_ID = "xstudio-guide-ready-message";
+const STUDIO_GUIDE_EMPTY_ACTION_ID = "xstudio-guide-empty-action";
+const STUDIO_GUIDE_FOCUS_INPUT_ID = "xstudio-guide-focus-input";
+const STUDIO_GUIDE_SET_FOCUS_ID = "xstudio-guide-set-focus";
+const STUDIO_GUIDE_MILESTONE_ID = "xstudio-guide-milestone";
+const STUDIO_GUIDE_MILESTONE_TITLE_ID = "xstudio-guide-milestone-title";
+const STUDIO_GUIDE_MILESTONE_PROGRESS_ID = "xstudio-guide-milestone-progress";
+const STUDIO_GUIDE_MILESTONE_ITEMS_ID = "xstudio-guide-milestone-items";
+const STUDIO_GUIDE_ACHIEVEMENTS_ID = "xstudio-guide-achievements";
+const STUDIO_GUIDE_ACHIEVEMENTS_LIST_ID = "xstudio-guide-achievements-list";
+const STUDIO_GUIDE_RECOMMENDATION_ID = "xstudio-guide-recommendation";
+const STUDIO_GUIDE_RECOMMENDATION_LABEL_ID = "xstudio-guide-recommendation-label";
+const STUDIO_GUIDE_RECOMMENDATION_TITLE_ID = "xstudio-guide-recommendation-title";
+const STUDIO_GUIDE_RECOMMENDATION_REASON_ID = "xstudio-guide-recommendation-reason";
+const STUDIO_GUIDE_RECOMMENDATION_DO_IT_ID = "xstudio-guide-recommendation-do-it";
+const STUDIO_GUIDE_RECOMMENDATION_STATUS_ID = "xstudio-guide-recommendation-status";
+const STUDIO_GUIDE_RECOMMENDATION_FOCUS_ID = "xstudio-guide-recommendation-focus";
+const STUDIO_GUIDE_RECOMMENDATION_PROGRESS_ID = "xstudio-guide-recommendation-progress";
+const STUDIO_GUIDE_RECOMMENDATION_CANCEL_ID = "xstudio-guide-recommendation-cancel";
+const STUDIO_GUIDE_STARTER_ADAPTATION_STATUS_ID = "xstudio-guide-starter-adaptation-status";
 const STUDIO_TOGGLE_LEFT_DOCK_ID = "xstudio-toggle-left-dock";
 const STUDIO_TOGGLE_RIGHT_DOCK_ID = "xstudio-toggle-right-dock";
+const STUDIO_OBJECT_PICKER_TOGGLE_ID = "xstudio-object-picker-toggle";
+const STUDIO_OBJECT_TREE_PICKER_TOGGLE_ID = "xstudio-object-tree-picker-toggle";
+const STUDIO_OBJECT_PICKER_TOGGLE_IDS = [
+  STUDIO_OBJECT_PICKER_TOGGLE_ID,
+  STUDIO_OBJECT_TREE_PICKER_TOGGLE_ID,
+];
+const STUDIO_ARRANGE_TOGGLE_ID = "xstudio-arrange-toggle";
+const STUDIO_OBJECT_TREE_ARRANGE_TOGGLE_ID = "xstudio-object-tree-arrange-toggle";
+const STUDIO_ARRANGE_TOGGLE_IDS = [
+  STUDIO_ARRANGE_TOGGLE_ID,
+  STUDIO_OBJECT_TREE_ARRANGE_TOGGLE_ID,
+];
+const STUDIO_LEFT_RESIZE_DIVIDER_ID = "xstudio-left-resize-divider";
 const STUDIO_APP_EXPLORER_PORTLET_ID = "xstudio-app-explorer-portlet";
 const STUDIO_APP_EXPLORER_BODY_ID = "xstudio-app-explorer-body";
 const STUDIO_APP_EXPLORER_RESULTS_ID = "xstudio-app-explorer-results";
 const STUDIO_APP_EXPLORER_SECTION_TOGGLE_ID = "xstudio-app-explorer-section-toggle";
 const STUDIO_APP_EXPLORER_ADD_VIEW_BUTTON_ID = "xstudio-app-explorer-add-view";
+const STUDIO_APP_EXPLORER_ADD_BUTTON_ID = "xstudio-app-explorer-add";
+const STUDIO_APP_EXPLORER_ADD_MENU_ID = "xstudio-app-explorer-add-menu";
+const STUDIO_APP_EXPLORER_DATA_FEATURE_DRAWER_ID = "xstudio-data-feature-panel";
+const STUDIO_APP_EXPLORER_DATA_FEATURE_BODY_ID = "xstudio-data-feature-body";
+const STUDIO_APP_EXPLORER_DATA_FEATURE_FIELD_PREFIX = "xstudio-data-feature-field";
+const STUDIO_APP_EXPLORER_DATA_FEATURE_NAME_ID = "xstudio-data-feature-name";
+const STUDIO_APP_EXPLORER_DATA_FEATURE_ENTITY_ID = "xstudio-data-feature-entity-id";
+const STUDIO_APP_EXPLORER_DATA_FEATURE_ERROR_ID = "xstudio-data-feature-error";
+const STUDIO_APP_EXPLORER_DATA_FEATURE_CREATE_ID = "xstudio-data-feature-create";
+const STUDIO_APP_EXPLORER_DATA_FEATURE_CANCEL_ID = "xstudio-data-feature-cancel";
+const STUDIO_APP_EXPLORER_DATA_FEATURE_PREVIEW_ID = "xstudio-data-feature-preview";
+const STUDIO_APP_EXPLORER_DATA_FEATURE_PROGRESS_ID = "xstudio-data-feature-progress";
+const STUDIO_APP_EXPLORER_DATA_FEATURE_ASK_INPUT_ID = "xstudio-data-feature-ask-input";
+const STUDIO_APP_EXPLORER_DATA_FEATURE_ASK_BUTTON_ID = "xstudio-data-feature-ask-button";
+const STUDIO_APP_EXPLORER_DATA_FEATURE_ASK_STATUS_ID = "xstudio-data-feature-ask-status";
+const STUDIO_APP_EXPLORER_DATA_FEATURE_ASK_MESSAGES_ID = "xstudio-data-feature-ask-messages";
+const STUDIO_APP_EXPLORER_DATA_FEATURE_REVIEW_ID = "xstudio-data-feature-review";
+const STUDIO_APP_EXPLORER_DATA_FEATURE_REPLACE_ID = "xstudio-data-feature-replace";
+const STUDIO_APP_EXPLORER_DATA_FEATURE_MERGE_ID = "xstudio-data-feature-merge";
+const STUDIO_APP_EXPLORER_DATA_FEATURE_CANCEL_SUGGESTION_ID = "xstudio-data-feature-cancel-suggestion";
+const STUDIO_APP_EXPLORER_DATA_FEATURE_OPTION_PREFIX = "xstudio-data-feature-option";
+const STUDIO_DATA_FEATURE_PROVIDER_AUTH_MESSAGE = "AI suggestions are unavailable because the configured provider could not authenticate.";
 const STUDIO_APP_EXPLORER_ADD_VIEW_DIALOG_ID = "xstudio-add-view-dialog";
 const STUDIO_APP_EXPLORER_ADD_VIEW_ID_INPUT_ID = "xstudio-add-view-id";
 const STUDIO_APP_EXPLORER_ADD_VIEW_TITLE_INPUT_ID = "xstudio-add-view-title";
@@ -115,25 +187,89 @@ const STUDIO_SELECTED_OBJECT_DANGER_BODY_ID = "xstudio-selected-object-danger-bo
 const STUDIO_SELECTED_OBJECT_DANGER_SECTION_TOGGLE_ID = "xstudio-selected-object-danger-section-toggle";
 const STUDIO_SELECTED_OBJECT_ROW_CLASS = "xstudio-object-tree-row-selected";
 const STUDIO_SELECTED_CANVAS_CLASS = "xstudio-selected-object";
+const STUDIO_OBJECT_PICKER_ACTIVE_CLASS = "xstudio-object-picker-active";
+const STUDIO_OBJECT_PICKER_TOGGLE_ACTIVE_CLASS = "xstudio-object-picker-toggle-active";
+const STUDIO_OBJECT_PICKER_OVERLAY_ID = "xstudio-object-picker-overlay";
+const STUDIO_OBJECT_PICKER_LABEL_ID = "xstudio-object-picker-label";
+const STUDIO_ARRANGE_ACTIVE_CLASS = "xstudio-arrange-active";
+const STUDIO_ARRANGE_TOGGLE_ACTIVE_CLASS = "xstudio-arrange-toggle-active";
+const STUDIO_ARRANGE_OVERLAY_ID = "xstudio-arrange-overlay";
+const STUDIO_ARRANGE_LABEL_ID = "xstudio-arrange-label";
+const STUDIO_ARRANGE_INDICATOR_ID = "xstudio-arrange-indicator";
+const STUDIO_ARRANGE_DRAG_THRESHOLD_PX = 5;
+const STUDIO_ARRANGE_SCROLL_EDGE_PX = 42;
+const STUDIO_ARRANGE_SCROLL_STEP_PX = 14;
+const STUDIO_OBJECT_TREE_DRAG_EXPAND_DELAY_MS = 450;
+const STUDIO_OBJECT_TREE_REVEAL_CLASS = "xstudio-object-tree-row-reveal";
 const STUDIO_THEME_DEFAULT = "dark";
 const STUDIO_THEME_SELECTOR_ID = "xstudio-theme-selector";
 const STUDIO_THEME_CLASS_PREFIX = "xstudio-theme-";
 const STUDIO_THEME_OPTIONS = ["terminal", "dark", "light"] as const;
+const STUDIO_LEFT_SIDEBAR_WIDTH_STORAGE_KEY = "xstudio:left_sidebar_width";
+const STUDIO_LEFT_SIDEBAR_DEFAULT_WIDTH = 300;
+const STUDIO_LEFT_SIDEBAR_MIN_WIDTH = 240;
+const STUDIO_LEFT_SIDEBAR_MAX_WIDTH_FALLBACK = 720;
+const STUDIO_CANVAS_MIN_WIDTH = 360;
+const STUDIO_RIGHT_SIDEBAR_WIDTH_FALLBACK = 500;
 const STUDIO_RUNTIME_SECTION_ID = "xstudio-runtime-section";
 const STUDIO_CONVERSATION_SECTION_ID = "xstudio-conversation-section";
 const STUDIO_CONVERSATION_TITLE_ID = "xstudio-conversation-title";
+const STUDIO_CONVERSATION_ACTIVE_TASK_HEADER_ID = "xstudio-conversation-active-task-header";
+const STUDIO_CONVERSATION_ACTIVE_TASK_HEADER_TITLE_ID = "xstudio-conversation-active-task-header-title";
+const STUDIO_CONVERSATION_ACTIVE_TASK_ID = "xstudio-conversation-active-task";
+const STUDIO_CONVERSATION_ACTIVE_TASK_LABEL_ID = "xstudio-conversation-active-task-label";
+const STUDIO_CONVERSATION_ACTIVE_TASK_TITLE_ID = "xstudio-conversation-active-task-title";
+const STUDIO_CONVERSATION_ACTIVE_TASK_RETRY_ID = "xstudio-conversation-active-task-retry";
+const STUDIO_CONVERSATION_ACTIVE_TASK_CANCEL_ID = "xstudio-conversation-active-task-cancel";
 const STUDIO_CONVERSATION_SELECTOR_ID = "xstudio-conversation-selector";
 const STUDIO_CONVERSATION_MESSAGES_ID = "xstudio-conversation-messages";
 const STUDIO_CONVERSATION_INPUT_ID = "xstudio-conversation-input";
 const STUDIO_CONVERSATION_SEND_BUTTON_ID = "xstudio-conversation-send-button";
 const STUDIO_CONVERSATION_INPUT_XD_KEY = "studio:conversation_input";
 const STUDIO_CONVERSATION_LAST_MESSAGES_LIMIT = 100;
+const STUDIO_ANALYZE_MESSAGE_TIMEOUT_MS = 45000;
+const STUDIO_ANALYZE_MESSAGE_TIMEOUT_TEXT = "Analysis took too long. Please retry.";
+const STUDIO_CAPABILITY_GUIDANCE_PROMPT = "What can I do with Visual Xpell?";
+const STUDIO_PLANNING_STAGE = "planning";
+const STUDIO_PLANNING_GREETING_QUICK_STARTS: XStudioPlanningGreetingQuickStart[] = [
+  {
+    _id: "crm",
+    _label: "CRM",
+    _prompt: "I want to build a CRM",
+    _send: true,
+  },
+  {
+    _id: "inventory",
+    _label: "Inventory",
+    _prompt: "I want to build an inventory system",
+    _send: true,
+  },
+  {
+    _id: "dashboard",
+    _label: "Dashboard",
+    _prompt: "I want to build an operations dashboard",
+    _send: true,
+  },
+  {
+    _id: "music-playlist",
+    _label: "Music playlist",
+    _prompt: "I want to build a hospital music playlist app",
+    _send: true,
+  },
+  {
+    _id: "custom-app",
+    _label: "Custom app",
+    _prompt: "I want to build ",
+    _send: false,
+  },
+];
 const STUDIO_INTENT_ACTION_STATUS_SUGGESTED = "suggested";
 const STUDIO_INTENT_ACTION_STATUS_DISMISSED = "dismissed";
 const STUDIO_INTENT_ACTION_STATUS_RUNNING = "running";
 const STUDIO_INTENT_ACTION_STATUS_DONE = "done";
 const STUDIO_INTENT_ACTION_STATUS_FAILED = "failed";
 const STUDIO_INTENT_ACTION_UNSUPPORTED_MESSAGE = "Execution not supported yet.";
+const STUDIO_FIX_PROJECT_VIEWS_ACTION_TYPE = "fix-project-views";
 const STUDIO_SUPPORTED_INTENT_APPLY_VIEW_EDIT_ACTIONS = new Set([
   "hide-object",
   "show-object",
@@ -147,6 +283,11 @@ const STUDIO_INTENT_APPLY_VIEW_EDIT_REFRESH_ACTIONS = new Set([
   "duplicate-object",
   "add-child",
   "move-object",
+  "set-style",
+  "set-styles",
+  "remove-style",
+  "add-class",
+  "remove-class",
 ]);
 const STUDIO_RUNTIME_INSPECTOR_SECTION_ID = "xstudio-runtime-inspector-section";
 const STUDIO_JSON_SECTION_ID = "xstudio-json-section";
@@ -184,12 +325,24 @@ const STUDIO_OBJECT_TREE_CHILD_LEAF_TYPES = new Set([
   "path",
 ]);
 type XStudioTheme = typeof STUDIO_THEME_OPTIONS[number];
-type XStudioPortletId = "selected" | "prompt" | "conversation" | "runtime" | "inspector" | "json" | "modules";
+type XStudioPortletId = "selected" | "prompt" | "conversation" | "guide" | "runtime" | "inspector" | "json" | "modules" | "data_feature";
 type XStudioExplorerSectionId = "app_explorer" | "object_tree" | "properties" | "interactions" | "raw_json" | "danger";
 type XStudioSelectedObjectInspectorSectionId = "properties" | "interactions" | "raw_json" | "danger";
 type XStudioAppExplorerArtifactType = "view" | "flow" | "entity" | "module";
 type XStudioAppExplorerCategoryId = "views" | "flows" | "entities" | "modules";
 type XStudioAppExplorerSectionId = "app" | XStudioAppExplorerCategoryId;
+type XStudioSidebarResizeDragState = {
+  _start_x: number;
+  _start_width: number;
+  _pointer_id: number;
+};
+type XStudioPickerResolvedObject = {
+  _id: string;
+  _type: string;
+  _element: HTMLElement;
+  _object: any;
+  _node: XStudioObjectTreeNode | null;
+};
 
 const STUDIO_PORTLETS: Record<XStudioPortletId, {
   _object_id: string;
@@ -209,6 +362,11 @@ const STUDIO_PORTLETS: Record<XStudioPortletId, {
     _object_id: STUDIO_CONVERSATION_SECTION_ID,
     _button_id: "xstudio-portlet-toggle-conversation",
     _label: "Conversation",
+  },
+  guide: {
+    _object_id: STUDIO_GUIDE_CARD_ID,
+    _button_id: "xstudio-portlet-toggle-guide",
+    _label: "Guide",
   },
   runtime: {
     _object_id: STUDIO_RUNTIME_SECTION_ID,
@@ -230,6 +388,10 @@ const STUDIO_PORTLETS: Record<XStudioPortletId, {
     _button_id: "xstudio-portlet-toggle-modules",
     _label: "Modules",
   },
+  data_feature: {
+    _object_id: STUDIO_APP_EXPLORER_DATA_FEATURE_DRAWER_ID,
+    _label: "Data Feature",
+  },
 };
 
 const STUDIO_PORTLET_IDS = Object.keys(STUDIO_PORTLETS) as XStudioPortletId[];
@@ -237,10 +399,12 @@ const STUDIO_DEFAULT_PORTLET_VISIBILITY: Record<XStudioPortletId, boolean> = {
   selected: true,
   prompt: false,
   conversation: true,
+  guide: false,
   runtime: false,
   inspector: false,
   json: false,
   modules: false,
+  data_feature: false,
 };
 const STUDIO_EXPLORER_SECTIONS: Record<XStudioExplorerSectionId, {
   _section_id: string;
@@ -339,6 +503,40 @@ const STUDIO_DEFAULT_APP_EXPLORER_SECTION_OPEN: Record<XStudioAppExplorerSection
   entities: true,
   modules: true,
 };
+const STUDIO_DATA_FEATURE_FIELD_TYPES: XStudioDataFeatureFieldType[] = ["String", "Number", "Boolean", "Date"];
+const STUDIO_DATA_FEATURE_OPTION_IDS: XStudioDataFeatureOptionId[] = [
+  "entity",
+  "list_view",
+  "create_form",
+  "create_flow",
+  "update_flow",
+  "delete_flow",
+];
+const STUDIO_DATA_FEATURE_DEFAULT_OPTIONS: Record<XStudioDataFeatureOptionId, boolean> = {
+  entity: true,
+  list_view: true,
+  create_form: true,
+  create_flow: true,
+  update_flow: true,
+  delete_flow: true,
+};
+const STUDIO_DATA_FEATURE_OPTION_LABELS: Record<XStudioDataFeatureOptionId, string> = {
+  entity: "Entity",
+  list_view: "List view",
+  create_form: "Create form",
+  create_flow: "Create flow",
+  update_flow: "Update flow",
+  delete_flow: "Delete flow",
+};
+const STUDIO_DATA_FEATURE_PROGRESS_STEPS: {
+  _id: XStudioDataFeatureProgressStepId;
+  _label: string;
+}[] = [
+  { _id: "entity", _label: "Creating entity" },
+  { _id: "actions", _label: "Creating actions" },
+  { _id: "form", _label: "Creating form" },
+  { _id: "list", _label: "Creating list view" },
+];
 const STUDIO_SELECTED_OBJECT_EDITOR_ACTION_CONTROL_IDS = [
   STUDIO_SELECTED_OBJECT_SAVE_FIELDS_ID,
   STUDIO_SELECTED_OBJECT_CANCEL_FIELDS_ID,
@@ -356,6 +554,24 @@ const EVT_VIBE_GENERATION_COMPLETE = "vibe:generation-complete";
 const EVT_VIBE_GENERATION_FAILED = "vibe:generation-failed";
 const EVT_XVIBE_ERROR = "xvibe:error";
 const EVT_COMMAND_ERROR = "command:error";
+const PROJECT_MEMORY_XD_KEY = "project.memory";
+const PROJECT_MEMORY_FOCUS_DRAFT_XD_KEY = "studio:guide_focus_draft";
+const GUIDE_RECOMMENDATION_XD_KEY = "guide.recommendation";
+const GUIDE_STATE_XD_KEY = "guide.state";
+const GUIDE_ACTIVE_RECOMMENDATION_XD_KEY = "guide.active_recommendation";
+const GUIDE_ACTIVE_RECOMMENDATION_STATUS_XD_KEY = "guide.active_recommendation_status";
+const GUIDE_MATERIALIZATION_XD_KEY = "guide.materialization";
+const GUIDE_MATERIALIZATION_ACTION_ID = "build-app";
+const GUIDE_MATERIALIZATION_RESUME_TOKEN_PREFIX = "guide-materialize";
+const GUIDE_MATERIALIZATION_STAGES = [
+  { _id: "preparing-starter", _title: "Preparing starter" },
+  { _id: "creating-data", _title: "Creating data" },
+  { _id: "creating-screens", _title: "Creating screens" },
+  { _id: "connecting-actions", _title: "Connecting actions" },
+  { _id: "composing-main-experience", _title: "Composing main experience" },
+  { _id: "validating-app", _title: "Validating app" },
+  { _id: "final-verification", _title: "Final verification" },
+] as const;
 
 const XSTUDIO_PACKAGE_VIEWS: Record<string, Record<string, any>> = {
   [STUDIO_SHELL_ID]: shell_view as Record<string, any>,
@@ -388,7 +604,20 @@ type XStudioClientRuntime = {
   }): Promise<Record<string, any> | void>;
   isWormholeReady?(): boolean;
   isServerReady?(): boolean;
-  sendXcmd(xcmd: any): Promise<any>;
+  sendXcmd(xcmd: any, timeoutMs?: number): Promise<any>;
+};
+
+type XStudioSendCommandOptions = {
+  _timeout_ms?: number;
+};
+
+type XStudioConversationAnalysisRequest = {
+  _request_id: number;
+  _app_id: string;
+  _env: string;
+  _conversation_id: string;
+  _message_id: string;
+  _prompt_key: string;
 };
 
 type StudioRuntimeAppContext = {
@@ -482,10 +711,28 @@ type XStudioIntentActionLocalStatus =
   | typeof STUDIO_INTENT_ACTION_STATUS_DONE
   | typeof STUDIO_INTENT_ACTION_STATUS_FAILED;
 
+type XStudioGuideActiveRecommendationStatus =
+  | "ready"
+  | "running"
+  | "adapting"
+  | "completed"
+  | "failed";
+
+type XStudioGuideMaterializationStageStatus =
+  | "pending"
+  | "running"
+  | "completed"
+  | "skipped"
+  | "failed";
+
 type XStudioIntentActionParamsResult = {
   _ok: boolean;
   _error: string;
   _params: Record<string, any> | null;
+};
+
+type XStudioAppendConversationMessageOptions = {
+  _analyze?: boolean;
 };
 
 type XStudioConversationSummary = {
@@ -516,7 +763,69 @@ type XStudioSelectedObjectApplyViewEditParams = {
   _child?: Record<string, any>;
   _before_id?: string;
   _after_id?: string;
+  _target_parent_id?: string;
+  _move_position?: string;
 };
+
+type XStudioAddObjectInsertMode = "inside" | "before" | "after";
+type XStudioArrangeDropMode = XStudioAddObjectInsertMode;
+
+type XStudioArrangeSourceResolution =
+  | {
+    _ok: true;
+    _id: string;
+    _type: string;
+    _resolved: XStudioPickerResolvedObject;
+    _node: XStudioObjectTreeNode;
+  }
+  | {
+    _ok: false;
+    _reason: string;
+    _message: string;
+  };
+
+type XStudioArrangeDropValidation =
+  | {
+    _ok: true;
+    _mode: XStudioArrangeDropMode;
+    _source_id: string;
+    _source_type: string;
+    _target_id: string;
+    _source_view_id: string;
+    _source_node: XStudioObjectTreeNode;
+    _target_node: XStudioObjectTreeNode;
+    _parent_node: XStudioObjectTreeNode;
+    _parent_id: string;
+    _before_id: string;
+    _after_id: string;
+  }
+  | {
+    _ok: false;
+    _reason: string;
+    _message: string;
+  };
+
+type XStudioArrangeDropPreview = {
+  _target: XStudioPickerResolvedObject;
+  _mode: XStudioArrangeDropMode;
+  _validation: XStudioArrangeDropValidation;
+};
+
+type XStudioObjectTreeDragKind = "handle" | "row";
+
+type XStudioAddObjectInsertionResolution =
+  | {
+    _ok: true;
+    _mode: XStudioAddObjectInsertMode;
+    _params: XStudioSelectedObjectApplyViewEditParams;
+    _selected_id: string;
+    _target_id: string;
+  }
+  | {
+    _ok: false;
+    _reason: string;
+    _message: string;
+  };
 
 type XStudioObjectTreeNode = {
   _key: string;
@@ -555,6 +864,72 @@ type XStudioAppExplorerArtifact = {
 type XStudioAppExplorerArtifacts = Record<XStudioAppExplorerCategoryId, XStudioAppExplorerArtifact[]>;
 
 type XStudioCreateViewTemplate = "blank" | "page" | "component";
+type XStudioDataFeatureFieldType = "String" | "Number" | "Boolean" | "Date";
+type XStudioDataFeatureProgressStepId = "entity" | "actions" | "form" | "list";
+type XStudioDataFeatureStatus = "idle" | "running" | "failed" | "completed";
+type XStudioDataFeatureSuggestionStatus = "idle" | "loading" | "failed" | "review";
+
+type XStudioDataFeatureFieldDraft = {
+  _key: string;
+  _name: string;
+  _field_id: string;
+  _type: XStudioDataFeatureFieldType;
+  _required: boolean;
+  _default: string;
+  _options: string;
+  _field_id_touched: boolean;
+};
+
+type XStudioDataFeatureSuggestedField = {
+  _name: string;
+  _field_id: string;
+  _type: XStudioDataFeatureFieldType;
+  _required: boolean;
+  _default?: unknown;
+  _options?: unknown[];
+};
+
+type XStudioDataFeatureSuggestedDraft = {
+  _feature_name: string;
+  _entity_id: string;
+  _fields: XStudioDataFeatureSuggestedField[];
+  _generation_options: Partial<Record<XStudioDataFeatureOptionId, boolean>>;
+  _assumptions: string[];
+  _warnings: string[];
+};
+
+type XStudioDataFeatureState = {
+  _open: boolean;
+  _add_menu_open: boolean;
+  _suggestion_prompt: string;
+  _suggestion_status: XStudioDataFeatureSuggestionStatus;
+  _suggestion_error: string;
+  _suggestion_debug_details: string;
+  _suggestion_assumptions: string[];
+  _suggestion_warnings: string[];
+  _suggestion_pending_draft: XStudioDataFeatureSuggestedDraft | null;
+  _feature_name: string;
+  _entity_id: string;
+  _entity_id_touched: boolean;
+  _fields: XStudioDataFeatureFieldDraft[];
+  _options: Record<XStudioDataFeatureOptionId, boolean>;
+  _status: XStudioDataFeatureStatus;
+  _error: string;
+  _progress: Record<XStudioDataFeatureProgressStepId, "pending" | "running" | "done" | "failed">;
+  _created_artifacts: {
+    _views: string[];
+    _flows: string[];
+    _entities: string[];
+  };
+};
+
+type XStudioDataFeatureOptionId =
+  | "entity"
+  | "list_view"
+  | "create_form"
+  | "create_flow"
+  | "update_flow"
+  | "delete_flow";
 
 export type XStudioObjectPaletteOptions = {
   onSelect?: (skill: XpellSkill) => void;
@@ -597,6 +972,46 @@ const empty_selected_object_click_interaction_draft = (): XStudioSelectedObjectC
   _view_id: "",
   _custom_json: "",
   _uses_legacy_view_id: false,
+});
+const empty_data_feature_progress = (): XStudioDataFeatureState["_progress"] => ({
+  entity: "pending",
+  actions: "pending",
+  form: "pending",
+  list: "pending",
+});
+const create_data_feature_field = (key: string): XStudioDataFeatureFieldDraft => ({
+  _key: key,
+  _name: "",
+  _field_id: "",
+  _type: "String",
+  _required: false,
+  _default: "",
+  _options: "",
+  _field_id_touched: false,
+});
+const empty_data_feature_state = (): XStudioDataFeatureState => ({
+  _open: false,
+  _add_menu_open: false,
+  _suggestion_prompt: "",
+  _suggestion_status: "idle",
+  _suggestion_error: "",
+  _suggestion_debug_details: "",
+  _suggestion_assumptions: [],
+  _suggestion_warnings: [],
+  _suggestion_pending_draft: null,
+  _feature_name: "",
+  _entity_id: "",
+  _entity_id_touched: false,
+  _fields: [create_data_feature_field("field-1")],
+  _options: { ...STUDIO_DATA_FEATURE_DEFAULT_OPTIONS },
+  _status: "idle",
+  _error: "",
+  _progress: empty_data_feature_progress(),
+  _created_artifacts: {
+    _views: [],
+    _flows: [],
+    _entities: [],
+  },
 });
 
 let object_palette_session: XStudioObjectPaletteSession | null = null;
@@ -682,6 +1097,456 @@ const object_palette_entries = (): XStudioObjectPaletteEntry[] => {
     const title_order = object_palette_compare(a._title, b._title);
     return title_order !== 0 ? title_order : object_palette_compare(a._id, b._id);
   });
+};
+
+const runtime_skill_string = (value: unknown, max = 360) => {
+  const text = String(value ?? "").trim();
+  if (!text) return "";
+  return text.length > max ? `${text.slice(0, max - 3)}...` : text;
+};
+
+const runtime_skill_string_array = (value: unknown, max_items = 16, max_len = 96) => {
+  if (!Array.isArray(value)) return [];
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const item of value) {
+    const text = runtime_skill_string(item, max_len);
+    if (!text || seen.has(text)) continue;
+    seen.add(text);
+    out.push(text);
+    if (out.length >= max_items) break;
+  }
+  return out;
+};
+
+const runtime_skill_json_value = (value: unknown, depth = 0): any => {
+  if (value === null || value === undefined) return value;
+  if (typeof value === "string") return runtime_skill_string(value, 180);
+  if (typeof value === "number" || typeof value === "boolean") return value;
+  if (Array.isArray(value)) {
+    if (depth >= 2) return value.length > 0 ? `[${value.length} items]` : [];
+    return value.slice(0, 8).map(item => runtime_skill_json_value(item, depth + 1));
+  }
+  if (is_obj(value)) {
+    if (depth >= 2) return Object.keys(value).length > 0 ? "{...}" : {};
+    const out: Record<string, any> = {};
+    for (const key of Object.keys(value).slice(0, 16)) {
+      const next = runtime_skill_json_value(value[key], depth + 1);
+      if (next !== undefined) out[key] = next;
+    }
+    return out;
+  }
+  return undefined;
+};
+
+const runtime_skill_compact_field_value = (value: unknown) => {
+  if (typeof value === "string") return runtime_skill_string(value, 220);
+  if (!is_obj(value)) return runtime_skill_json_value(value);
+
+  const out: Record<string, any> = {};
+  for (const key of [
+    "_key",
+    "_label",
+    "_input",
+    "_description",
+    "_placeholder",
+    "_required",
+    "_advanced",
+    "_readonly",
+  ]) {
+    if (value[key] === undefined) continue;
+    out[key] = typeof value[key] === "string"
+      ? runtime_skill_string(value[key], 160)
+      : runtime_skill_json_value(value[key]);
+  }
+  if (Array.isArray(value._options)) {
+    out._options = runtime_skill_string_array(value._options, 12, 72);
+  }
+  return out;
+};
+
+const runtime_skill_compact_fields = (value: unknown) => {
+  if (!is_obj(value)) return undefined;
+  const out: Record<string, any> = {};
+  const preferred = [
+    "_type",
+    "_children",
+    "_data_source",
+    "_data_output",
+    "_update_data_source_event",
+    "_items",
+    "_rows",
+    "_item",
+    "_columns",
+    "_row_key",
+    "_empty_text",
+    "_empty",
+    "_actions",
+    "_on",
+    "_on_data",
+    "_flow",
+    "_flow_event",
+  ];
+  const keys = [
+    ...preferred.filter(key => Object.prototype.hasOwnProperty.call(value, key)),
+    ...Object.keys(value).filter(key => !preferred.includes(key)),
+  ].slice(0, 32);
+  for (const key of keys) {
+    out[key] = runtime_skill_compact_field_value(value[key]);
+  }
+  return Object.keys(out).length > 0 ? out : undefined;
+};
+
+const runtime_skill_compact_inspector_fields = (value: unknown) => {
+  if (!Array.isArray(value)) return undefined;
+  const fields = value
+    .slice(0, 16)
+    .map(field => runtime_skill_compact_field_value(field))
+    .filter(item => is_obj(item) && typeof item._key === "string");
+  return fields.length > 0 ? fields : undefined;
+};
+
+const runtime_skill_compact_design = (value: unknown) => {
+  if (!is_obj(value)) return undefined;
+  const out: Record<string, any> = {};
+
+  if (is_obj(value._palette)) {
+    out._palette = {
+      ...(typeof value._palette._title === "string"
+        ? { _title: runtime_skill_string(value._palette._title, 120) }
+        : {}),
+      ...(typeof value._palette._category === "string"
+        ? { _category: runtime_skill_string(value._palette._category, 120) }
+        : {}),
+      ...(typeof value._palette._icon === "string"
+        ? { _icon: runtime_skill_string(value._palette._icon, 80) }
+        : {}),
+      ...(is_obj(value._palette._default_object)
+        ? { _default_object: runtime_skill_json_value(value._palette._default_object) }
+        : {}),
+    };
+  }
+
+  if (is_obj(value._children)) {
+    out._children = {
+      ...(typeof value._children._allowed === "boolean"
+        ? { _allowed: value._children._allowed }
+        : {}),
+      ...(Array.isArray(value._children._accepted_types)
+        ? { _accepted_types: runtime_skill_string_array(value._children._accepted_types, 24, 80) }
+        : {}),
+      ...(Array.isArray(value._children._insert_modes)
+        ? { _insert_modes: runtime_skill_string_array(value._children._insert_modes, 8, 40) }
+        : {}),
+    };
+  }
+
+  const inspector = is_obj(value._inspector) ? value._inspector : null;
+  const inspector_fields = runtime_skill_compact_inspector_fields(inspector?._fields);
+  if (inspector || inspector_fields) {
+    out._inspector = {
+      ...(Array.isArray(inspector?._sections)
+        ? { _sections: runtime_skill_string_array(inspector?._sections, 8, 40) }
+        : {}),
+      ...(inspector_fields ? { _fields: inspector_fields } : {}),
+    };
+  }
+
+  if (Array.isArray(value._actions)) {
+    out._actions = value._actions.slice(0, 8).map(action => runtime_skill_json_value(action));
+  }
+
+  return Object.keys(out).length > 0 ? out : undefined;
+};
+
+const runtime_skill_compact_exports = (value: unknown, object_types: string[] = []) => {
+  const source = is_obj(value) ? value : {};
+  const xui_objects = runtime_skill_string_array([
+    ...object_types,
+    ...(Array.isArray(source._xui_objects) ? source._xui_objects : []),
+  ], 48, 96);
+  const modules = Array.isArray(source._modules)
+    ? source._modules.slice(0, 16).map((module_item: any) => ({
+      ...(typeof module_item?._name === "string"
+        ? { _name: runtime_skill_string(module_item._name, 120) }
+        : {}),
+      ...(typeof module_item?._scope === "string"
+        ? { _scope: runtime_skill_string(module_item._scope, 40) }
+        : {}),
+      ...(typeof module_item?._description === "string"
+        ? { _description: runtime_skill_string(module_item._description, 240) }
+        : {}),
+      ...(Array.isArray(module_item?._ops)
+        ? {
+          _ops: module_item._ops.slice(0, 40).map((op: any) => ({
+            ...(typeof op?._name === "string" ? { _name: runtime_skill_string(op._name, 120) } : {}),
+            ...(typeof op?._scope === "string" ? { _scope: runtime_skill_string(op._scope, 40) } : {}),
+            ...(typeof op?._description === "string"
+              ? { _description: runtime_skill_string(op._description, 180) }
+              : {}),
+          })),
+        }
+        : {}),
+    })).filter((item: any) => Object.keys(item).length > 0)
+    : [];
+  const out: Record<string, any> = {};
+  if (xui_objects.length > 0) out._xui_objects = xui_objects;
+  if (modules.length > 0) out._modules = modules;
+  return Object.keys(out).length > 0 ? out : undefined;
+};
+
+const runtime_skill_compact_skill = (
+  skill: unknown,
+  object_types: string[] = [],
+): XpellSkill | null => {
+  if (!is_obj(skill)) return null;
+
+  const id = runtime_skill_string(skill._id || object_types[0], 120);
+  if (!id) return null;
+
+  const xui_types = runtime_skill_string_array([
+    ...object_types,
+    skill._xtype,
+    skill._xui_type,
+    skill._object_type,
+    skill._id,
+    ...(Array.isArray(skill._xui_objects) ? skill._xui_objects : []),
+    ...(Array.isArray(skill._exports?._xui_objects) ? skill._exports._xui_objects : []),
+  ], 48, 96);
+
+  const out: Record<string, any> = {
+    _id: id,
+  };
+
+  for (const key of ["_name", "_title", "_version", "_type"] as const) {
+    if (typeof skill[key] === "string" && skill[key].trim()) {
+      out[key] = runtime_skill_string(skill[key], 160);
+    }
+  }
+  if (typeof skill._active === "boolean") out._active = skill._active;
+  if (xui_types.length > 0) {
+    out._xtype = xui_types[0];
+    out._xui_type = xui_types[0];
+    out._object_type = xui_types[0];
+  }
+  if (typeof skill._description === "string") {
+    out._description = runtime_skill_string(skill._description, 420);
+  }
+
+  const fields = runtime_skill_compact_fields(skill._fields);
+  if (fields) out._fields = fields;
+
+  if (is_obj(skill._match)) {
+    const match: Record<string, any> = {};
+    const match_source = skill._match as Record<string, any>;
+    for (const key of ["_keywords", "_aliases", "_requires_any", "_requires_all", "_exclude_keywords"]) {
+      if (Array.isArray(match_source[key])) {
+        match[key] = runtime_skill_string_array(match_source[key], 24, 96);
+      }
+    }
+    if (typeof match_source._priority === "number") match._priority = match_source._priority;
+    if (Object.keys(match).length > 0) out._match = match;
+  }
+
+  for (const key of ["_aliases", "_keywords"] as const) {
+    if (Array.isArray(skill[key])) out[key] = runtime_skill_string_array(skill[key], 24, 96);
+  }
+
+  const exports_value = runtime_skill_compact_exports(skill._exports, xui_types);
+  if (exports_value) out._exports = exports_value;
+
+  const design = runtime_skill_compact_design(skill._design);
+  if (design) out._design = design;
+
+  if (skill._capabilities !== undefined) {
+    out._capabilities = runtime_skill_json_value(skill._capabilities);
+  }
+
+  for (const key of ["_core_rules", "_priority_rules", "_notes"] as const) {
+    if (Array.isArray(skill[key])) out[key] = runtime_skill_string_array(skill[key], 8, 220);
+  }
+
+  if (Array.isArray(skill._canonical_examples) && skill._canonical_examples.length > 0) {
+    out._canonical_examples = skill._canonical_examples
+      .slice(0, 2)
+      .map(item => runtime_skill_json_value(item));
+  }
+
+  return out as XpellSkill;
+};
+
+const runtime_skill_id = (skill: unknown) =>
+  is_obj(skill) && typeof skill._id === "string" ? skill._id.trim() : "";
+
+const runtime_skill_xui_types = (skill: unknown) => {
+  if (!is_obj(skill)) return [];
+  return runtime_skill_string_array([
+    skill._xtype,
+    skill._xui_type,
+    skill._object_type,
+    skill._id,
+    ...(Array.isArray(skill._xui_objects) ? skill._xui_objects : []),
+    ...(Array.isArray(skill._exports?._xui_objects) ? skill._exports._xui_objects : []),
+  ], 48, 96);
+};
+
+const runtime_component_skill_records = () => {
+  const records = new Map<string, { _skill: XpellSkill; _types: string[] }>();
+
+  for (const { _name, _class } of object_palette_registered_classes()) {
+    const raw_skill =
+      typeof _class?.getOwnSkill === "function"
+        ? _class.getOwnSkill()
+        : _class?._skill;
+    const raw_id = runtime_skill_id(raw_skill);
+    const id = raw_id || runtime_skill_string(_class?._xtype || _name, 120);
+    if (!id) continue;
+
+    const existing = records.get(id);
+    const types = runtime_skill_string_array([
+      ...(existing?._types ?? []),
+      _name,
+      _class?._xtype,
+      ...runtime_skill_xui_types(raw_skill),
+    ], 64, 96);
+    const compact = runtime_skill_compact_skill(raw_skill, types);
+    if (!compact) continue;
+
+    records.set(id, {
+      _skill: compact,
+      _types: types,
+    });
+  }
+
+  return Array.from(records.values());
+};
+
+const runtime_skill_add_unique = (
+  out: XpellSkill[],
+  seen: Set<string>,
+  skill: XpellSkill | null,
+) => {
+  const id = runtime_skill_id(skill);
+  if (!id || seen.has(id)) return;
+  seen.add(id);
+  out.push(skill as XpellSkill);
+};
+
+const runtime_skill_compact_skill_array = (
+  value: unknown,
+  seen = new Set<string>(),
+  object_types_by_id = new Map<string, string[]>(),
+) => {
+  const out: XpellSkill[] = [];
+  if (!Array.isArray(value)) return out;
+
+  for (const skill of value) {
+    const id = runtime_skill_id(skill);
+    const object_types = id ? object_types_by_id.get(id) ?? [] : [];
+    runtime_skill_add_unique(out, seen, runtime_skill_compact_skill(skill, object_types));
+  }
+
+  return out;
+};
+
+const runtime_skill_compact_module = (
+  module_item: unknown,
+  component_records: Array<{ _skill: XpellSkill; _types: string[] }>,
+) => {
+  if (!is_obj(module_item)) return null;
+
+  const name = runtime_skill_string(module_item._name, 120);
+  if (!name) return null;
+
+  const component_types_by_id = new Map(
+    component_records.map(record => [record._skill._id, record._types]),
+  );
+  const skill_seen = new Set<string>();
+  const object_seen = new Set<string>();
+  const skills = runtime_skill_compact_skill_array(
+    module_item._skills,
+    skill_seen,
+    component_types_by_id,
+  );
+  const objects: XpellSkill[] = [];
+
+  if (name === "xui") {
+    for (const record of component_records) {
+      runtime_skill_add_unique(objects, object_seen, record._skill);
+    }
+  }
+  for (const skill of runtime_skill_compact_skill_array(
+    module_item._objects,
+    object_seen,
+    component_types_by_id,
+  )) {
+    objects.push(skill);
+  }
+
+  const out: Record<string, any> = { _name: name };
+  if (skills.length > 0) out._skills = skills;
+  if (objects.length > 0) out._objects = objects;
+  return out;
+};
+
+const runtime_skill_compact_snapshot = (raw_snapshot: unknown) => {
+  const component_records = runtime_component_skill_records();
+  const component_types_by_id = new Map(
+    component_records.map(record => [record._skill._id, record._types]),
+  );
+  const component_types = runtime_skill_string_array(
+    component_records.flatMap(record => record._types),
+    128,
+    96,
+  ).sort(object_palette_compare);
+  const component_skills = component_records.map(record => record._skill);
+  const raw = is_obj(raw_snapshot) ? raw_snapshot : {};
+  const skill_seen = new Set<string>();
+  const object_seen = new Set<string>();
+  const module_seen = new Set<string>();
+  const modules: Record<string, any>[] = [];
+  const objects: XpellSkill[] = [];
+
+  for (const skill of component_skills) {
+    runtime_skill_add_unique(objects, object_seen, skill);
+  }
+  for (const skill of runtime_skill_compact_skill_array(raw._objects, object_seen, component_types_by_id)) {
+    objects.push(skill);
+  }
+
+  if (Array.isArray(raw._modules)) {
+    for (const module_item of raw._modules) {
+      const compact_module = runtime_skill_compact_module(module_item, component_records);
+      if (!compact_module?._name || module_seen.has(compact_module._name)) continue;
+      module_seen.add(compact_module._name);
+      modules.push(compact_module);
+    }
+  }
+
+  if (!module_seen.has("xui") && component_skills.length > 0) {
+    modules.push({
+      _name: "xui",
+      _objects: component_skills,
+    });
+  }
+
+  const runtime_context: Record<string, any> = {
+    ...(is_obj(raw._runtime) ? { _runtime: runtime_skill_json_value(raw._runtime) } : {}),
+    _skills: runtime_skill_compact_skill_array(raw._skills, skill_seen, component_types_by_id),
+    _objects: objects,
+    _modules: modules,
+  };
+
+  if (typeof raw._synced_at === "string") runtime_context._synced_at = raw._synced_at;
+  if (typeof raw._skills_count === "number") runtime_context._skills_count = raw._skills_count;
+
+  return {
+    _runtime_skills: runtime_context,
+    _component_diagnostics: {
+      _count: component_skills.length,
+      _types: component_types,
+    },
+  };
 };
 
 const object_palette_filter = (
@@ -950,6 +1815,14 @@ const to_result = (raw: any) => {
 export class XStudioModule extends XModule {
   static _name = "xstudio";
   private static _shortcut_owner: XStudioModule | null = null;
+  static _is_project_memory_apply_success(result: any) {
+    if (!is_obj(result)) return false;
+    if (result._ok === false) return false;
+    if (is_obj(result._memory)) return true;
+    if (is_obj(result._result) && is_obj(result._result._memory)) return true;
+    return false;
+  }
+
   static _skill: XpellSkill = {
     _id: "xstudio",
     _title: "XStudio Module",
@@ -986,7 +1859,7 @@ export class XStudioModule extends XModule {
       _scope: "module",
       _description: "Toggle a right-dock XStudio portlet without recreating it.",
       _params: {
-        _portlet: "Portlet id: prompt, conversation, runtime, inspector, json, or modules."
+        _portlet: "Portlet id: prompt, conversation, guide, runtime, inspector, json, or modules."
       }
     },
   };
@@ -999,8 +1872,53 @@ export class XStudioModule extends XModule {
   private _active_generation_view_id = "";
   private _left_dock_collapsed = false;
   private _right_dock_collapsed = false;
+  private _left_sidebar_width = STUDIO_LEFT_SIDEBAR_DEFAULT_WIDTH;
+  private _left_sidebar_resize_bound = false;
+  private _left_sidebar_resize_drag_state: XStudioSidebarResizeDragState | null = null;
+  private _left_sidebar_resize_divider_dom: HTMLElement | null = null;
+  private _left_sidebar_pointer_down_handler: ((event: any) => void) | null = null;
+  private _left_sidebar_double_click_handler: ((event: any) => void) | null = null;
+  private _left_sidebar_keydown_handler: ((event: KeyboardEvent) => void) | null = null;
+  private _left_sidebar_move_handler: ((event: any) => void) | null = null;
+  private _left_sidebar_up_handler: ((event: any) => void) | null = null;
+  private _left_sidebar_window_resize_handler: (() => void) | null = null;
   private _shortcuts_registered = false;
   private _shortcut_keydown_handler: ((event: KeyboardEvent) => void) | null = null;
+  private _object_picker_active = false;
+  private _object_picker_canvas_dom: HTMLElement | null = null;
+  private _object_picker_pointer_move_handler: ((event: PointerEvent) => void) | null = null;
+  private _object_picker_pointer_leave_handler: ((event: PointerEvent) => void) | null = null;
+  private _object_picker_pointer_down_handler: ((event: PointerEvent) => void) | null = null;
+  private _object_picker_click_handler: ((event: MouseEvent) => void) | null = null;
+  private _object_picker_hover: XStudioPickerResolvedObject | null = null;
+  private _object_picker_overlay_dom: HTMLElement | null = null;
+  private _object_picker_label_dom: HTMLElement | null = null;
+  private _arrange_mode_active = false;
+  private _arrange_canvas_dom: HTMLElement | null = null;
+  private _arrange_pointer_down_handler: ((event: PointerEvent) => void) | null = null;
+  private _arrange_pointer_move_handler: ((event: PointerEvent) => void) | null = null;
+  private _arrange_pointer_up_handler: ((event: PointerEvent) => void) | null = null;
+  private _arrange_pointer_cancel_handler: ((event: PointerEvent) => void) | null = null;
+  private _arrange_pointer_leave_handler: ((event: PointerEvent) => void) | null = null;
+  private _arrange_click_handler: ((event: MouseEvent) => void) | null = null;
+  private _arrange_dblclick_handler: ((event: MouseEvent) => void) | null = null;
+  private _arrange_contextmenu_handler: ((event: MouseEvent) => void) | null = null;
+  private _arrange_drag_source: XStudioArrangeSourceResolution | null = null;
+  private _arrange_hover: XStudioPickerResolvedObject | null = null;
+  private _arrange_drop_preview: XStudioArrangeDropPreview | null = null;
+  private _arrange_dragging = false;
+  private _arrange_committing = false;
+  private _arrange_start_x = 0;
+  private _arrange_start_y = 0;
+  private _arrange_last_x = 0;
+  private _arrange_last_y = 0;
+  private _arrange_pointer_id = -1;
+  private _arrange_drag_app_id = "";
+  private _arrange_drag_env = "";
+  private _arrange_overlay_dom: HTMLElement | null = null;
+  private _arrange_label_dom: HTMLElement | null = null;
+  private _arrange_indicator_dom: HTMLElement | null = null;
+  private _arrange_scroll_frame = 0;
   private _selected_object: XStudioSelectedObject | null = null;
   private _selected_object_data: Record<string, any> | null = null;
   private _selected_object_pending_delete: XStudioSelectedObject | null = null;
@@ -1022,6 +1940,29 @@ export class XStudioModule extends XModule {
   private _object_tree_expanded_node_keys = new Set<string>();
   private _object_tree_touched_expansion_node_keys = new Set<string>();
   private _object_tree_pending_duplicate: XStudioObjectTreeDuplicateTarget | null = null;
+  private _object_tree_drag_source: XStudioArrangeSourceResolution | null = null;
+  private _object_tree_drop_preview: XStudioArrangeDropPreview | null = null;
+  private _object_tree_dragging = false;
+  private _object_tree_drag_committing = false;
+  private _object_tree_drag_start_kind: XStudioObjectTreeDragKind = "row";
+  private _object_tree_drag_start_x = 0;
+  private _object_tree_drag_start_y = 0;
+  private _object_tree_drag_last_x = 0;
+  private _object_tree_drag_last_y = 0;
+  private _object_tree_drag_pointer_id = -1;
+  private _object_tree_drag_app_id = "";
+  private _object_tree_drag_env = "";
+  private _object_tree_drag_source_row: HTMLElement | null = null;
+  private _object_tree_drop_row: HTMLElement | null = null;
+  private _object_tree_scroll_frame = 0;
+  private _object_tree_expand_timer = 0;
+  private _object_tree_expand_node_key = "";
+  private _object_tree_pointer_move_handler: ((event: PointerEvent) => void) | null = null;
+  private _object_tree_pointer_up_handler: ((event: PointerEvent) => void) | null = null;
+  private _object_tree_pointer_cancel_handler: ((event: PointerEvent) => void) | null = null;
+  private _object_tree_keydown_handler: ((event: KeyboardEvent) => void) | null = null;
+  private _object_tree_click_suppress_handler: ((event: MouseEvent) => void) | null = null;
+  private _object_tree_drag_suppress_click = false;
   private _app_explorer_render_seq = 0;
   private _app_explorer_selected_key = "";
   private _app_explorer_artifacts: XStudioAppExplorerArtifacts = {
@@ -1033,8 +1974,22 @@ export class XStudioModule extends XModule {
   private _app_explorer_section_open: Record<XStudioAppExplorerSectionId, boolean> = {
     ...STUDIO_DEFAULT_APP_EXPLORER_SECTION_OPEN,
   };
+  private _data_feature_state: XStudioDataFeatureState = empty_data_feature_state();
+  private _data_feature_field_seq = 1;
+  private _data_feature_previous_portlet_visibility: Record<XStudioPortletId, boolean> | null = null;
+  private _data_feature_initial_snapshot = "";
+  private _data_feature_scope_key = "";
+  private _app_explorer_recent_artifact_keys = new Set<string>();
   private _studio_theme: XStudioTheme = STUDIO_THEME_DEFAULT;
   private _conversation_messages: XStudioConversationMessage[] = [];
+  private _conversation_transient_messages: XStudioConversationMessage[] = [];
+  private _conversation_analyzing = false;
+  private _conversation_analysis_seq = 0;
+  private _active_conversation_analysis_request: XStudioConversationAnalysisRequest | null = null;
+  private _timed_out_conversation_analysis_prompt_keys = new Set<string>();
+  private _completed_conversation_analysis_prompt_keys: Record<string, string> = {};
+  private _ignored_conversation_analysis_message_ids = new Set<string>();
+  private _conversation_preserve_transient_load = false;
   private _conversation_app_id = "";
   private _conversation_env = "";
   private _conversation_id = "";
@@ -1042,10 +1997,18 @@ export class XStudioModule extends XModule {
   private _conversation_ready: Promise<void> | null = null;
   private _pending_app_explorer_refresh = false;
   private _pending_conversation_load = false;
+  private _pending_project_memory_load = false;
   private _flushing_pending_server_ready = false;
+  private _project_memory_loaded_scope = "";
+  private _project_memory_loading_scope = "";
   private _conversation_action_status: Record<string, XStudioIntentActionLocalStatus> = {};
-  private _conversation_action_error: Record<string, string> = {};
+  private _conversation_action_error: Record<string, any> = {};
   private _conversation_action_result: Record<string, any> = {};
+  private _guide_structured_action_running_key = "";
+  private _project_plan_expanded: Record<string, boolean> = {};
+  private _mutation_plan_collapsed: Record<string, boolean> = {};
+  private _mutation_plan_execution_state: Record<string, XStudioMutationPlanExecutionState> = {};
+  private _planning_question_multi_answers: Record<string, string[]> = {};
   private _portlet_visibility: Record<XStudioPortletId, boolean> = {
     ...STUDIO_DEFAULT_PORTLET_VISIBILITY,
   };
@@ -1059,6 +2022,7 @@ export class XStudioModule extends XModule {
     });
 
     this._xvm_client = client ?? null;
+    this._left_sidebar_width = this._read_persisted_left_sidebar_width();
   }
 
   override async onLoad() {
@@ -1090,19 +2054,3435 @@ export class XStudioModule extends XModule {
 
   private async _flush_pending_server_refreshes() {
     if (this._flushing_pending_server_ready || !this._server_ready()) return;
-    if (!this._pending_app_explorer_refresh && !this._pending_conversation_load) return;
+    if (
+      !this._pending_app_explorer_refresh &&
+      !this._pending_conversation_load &&
+      !this._pending_project_memory_load
+    ) return;
 
     this._flushing_pending_server_ready = true;
     const refresh_app_explorer = this._pending_app_explorer_refresh;
     const load_conversation = this._pending_conversation_load;
+    const load_project_memory = this._pending_project_memory_load;
     this._pending_app_explorer_refresh = false;
     this._pending_conversation_load = false;
+    this._pending_project_memory_load = false;
 
     try {
       if (refresh_app_explorer) await this._refresh_app_explorer();
       if (load_conversation) await this._ensure_conversation_for_current_context();
+      if (load_project_memory) await this._load_project_memory_for_current_app("server-ready");
     } finally {
       this._flushing_pending_server_ready = false;
+    }
+  }
+
+  private _project_memory_scope_key(app_id: string, env: string) {
+    return `${env}::${app_id}`;
+  }
+
+  private _project_memory_should_skip_system_app(app_id: string) {
+    if (app_id === "vibe-system") return true;
+
+    const app = (this._xvm_client as any)?._app;
+    if (!is_obj(app)) return false;
+
+    return app._system === true || app._readonly === true;
+  }
+
+  private async _load_project_memory_for_current_app(
+    reason: string,
+    opts: {
+      _force?: boolean;
+    } = {}
+  ) {
+    let app_id = "";
+    let env = "default";
+
+    try {
+      app_id = this._client().getActiveAppId();
+      env = this._client().getActiveEnv() || "default";
+    } catch (err) {
+      this._pending_project_memory_load = true;
+      this._log("project memory load deferred: missing client", {
+        _reason: reason,
+        _error: to_err(err),
+      });
+      return;
+    }
+
+    if (!app_id) {
+      this._log("project memory load skipped: missing app id", {
+        _reason: reason,
+        _env: env,
+      });
+      return;
+    }
+
+    if (this._project_memory_should_skip_system_app(app_id)) {
+      this._debug_log("project memory skipped for system app", {
+        _reason: reason,
+        _app_id: app_id,
+        _env: env,
+      });
+      return;
+    }
+
+    const scope = this._project_memory_scope_key(app_id, env);
+
+    if (this._project_memory_loading_scope === scope) {
+      this._debug_log("project memory load skipped: already loading", {
+        _reason: reason,
+        _app_id: app_id,
+        _env: env,
+      });
+      return;
+    }
+
+    if (!opts._force && this._project_memory_loaded_scope === scope) {
+      this._debug_log("project memory load skipped: already loaded", {
+        _reason: reason,
+        _app_id: app_id,
+        _env: env,
+      });
+      return;
+    }
+
+    if (!this._server_ready()) {
+      this._pending_project_memory_load = true;
+      this._log("project memory load deferred: server not ready", {
+        _reason: reason,
+        _app_id: app_id,
+        _env: env,
+      });
+      return;
+    }
+
+    this._project_memory_loading_scope = scope;
+    this._pending_project_memory_load = false;
+
+    this._log("project memory load requested", {
+      _reason: reason,
+      _app_id: app_id,
+      _env: env,
+      _result_key: PROJECT_MEMORY_XD_KEY,
+    });
+
+    try {
+      const result = await _x.execute({
+        _module: "project-memory-client",
+        _op: "get",
+        _params: {
+          _app_id: app_id,
+          _env: env,
+          _result_key: PROJECT_MEMORY_XD_KEY,
+        },
+      });
+
+      if (is_obj(result) && result._ok === false) {
+        this._error("project memory load failed", {
+          _reason: reason,
+          _app_id: app_id,
+          _env: env,
+          _error: result._error ?? result,
+        });
+        return;
+      }
+
+      const memory = _xd.get(PROJECT_MEMORY_XD_KEY);
+      this._project_memory_loaded_scope = scope;
+      this._render_project_memory_guide();
+      this._render_conversation_messages();
+
+      this._log("project memory loaded", {
+        _reason: reason,
+        _app_id: app_id,
+        _env: env,
+        _result_key: PROJECT_MEMORY_XD_KEY,
+        _has_memory: is_obj(memory),
+        _updated_at: is_obj(memory) ? memory._updated_at : undefined,
+      });
+      await this._load_guide_recommendation("project-memory-loaded");
+    } catch (err) {
+      this._error("project memory load failed", {
+        _reason: reason,
+        _app_id: app_id,
+        _env: env,
+        _error: to_err(err),
+      });
+    } finally {
+      if (this._project_memory_loading_scope === scope) {
+        this._project_memory_loading_scope = "";
+      }
+    }
+  }
+
+  private _project_memory_text(memory: any, key: string, fallback: string) {
+    const value = is_obj(memory) ? memory[key] : undefined;
+    return typeof value === "string" && value.trim()
+      ? value.trim()
+      : fallback;
+  }
+
+  private _project_memory_count(memory: any, key: string) {
+    const value = is_obj(memory) ? memory[key] : undefined;
+    return Array.isArray(value) ? value.length : 0;
+  }
+
+  private _project_memory_guide_status_text(memory: any) {
+    return this._project_memory_guide_available(memory) ? "Ready to build" : "";
+  }
+
+  private _guide_normalized_text(value: any) {
+    return String(value ?? "")
+      .toLowerCase()
+      .replace(/[_/.-]+/g, " ")
+      .replace(/[^\p{L}\p{N}\s]/gu, "")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  private _project_memory_milestone_label(value: any) {
+    const raw = is_obj(value)
+      ? value._title ?? value.title ?? value._label ?? value.label ?? value._name ?? value.name ?? value._id ?? value.id
+      : value;
+    return typeof raw === "string" && raw.trim() ? raw.trim() : "";
+  }
+
+  private _normalize_project_memory_milestone(raw_milestone: any, index = 0) {
+    if (!is_obj(raw_milestone)) return null;
+
+    const title = this._project_memory_milestone_label(raw_milestone);
+    const id = typeof raw_milestone._id === "string" && raw_milestone._id.trim()
+      ? raw_milestone._id.trim()
+      : typeof raw_milestone.id === "string" && raw_milestone.id.trim()
+        ? raw_milestone.id.trim()
+        : title || `milestone-${index}`;
+    const raw_items = Array.isArray(raw_milestone._items)
+      ? raw_milestone._items
+      : Array.isArray(raw_milestone.items)
+        ? raw_milestone.items
+        : [];
+    const items = raw_items
+      .map((raw_item: any, item_index: number) => {
+        if (!is_obj(raw_item)) return null;
+
+        const item_title = this._project_memory_milestone_label(raw_item);
+        const item_id = typeof raw_item._id === "string" && raw_item._id.trim()
+          ? raw_item._id.trim()
+          : typeof raw_item.id === "string" && raw_item.id.trim()
+            ? raw_item.id.trim()
+            : item_title || `${id}-item-${item_index}`;
+        if (!item_title) return null;
+
+        return {
+          _id: item_id,
+          _title: item_title,
+          _completed:
+            raw_item._completed === true ||
+            raw_item.completed === true ||
+            raw_item._status === "completed" ||
+            raw_item.status === "completed",
+        };
+      })
+      .filter((item: any) => item !== null);
+
+    if (!id || !title || items.length === 0) return null;
+
+    const progress = raw_milestone._progress ?? raw_milestone.progress;
+
+    return {
+      _id: id,
+      _title: title,
+      _items: items,
+      ...(progress !== undefined ? { _progress: progress } : {}),
+    };
+  }
+
+  private _project_memory_milestones(memory: any) {
+    const raw_milestones = is_obj(memory) && Array.isArray(memory._milestones)
+      ? memory._milestones
+      : [];
+
+    return raw_milestones
+      .map((raw_milestone: any, index: number) =>
+        this._normalize_project_memory_milestone(raw_milestone, index)
+      )
+      .filter((milestone: any) => milestone !== null);
+  }
+
+  private _project_memory_current_milestone(memory: any) {
+    const focus = this._project_memory_text(memory, "_current_focus", "");
+    const normalized_focus = this._guide_normalized_text(focus);
+    if (!normalized_focus) return null;
+
+    return this._project_memory_milestones(memory).find((milestone: any) =>
+      this._guide_normalized_text(milestone._id) === normalized_focus ||
+      this._guide_normalized_text(milestone._title) === normalized_focus
+    ) ?? null;
+  }
+
+  private _project_memory_milestone_next_item(milestone: any) {
+    return is_obj(milestone) && Array.isArray(milestone._items)
+      ? milestone._items.find((item: any) => item?._completed !== true) ?? null
+      : null;
+  }
+
+  private _project_memory_milestone_progress_text(milestone: any) {
+    const progress = is_obj(milestone) ? milestone._progress ?? milestone.progress : undefined;
+    if (typeof progress === "string" && progress.trim()) return progress.trim();
+    if (is_obj(progress)) {
+      const completed = typeof progress._completed === "number"
+        ? progress._completed
+        : typeof progress.completed === "number"
+          ? progress.completed
+          : undefined;
+      const total = typeof progress._total === "number"
+        ? progress._total
+        : typeof progress.total === "number"
+          ? progress.total
+          : undefined;
+      if (
+        typeof completed === "number" &&
+        Number.isFinite(completed) &&
+        typeof total === "number" &&
+        Number.isFinite(total)
+      ) {
+        return `${completed} / ${total} completed`;
+      }
+    }
+
+    const items = is_obj(milestone) && Array.isArray(milestone._items)
+      ? milestone._items
+      : [];
+    const completed = items.filter((item: any) => item?._completed === true).length;
+    const total = items.length;
+    return `${completed} / ${total} completed`;
+  }
+
+  private _project_memory_milestone_children(milestone: any) {
+    const next_item = this._project_memory_milestone_next_item(milestone);
+    const items = is_obj(milestone) && Array.isArray(milestone._items)
+      ? milestone._items
+      : [];
+
+    return items.map((item: any, index: number) => ({
+      _id: `xstudio-guide-milestone-item-${index}`,
+      _type: "label",
+      class: [
+        "xstudio-guide-milestone-item",
+        item._completed === true ? "xstudio-guide-milestone-item-complete" : "xstudio-guide-milestone-item-open",
+        next_item && item._id === next_item._id ? "xstudio-guide-milestone-item-next" : "",
+      ].filter(Boolean).join(" "),
+      _text: `${item._completed === true ? "✓" : "□"} ${item._title}`,
+    }));
+  }
+
+  private _guide_recommendation_matches_milestone_item(recommendation: any, item: any) {
+    if (!recommendation || !item) return false;
+
+    const item_title = this._guide_normalized_text(item._title);
+    const item_id = this._guide_normalized_text(item._id);
+    const recommendation_parts = [
+      recommendation._title,
+      recommendation._reason,
+      recommendation._action?._prompt,
+    ].map((part) => this._guide_normalized_text(part)).filter(Boolean);
+
+    return recommendation_parts.some((part) =>
+      part === item_title ||
+      part === item_id ||
+      part.includes(item_title) ||
+      part.includes(item_id)
+    );
+  }
+
+  private _guide_recommendation_title(recommendation: any, next_item: any) {
+    if (typeof recommendation?._title === "string" && recommendation._title.trim()) {
+      return recommendation._title.trim();
+    }
+
+    if (
+      next_item &&
+      this._guide_recommendation_matches_milestone_item(recommendation, next_item) &&
+      typeof recommendation?._action?._prompt === "string" &&
+      recommendation._action._prompt.trim()
+    ) {
+      return recommendation._action._prompt.trim().replace(/[.。]+$/u, "");
+    }
+
+    return "Next step";
+  }
+
+  private _guide_recommendation_dynamic_milestone(recommendation: any) {
+    if (!is_obj(recommendation)) return null;
+
+    const direct_milestone = [
+      recommendation._milestone,
+      recommendation.milestone,
+      recommendation._current_milestone,
+      recommendation.current_milestone,
+      recommendation._guide_milestone,
+      recommendation.guide_milestone,
+    ].find((candidate) => is_obj(candidate));
+    const normalized_direct =
+      this._normalize_project_memory_milestone(direct_milestone, 0);
+    if (normalized_direct) return normalized_direct;
+
+    const raw_milestones = Array.isArray(recommendation._milestones)
+      ? recommendation._milestones
+      : Array.isArray(recommendation.milestones)
+        ? recommendation.milestones
+        : [];
+    const normalized_milestones = raw_milestones
+      .map((raw_milestone: any, index: number) =>
+        this._normalize_project_memory_milestone(raw_milestone, index)
+      )
+      .filter((milestone: any) => milestone !== null);
+    if (normalized_milestones.length > 0) return normalized_milestones[0];
+
+    const raw_items = Array.isArray(recommendation._items)
+      ? recommendation._items
+      : Array.isArray(recommendation.items)
+        ? recommendation.items
+        : [];
+    if (raw_items.length === 0) return null;
+
+    return this._normalize_project_memory_milestone({
+      _id: recommendation._milestone_id ?? recommendation.milestone_id ?? recommendation._type ?? "guide-milestone",
+      _title:
+        recommendation._milestone_title ??
+        recommendation.milestone_title ??
+        recommendation._focus ??
+        recommendation.focus ??
+        recommendation._title,
+      _items: raw_items,
+      ...(recommendation._progress !== undefined ? { _progress: recommendation._progress } : {}),
+      ...(recommendation.progress !== undefined ? { progress: recommendation.progress } : {}),
+    }, 0);
+  }
+
+  private _guide_current_milestone(memory: any, recommendation: any = null) {
+    const stored_milestone = this._project_memory_current_milestone(memory);
+    if (stored_milestone) return stored_milestone;
+
+    return this._guide_recommendation_dynamic_milestone(recommendation);
+  }
+
+  private _guide_task_title(recommendation: any) {
+    if (typeof recommendation?._action?._prompt === "string" && recommendation._action._prompt.trim()) {
+      return recommendation._action._prompt.trim().replace(/[.。]+$/u, "");
+    }
+
+    if (typeof recommendation?._title === "string" && recommendation._title.trim()) {
+      return recommendation._title.trim();
+    }
+
+    return "";
+  }
+
+  private _is_materialize_confirmed_plan_recommendation(recommendation: any) {
+    if (!is_obj(recommendation)) return false;
+    const action = is_obj(recommendation._action) ? recommendation._action : {};
+    const command = this._intent_action_execution_payload(action);
+    return is_obj(command) &&
+      command._module === "xvibe" &&
+      command._op === "materialize-confirmed-plan";
+  }
+
+  private _guide_materialization_status(value: any): XStudioGuideMaterializationStageStatus {
+    const status = String(value ?? "")
+      .trim()
+      .toLowerCase()
+      .replace(/_/g, "-");
+    if (status === "running" || status === "in-progress" || status === "working") return "running";
+    if (status === "completed" || status === "complete" || status === "done" || status === "success") return "completed";
+    if (status === "skipped" || status === "skip") return "skipped";
+    if (status === "failed" || status === "failure" || status === "error") return "failed";
+    return "pending";
+  }
+
+  private _guide_materialization_default_stages(
+    first_status: XStudioGuideMaterializationStageStatus = "pending",
+  ) {
+    return GUIDE_MATERIALIZATION_STAGES.map((stage, index) => ({
+      _id: stage._id,
+      _title: stage._title,
+      _status: index === 0 ? first_status : ("pending" as XStudioGuideMaterializationStageStatus),
+    }));
+  }
+
+  private _guide_materialization_result_source(result: any) {
+    const parsed_error = this._guide_materialization_error_payload(result);
+    if (!is_obj(result)) return null;
+    return [
+      parsed_error?._materialization,
+      parsed_error?.materialization,
+      parsed_error?._progress,
+      parsed_error?.progress,
+      parsed_error,
+      result._materialization,
+      result.materialization,
+      result._result?._materialization,
+      result._result?.materialization,
+      result._progress,
+      result.progress,
+      result._result?._progress,
+      result._result?.progress,
+      result,
+      result._result,
+    ].find((candidate) => is_obj(candidate)) ?? null;
+  }
+
+  private _guide_materialization_error_payload(result: any) {
+    const message = typeof result?.message === "string" ? result.message.trim() : "";
+    if (!message || !message.startsWith("{")) return null;
+    try {
+      const parsed = JSON.parse(message);
+      return is_obj(parsed) ? parsed : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private _guide_materialization_raw_stages(source: any) {
+    if (!is_obj(source)) return [];
+    const stages =
+      source._stages ??
+      source.stages ??
+      source._stage_progress ??
+      source.stage_progress ??
+      source._progress_stages ??
+      source.progress_stages;
+    return Array.isArray(stages) ? stages : [];
+  }
+
+  private _guide_materialization_stage_title(raw_stage: any, fallback: string) {
+    if (is_obj(raw_stage)) {
+      return this._first_display_text(raw_stage, [
+        "_title",
+        "title",
+        "_label",
+        "label",
+        "_name",
+        "name",
+        "_id",
+        "id",
+      ]) || fallback;
+    }
+    return fallback;
+  }
+
+  private _guide_materialization_stages_from_result(
+    result: any,
+    fallback_status: XStudioGuideMaterializationStageStatus,
+  ) {
+    const source = this._guide_materialization_result_source(result);
+    const raw_stages = this._guide_materialization_raw_stages(source);
+    const default_stages = this._guide_materialization_default_stages();
+
+    if (raw_stages.length === 0) {
+      if (fallback_status === "completed") {
+        return default_stages.map((stage) => ({ ...stage, _status: "completed" as const }));
+      }
+      if (fallback_status === "failed") {
+        return default_stages.map((stage, index) => ({
+          ...stage,
+          _status: index === 0 ? "failed" as const : "pending" as const,
+        }));
+      }
+      return this._guide_materialization_default_stages(fallback_status);
+    }
+
+    return default_stages.map((stage, index) => {
+      const raw_stage = raw_stages[index];
+      if (!is_obj(raw_stage)) return stage;
+      return {
+        _id: typeof raw_stage._id === "string" && raw_stage._id.trim()
+          ? raw_stage._id.trim()
+          : typeof raw_stage.id === "string" && raw_stage.id.trim()
+            ? raw_stage.id.trim()
+            : stage._id,
+        _title: this._guide_materialization_stage_title(raw_stage, stage._title),
+        _status: this._guide_materialization_status(raw_stage._status ?? raw_stage.status),
+        ...(typeof raw_stage._message === "string" && raw_stage._message.trim()
+          ? { _message: raw_stage._message.trim() }
+          : typeof raw_stage.message === "string" && raw_stage.message.trim()
+            ? { _message: raw_stage.message.trim() }
+            : {}),
+      };
+    });
+  }
+
+  private _guide_materialization_state() {
+    const state = _xd.get(GUIDE_MATERIALIZATION_XD_KEY);
+    return is_obj(state) ? state : null;
+  }
+
+  private _guide_materialization_safe_error(result: any, fallback = "Build failed. You can retry safely.") {
+    const source = this._guide_materialization_result_source(result);
+    const safe_sources = [
+      source,
+      this._guide_materialization_error_payload(result),
+      result,
+      result?._result,
+    ].filter(is_obj);
+    const safe_keys = [
+      "_safe_error",
+      "safe_error",
+      "_safe_message",
+      "safe_message",
+      "_user_message",
+      "user_message",
+    ];
+    for (const candidate of safe_sources) {
+      const message = this._first_display_text(candidate, safe_keys);
+      if (message) return message;
+    }
+
+    const generic_message = safe_sources
+      .map((candidate) => this._first_display_text(candidate, ["_message", "message"]))
+      .find((message) => message && !message.trim().startsWith("{"));
+    return generic_message || fallback;
+  }
+
+  private _set_guide_materialization_state(state: Record<string, any>) {
+    _xd.set(GUIDE_MATERIALIZATION_XD_KEY, state, {
+      source: "xstudio-guide",
+    });
+    this._render_guide_recommendation();
+  }
+
+  private _guide_materialization_running_stages() {
+    const current = this._guide_materialization_state();
+    const stages = Array.isArray(current?._stages)
+      ? current._stages
+      : this._guide_materialization_default_stages();
+    let running_assigned = false;
+
+    return stages.map((stage: any, index: number) => {
+      const status = this._guide_materialization_status(stage?._status ?? stage?.status);
+      if (status === "completed" || status === "skipped") {
+        return { ...stage, _status: status };
+      }
+      if (!running_assigned) {
+        running_assigned = true;
+        return { ...stage, _status: "running" as const };
+      }
+      return {
+        ...stage,
+        _status: "pending" as const,
+      };
+    });
+  }
+
+  private _guide_materialization_result_state(
+    result: any,
+    status: XStudioGuideActiveRecommendationStatus,
+    params: Record<string, any>,
+    action: XStudioIntentActionView,
+    error = "",
+  ) {
+    const source = this._guide_materialization_result_source(result);
+    const resume_token =
+      (typeof params._resume_token === "string" ? params._resume_token : "") ||
+      this._first_display_text(source ?? {}, ["_resume_token", "resume_token"]) ||
+      this._first_display_text(result, ["_resume_token", "resume_token"]);
+    return {
+      ...(this._guide_materialization_state() ?? {}),
+      _status: status,
+      ...(resume_token ? { _resume_token: resume_token } : {}),
+      _conversation_message_id: action._message_id,
+      _conversation_action_id: action._id,
+      _conversation_action_key: action._key,
+      _stages: this._guide_materialization_stages_from_result(
+        result,
+        status === "completed" ? "completed" : status === "failed" ? "failed" : "running",
+      ),
+      ...(error ? { _error: error } : {}),
+      ...(result !== undefined ? { _result: result } : {}),
+    };
+  }
+
+  private _guide_materialization_resume_token(
+    recommendation: Record<string, any>,
+    action_id: string,
+    message_id: string,
+  ) {
+    const existing =
+      recommendation._resume_token ??
+      recommendation.resume_token ??
+      recommendation._action?._resume_token ??
+      recommendation._action?.resume_token;
+    if (typeof existing === "string" && existing.trim()) return existing.trim();
+
+    let active_app_id = "";
+    let active_env = "";
+    try {
+      active_app_id = this._client().getActiveAppId?.() || "";
+      active_env = this._client().getActiveEnv?.() || "";
+    } catch {
+      active_app_id = "";
+      active_env = "";
+    }
+
+    return [
+      GUIDE_MATERIALIZATION_RESUME_TOKEN_PREFIX,
+      this._conversation_app_id || active_app_id || "app",
+      this._conversation_env || active_env || "default",
+      this._conversation_id || "conversation",
+      message_id || action_id || GUIDE_MATERIALIZATION_ACTION_ID,
+    ].map((part) => _xu.normalize_id(String(part)) ?? "id").join(":");
+  }
+
+  private _guide_materialization_recommendation(memory: any) {
+    if (!this._project_memory_guide_available(memory)) return null;
+
+    let active_app_id = "";
+    let active_env = "";
+    try {
+      active_app_id = this._client().getActiveAppId?.() || "";
+      active_env = this._client().getActiveEnv?.() || "";
+    } catch {
+      active_app_id = "";
+      active_env = "";
+    }
+    const app_id = this._conversation_app_id || active_app_id || "";
+    const env = this._conversation_env || active_env || "";
+    const materialization = this._guide_materialization_state();
+
+    return {
+      _id: GUIDE_MATERIALIZATION_ACTION_ID,
+      _type: "materialization",
+      _title: "Build app",
+      _reason: "Build the confirmed plan into a runnable app.",
+      ...(materialization ? { _materialization: materialization } : {}),
+      ...(typeof materialization?._resume_token === "string" ? { _resume_token: materialization._resume_token } : {}),
+      ...(typeof materialization?._conversation_message_id === "string"
+        ? { _conversation_message_id: materialization._conversation_message_id }
+        : {}),
+      ...(typeof materialization?._conversation_action_id === "string"
+        ? { _conversation_action_id: materialization._conversation_action_id }
+        : {}),
+      ...(typeof materialization?._conversation_action_key === "string"
+        ? { _conversation_action_key: materialization._conversation_action_key }
+        : {}),
+      _action: {
+        _id: GUIDE_MATERIALIZATION_ACTION_ID,
+        _prompt: "Build app",
+        _execution_payload: {
+          _module: "xvibe",
+          _op: "materialize-confirmed-plan",
+          _params: {
+            _app_id: app_id,
+            _env: env,
+            ...(typeof materialization?._resume_token === "string"
+              ? { _resume_token: materialization._resume_token }
+              : {}),
+          },
+        },
+      },
+    };
+  }
+
+  private _guide_lower_level_actions_visible() {
+    const guide_state = this._normalize_guide_state(_xd.get(GUIDE_STATE_XD_KEY));
+    return Boolean(
+      guide_state?._advanced ||
+      guide_state?._advanced_workflow ||
+      guide_state?._manual_repair ||
+      guide_state?._manual_repair_mode ||
+      guide_state?._show_lower_level_actions,
+    );
+  }
+
+  private _guide_recommendation_description(recommendation: any) {
+    if (!is_obj(recommendation)) return "";
+    return this._first_display_text(recommendation, [
+      "_description",
+      "description",
+      "_reason",
+      "reason",
+      "_summary",
+      "summary",
+    ]);
+  }
+
+  private _guide_recommendation_focus_text(memory: any, milestone: any) {
+    const focus = this._project_memory_text(memory, "_current_focus", "");
+    if (!focus) return "No focus set";
+
+    if (
+      is_obj(milestone) &&
+      (
+        this._guide_normalized_text(milestone._id) === this._guide_normalized_text(focus) ||
+        this._guide_normalized_text(milestone._title) === this._guide_normalized_text(focus)
+      )
+    ) {
+      return milestone._title || focus;
+    }
+
+    return this._project_memory_achievement_label(focus);
+  }
+
+  private _guide_recommendation_status_text(
+    active: any,
+    status: XStudioGuideActiveRecommendationStatus | "",
+  ) {
+    if (!active) return "";
+    if (this._is_materialize_confirmed_plan_recommendation(active)) {
+      if (status === "failed") return "Build failed";
+      if (status === "completed") return "Build complete";
+      if (status === "ready") return "Ready";
+      return "Building";
+    }
+    if (status === "failed") return "Failed · Retry available";
+    if (status === "completed") return "Completed";
+    if (status === "ready") return "Ready";
+    if (status === "adapting") return "Adapting";
+    return "Running";
+  }
+
+  private _guide_recommendation_action_text(
+    active: any,
+    status: XStudioGuideActiveRecommendationStatus | "",
+  ) {
+    if (active && this._is_materialize_confirmed_plan_recommendation(active)) {
+      if (status === "failed") return "Retry build";
+      if (status === "completed") return "Build complete";
+      if (status === "ready") return "Build app";
+      return "Building";
+    }
+    if (!active) return "Build this step";
+    if (status === "failed") return "Retry";
+    if (status === "completed") return "Completed";
+    if (status === "ready") return "Build this step";
+    return "Running";
+  }
+
+  private _guide_recommendation_action_title(
+    active: any,
+    status: XStudioGuideActiveRecommendationStatus | "",
+  ) {
+    if (active && this._is_materialize_confirmed_plan_recommendation(active)) {
+      if (status === "failed") return "Retry app build";
+      if (status === "completed") return "App build completed";
+      if (status === "ready") return "Build app";
+      return "App build is running";
+    }
+    if (!active) return "Start suggested task";
+    if (status === "failed") return "Retry current task";
+    if (status === "completed") return "Task completed";
+    if (status === "ready") return "Start current task";
+    return "Task is running";
+  }
+
+  private _guide_recommendation_action_disabled(
+    active: any,
+    status: XStudioGuideActiveRecommendationStatus | "",
+    recommendation_blocker: string,
+    prompt: string,
+  ) {
+    if (recommendation_blocker || !prompt) return true;
+    if (!active) return false;
+    return status !== "failed" && status !== "ready";
+  }
+
+  private _guide_materialization_display_state(
+    recommendation: any,
+    active: any,
+    active_status: XStudioGuideActiveRecommendationStatus | "",
+  ) {
+    const state = is_obj(active?._materialization)
+      ? this._guide_materialization_state() ?? active._materialization
+      : this._guide_materialization_state() ??
+        (is_obj(recommendation?._materialization) ? recommendation._materialization : null);
+    const stage_status =
+      active_status === "running" || active_status === "adapting"
+        ? "running"
+        : active_status === "completed"
+          ? "completed"
+          : active_status === "failed"
+            ? "failed"
+            : "pending";
+    return {
+      _status: active_status || String(state?._status ?? "pending"),
+      _stages: Array.isArray(state?._stages)
+        ? state._stages
+        : this._guide_materialization_default_stages(stage_status),
+      _error: typeof state?._error === "string" ? state._error : "",
+    };
+  }
+
+  private _guide_materialization_stage_children(
+    recommendation: any,
+    active: any,
+    active_status: XStudioGuideActiveRecommendationStatus | "",
+  ) {
+    if (!this._is_materialize_confirmed_plan_recommendation(active ?? recommendation)) return [];
+
+    const state = this._guide_materialization_display_state(recommendation, active, active_status);
+    return [{
+      _type: "view",
+      class: "xstudio-guide-materialization-progress",
+      "aria-label": "Build app progress",
+      _children: [
+        {
+          _type: "label",
+          class: "xstudio-guide-recommendation-label",
+          _text: "Build progress",
+        },
+        {
+          _type: "view",
+          class: "xstudio-guide-materialization-stages",
+          _children: state._stages.map((stage: any, index: number) => {
+            const status = this._guide_materialization_status(stage?._status ?? stage?.status);
+            const title = typeof stage?._title === "string" && stage._title.trim()
+              ? stage._title.trim()
+              : GUIDE_MATERIALIZATION_STAGES[index]?._title ?? `Stage ${index + 1}`;
+            return {
+              _id: `xstudio-guide-materialization-stage-${index}`,
+              _type: "view",
+              class: [
+                "xstudio-guide-materialization-stage",
+                `xstudio-guide-materialization-stage-${status}`,
+              ].join(" "),
+              _children: [
+                {
+                  _type: "label",
+                  class: "xstudio-guide-materialization-stage-title",
+                  _text: title,
+                },
+                {
+                  _type: "label",
+                  class: "xstudio-guide-materialization-stage-status",
+                  _text: status,
+                },
+              ],
+            };
+          }),
+        },
+        ...(state._error
+          ? [{
+            _type: "label",
+            class: "xstudio-guide-materialization-error",
+            _text: state._error,
+          }]
+          : []),
+      ],
+    }];
+  }
+
+  private _guide_recommendation_standard_children(options: {
+    _memory: any;
+    _display_recommendation: any;
+    _active_recommendation: any;
+    _active_status: XStudioGuideActiveRecommendationStatus | "";
+    _milestone: any;
+    _next_item: any;
+    _recommendation_blocker: string;
+    _recommendation_matches_milestone: boolean;
+  }) {
+    const active = options._active_recommendation;
+    const display_recommendation = options._display_recommendation;
+    const active_status = options._active_status;
+    const recommendation_blocker = options._recommendation_blocker;
+    const prompt = typeof display_recommendation?._action?._prompt === "string"
+      ? display_recommendation._action._prompt.trim()
+      : "";
+    const status_text = this._guide_recommendation_status_text(active, active_status);
+    const title = recommendation_blocker
+      ? "No executable action available"
+      : active
+        ? this._guide_task_title(active)
+        : this._guide_recommendation_title(display_recommendation, options._next_item);
+    const description = recommendation_blocker ||
+      this._guide_recommendation_description(display_recommendation);
+    const progress = options._milestone
+      ? this._project_memory_milestone_progress_text(options._milestone)
+      : "";
+    const focus = this._guide_recommendation_focus_text(options._memory, options._milestone);
+    const label = active
+      ? "Current task"
+      : display_recommendation || recommendation_blocker
+        ? "Recommended next"
+        : "Next suggested step";
+    const action_disabled = this._guide_recommendation_action_disabled(
+      active,
+      active_status,
+      recommendation_blocker,
+      prompt,
+    );
+    const materialization_recommendation =
+      this._is_materialize_confirmed_plan_recommendation(display_recommendation);
+    const action_text = materialization_recommendation && !active
+      ? "Build app"
+      : this._guide_recommendation_action_text(active, active_status);
+    const action_title = materialization_recommendation && !active
+      ? "Build app"
+      : this._guide_recommendation_action_title(active, active_status);
+
+    return [
+      {
+        _type: "view",
+        class: [
+          "xstudio-guide-recommendation-status-block",
+          ...(!status_text ? ["xstudio-guide-recommendation-status-block-empty"] : []),
+        ].join(" "),
+        "aria-label": "Guide task status",
+        _children: status_text
+          ? [{
+            _id: STUDIO_GUIDE_RECOMMENDATION_STATUS_ID,
+            _type: "label",
+            class: "xstudio-guide-recommendation-status",
+            _text: status_text,
+          }]
+          : [],
+      },
+      {
+        _type: "view",
+        class: "xstudio-guide-recommendation-task-block",
+        "aria-label": active ? "Current task" : "Recommended task",
+        _children: [
+          {
+            _id: STUDIO_GUIDE_RECOMMENDATION_LABEL_ID,
+            _type: "label",
+            class: "xstudio-guide-recommendation-label",
+            _text: label,
+          },
+          {
+            _id: STUDIO_GUIDE_RECOMMENDATION_TITLE_ID,
+            _type: "label",
+            class: "xstudio-guide-recommendation-title",
+            _text: title,
+          },
+        ],
+      },
+      ...(active
+        ? [{
+          _type: "view",
+          class: "xstudio-guide-recommendation-focus-block",
+          "aria-label": "Current focus",
+          _children: [
+            {
+              _type: "label",
+              class: "xstudio-guide-recommendation-label",
+              _text: "Current focus",
+            },
+            {
+              _id: STUDIO_GUIDE_RECOMMENDATION_FOCUS_ID,
+              _type: "label",
+              class: "xstudio-guide-recommendation-focus",
+              _text: focus,
+            },
+          ],
+        }]
+        : []),
+      {
+        _type: "view",
+        class: [
+          "xstudio-guide-recommendation-description-block",
+          ...(!description ? ["xstudio-guide-recommendation-description-block-empty"] : []),
+        ].join(" "),
+        "aria-label": "Task description",
+        _children: description
+          ? [{
+            _id: STUDIO_GUIDE_RECOMMENDATION_REASON_ID,
+            _type: "label",
+            class: "xstudio-guide-recommendation-reason",
+            _text: description,
+          }]
+          : [],
+      },
+      {
+        _type: "view",
+        class: [
+          "xstudio-guide-recommendation-progress-block",
+          ...(!progress ? ["xstudio-guide-recommendation-progress-block-empty"] : []),
+        ].join(" "),
+        "aria-label": "Guide progress",
+        _children: progress
+          ? [
+            {
+              _type: "label",
+              class: "xstudio-guide-recommendation-label",
+              _text: "Progress",
+            },
+            {
+              _id: STUDIO_GUIDE_RECOMMENDATION_PROGRESS_ID,
+              _type: "label",
+              class: "xstudio-guide-recommendation-progress",
+              _text: progress,
+            },
+          ]
+          : [],
+      },
+      ...this._guide_materialization_stage_children(
+        display_recommendation,
+        active,
+        active_status,
+      ),
+      {
+        _type: "view",
+        class: "xstudio-guide-recommendation-actions",
+        "aria-label": "Guide task actions",
+        _children: [
+          {
+            _id: STUDIO_GUIDE_RECOMMENDATION_DO_IT_ID,
+            _type: "button",
+            type: "button",
+            class: "xstudio-guide-recommendation-do-it",
+            _text: action_text,
+            title: action_title,
+            disabled: action_disabled,
+            _on: {
+              click: {
+                _module: "xem",
+                _op: "fire",
+                _params: {
+                  event: "studio:guide-recommendation-do-it",
+                },
+              },
+            },
+          },
+          ...(active
+            ? [{
+              _id: STUDIO_GUIDE_RECOMMENDATION_CANCEL_ID,
+              _type: "button",
+              type: "button",
+              class: "xstudio-guide-recommendation-cancel",
+              _text: "Cancel",
+              title: "Cancel current task",
+              disabled: active_status === "completed",
+              _on: {
+                click: {
+                  _module: "xem",
+                  _op: "fire",
+                  _params: {
+                    event: "studio:guide-active-recommendation-cancel",
+                  },
+                },
+              },
+            }]
+            : []),
+        ],
+      },
+    ];
+  }
+
+  private _project_memory_achievement_label(value: any) {
+    const raw = is_obj(value)
+      ? value._title ?? value.title ?? value._label ?? value.label ?? value._name ?? value.name ?? value._id ?? value.id
+      : value;
+    const text = typeof raw === "string" ? raw.trim() : "";
+    if (!text) return "";
+
+    const known: Record<string, string> = {
+      first_focus_set: "First Focus Set",
+      "first-focus-set": "First Focus Set",
+      first_recommendation: "First Recommendation",
+      "first-recommendation": "First Recommendation",
+      first_suggested_action_applied: "First Suggested Action Applied",
+      "first-suggested-action-applied": "First Suggested Action Applied",
+    };
+    if (known[text]) return known[text];
+
+    return text
+      .replace(/^achievement[:/_-]+/i, "")
+      .replace(/[_-]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .replace(/\b\w/g, (char) => char.toUpperCase());
+  }
+
+  private _project_memory_achievements(memory: any) {
+    const achievements = is_obj(memory) && Array.isArray(memory._achievements)
+      ? memory._achievements
+      : [];
+    return achievements
+      .slice(-3)
+      .map((item: any) => this._project_memory_achievement_label(item))
+      .filter((item: string) => item.length > 0);
+  }
+
+  private _project_memory_achievement_children(memory: any) {
+    return this._project_memory_achievements(memory).map((label, index) => ({
+      _id: `xstudio-guide-achievement-${index}`,
+      _type: "label",
+      class: "xstudio-guide-achievement",
+      _text: `✓ ${label}`,
+    }));
+  }
+
+  private _project_memory_explicitly_confirmed(memory: any) {
+    if (!is_obj(memory)) return false;
+
+    return [
+      memory._project_plan_confirmed,
+      memory.project_plan_confirmed,
+      memory._planning_confirmed,
+      memory.planning_confirmed,
+      memory._plan_confirmed,
+      memory.plan_confirmed,
+      memory._confirmed,
+      memory.confirmed,
+    ].some((value) => value === true || value === "true" || value === "confirmed");
+  }
+
+  private _conversation_has_confirmed_project_plan() {
+    const messages = [
+      ...this._conversation_messages,
+      ...this._conversation_transient_messages,
+    ];
+
+    for (let index = 0; index < messages.length; index += 1) {
+      const request = this._conversation_artifact_request(messages[index], index);
+      if (!request || request._artifact_type !== PROJECT_PLAN_ARTIFACT_TYPE) continue;
+
+      const local_status = this._conversation_action_status[request._key];
+      const local_result = this._conversation_action_result[request._key];
+      if (
+        local_status === STUDIO_INTENT_ACTION_STATUS_DONE ||
+        request._status === STUDIO_INTENT_ACTION_STATUS_DONE ||
+        local_result === "Plan confirmed."
+      ) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  private _project_memory_guide_available(memory: any) {
+    return this._project_memory_explicitly_confirmed(memory) ||
+      this._conversation_has_confirmed_project_plan();
+  }
+
+  private _project_memory_guide_has_content(memory: any, display_recommendation: any) {
+    const milestone = this._guide_current_milestone(memory, display_recommendation);
+    const blocker = display_recommendation
+      ? ""
+      : this._guide_recommendation_blocker_text(
+        memory,
+        milestone,
+        this._project_memory_milestone_next_item(milestone),
+      );
+    return Boolean(milestone) ||
+      this._project_memory_achievements(memory).length > 0 ||
+      Boolean(display_recommendation) ||
+      Boolean(blocker);
+  }
+
+  private _project_memory_guide_empty_action_children(memory: any, display_recommendation: any) {
+    const has_content = this._project_memory_guide_has_content(memory, display_recommendation);
+    return {
+      _id: STUDIO_GUIDE_EMPTY_ACTION_ID,
+      _type: "view",
+      class: [
+        "xstudio-guide-empty-action",
+        ...(has_content ? ["xstudio-guide-empty-action-hidden"] : []),
+      ].join(" "),
+      _children: has_content ? [] : [
+        {
+          _type: "label",
+          class: "xstudio-guide-empty-action-text",
+          _text: "No executable build action is available for the current guide focus.",
+        },
+      ],
+    };
+  }
+
+  private _guide_recommendation_action_key(recommendation: any, index: number) {
+    const title = this._first_display_text(recommendation, ["_title", "title"]) ||
+      this._first_display_text(this._recommendation_action_source(recommendation), [
+        "_title",
+        "title",
+        "_label",
+        "label",
+        "_prompt",
+        "prompt",
+      ]);
+    const normalized_title = _xu.normalize_id(title) ?? "crud";
+    let app_id = "app";
+    let env = "default";
+    try {
+      app_id = this._client().getActiveAppId() || app_id;
+      env = this._client().getActiveEnv() || env;
+    } catch {
+      // The guide can be rendered in isolated tests before a client is mounted.
+    }
+    return [
+      "guide-recommendation",
+      app_id,
+      env,
+      normalized_title,
+      String(index),
+    ].join("::");
+  }
+
+  private _guide_crud_recommendation_action_view(
+    recommendation: any,
+    index: number,
+    total: number,
+    active_status: XStudioGuideActiveRecommendationStatus | "" = "",
+  ) {
+    if (!is_obj(recommendation) || !this._is_crud_recommendation(recommendation)) return null;
+
+    const normalized_action = this._normalize_conversation_intent_action(
+      this._normalize_crud_recommendation_action(recommendation, index, total),
+    );
+    if (!is_obj(normalized_action)) return null;
+
+    const action_key = this._guide_recommendation_action_key(recommendation, index);
+    const source_status = this._intent_action_text(
+      normalized_action,
+      "status",
+      STUDIO_INTENT_ACTION_STATUS_SUGGESTED,
+    );
+    const local_status = this._conversation_action_status[action_key] ??
+      (active_status === "failed"
+        ? STUDIO_INTENT_ACTION_STATUS_FAILED
+        : active_status === "running"
+          ? STUDIO_INTENT_ACTION_STATUS_RUNNING
+          : source_status);
+    const source_error =
+      this._intent_action_text(normalized_action, "error") ||
+      this._intent_action_text(normalized_action, "reason");
+    const visible_source_error =
+      normalized_action._executable === false || local_status === STUDIO_INTENT_ACTION_STATUS_FAILED
+        ? source_error
+        : "";
+    const action: XStudioIntentActionView = {
+      _key: action_key,
+      _render_key: action_key,
+      _id: "",
+      _message_id: "",
+      _action_index: index,
+      _title: this._intent_action_text(normalized_action, "title", "Build CRUD foundation"),
+      _description: this._intent_action_text(normalized_action, "description"),
+      _action_type: this._intent_action_text(normalized_action, "action_type", "crud-recommendation"),
+      _confidence: this._intent_action_text(normalized_action, "confidence"),
+      _status: local_status,
+      ...(typeof normalized_action._executable === "boolean"
+        ? { _executable: normalized_action._executable }
+        : {}),
+      _has_execution_payload: normalized_action._has_execution_payload === true,
+      _execution_payload_error:
+        this._intent_action_text(normalized_action, "execution_payload_error"),
+      _execution_payload: is_obj(normalized_action._execution_payload)
+        ? { ...normalized_action._execution_payload }
+        : null,
+      ...(typeof normalized_action._requires_approval === "boolean"
+        ? { _requires_approval: normalized_action._requires_approval }
+        : {}),
+      _params: is_obj(normalized_action._params) ? { ...normalized_action._params } : null,
+      _result: this._conversation_action_result[action_key] ??
+        normalized_action._result ??
+        normalized_action.result,
+      _error: this._conversation_action_error[action_key] || visible_source_error,
+      _recommendation_kind: "crud",
+      _recommendation_badge: this._intent_action_text(normalized_action, "recommendation_badge"),
+      _recommendation_order: this._intent_action_text(normalized_action, "recommendation_order"),
+      _recommendation_dependency: this._intent_action_text(normalized_action, "recommendation_dependency"),
+      _recommendation_entity_name: this._intent_action_text(normalized_action, "recommendation_entity_name"),
+      _recommendation_expected_artifacts: Array.isArray(normalized_action._recommendation_expected_artifacts)
+        ? normalized_action._recommendation_expected_artifacts.filter((item: any) =>
+          typeof item === "string" && item.trim()
+        )
+        : [],
+      _recommendation_button_label: this._intent_action_text(normalized_action, "recommendation_button_label"),
+      _recommendation_debug: normalized_action._recommendation_debug,
+      ...(typeof normalized_action._recommended === "boolean"
+        ? { _recommended: normalized_action._recommended }
+        : {}),
+    };
+
+    return {
+      ...action,
+      _execute_state: this._intent_action_card_execute_state(action),
+    };
+  }
+
+  private _guide_crud_recommendation_cards(
+    recommendations: any[],
+    active_status: XStudioGuideActiveRecommendationStatus | "" = "",
+  ) {
+    const crud_recommendations = recommendations
+      .filter((recommendation) => this._is_crud_recommendation(recommendation));
+    return crud_recommendations
+      .map((recommendation, index) =>
+        this._guide_crud_recommendation_action_view(
+          recommendation,
+          index,
+          crud_recommendations.length,
+          active_status,
+        )
+      )
+      .filter((action): action is NonNullable<ReturnType<typeof this._guide_crud_recommendation_action_view>> =>
+        action !== null
+      )
+      .map((action, index) =>
+        create_xstudio_crud_recommendation_card(action, {
+          _id_suffix: `guide-${index}`,
+          _surface: "guide",
+        })
+      );
+  }
+
+  private _starter_adaptation_type_text(recommendation: any) {
+    if (!is_obj(recommendation)) return "";
+
+    const action = this._recommendation_action_source(recommendation);
+    return [
+      this._first_display_text(recommendation, [
+        "_recommendation_type",
+        "recommendation_type",
+        "_semantic_type",
+        "semantic_type",
+        "_type",
+        "type",
+        "_kind",
+        "kind",
+        "_capability",
+        "capability",
+      ]),
+      this._first_display_text(action, [
+        "_recommendation_type",
+        "recommendation_type",
+        "_semantic_type",
+        "semantic_type",
+        "_type",
+        "type",
+        "_kind",
+        "kind",
+        "_action_type",
+        "action_type",
+        "_capability",
+        "capability",
+      ]),
+    ].filter(Boolean).join(" ").toLowerCase().replace(/_/g, "-");
+  }
+
+  private _starter_adaptation_source(recommendation: any) {
+    if (!is_obj(recommendation)) return null;
+
+    const action = this._recommendation_action_source(recommendation);
+    const candidates = [
+      recommendation._starter_adaptation,
+      recommendation.starter_adaptation,
+      recommendation._adaptation,
+      recommendation.adaptation,
+      recommendation._change_summary,
+      recommendation.change_summary,
+      action._starter_adaptation,
+      action.starter_adaptation,
+      action._adaptation,
+      action.adaptation,
+      action._change_summary,
+      action.change_summary,
+    ];
+
+    return candidates.find((candidate) => is_obj(candidate) || Array.isArray(candidate)) ?? null;
+  }
+
+  private _starter_adaptation_visible_label(value: any) {
+    if (typeof value === "string" && value.trim()) return value.trim();
+    if (!is_obj(value)) return "";
+
+    return this._first_display_text(value, [
+      "_title",
+      "title",
+      "_label",
+      "label",
+      "_name",
+      "name",
+      "_text",
+      "text",
+      "_description",
+      "description",
+    ]);
+  }
+
+  private _starter_adaptation_summary_values(source: any, keys: string[]) {
+    if (!is_obj(source)) return [];
+
+    for (const key of keys) {
+      const value = source[key];
+      if (Array.isArray(value)) return value;
+      if (typeof value === "string" && value.trim()) return value.split(/\r?\n|,/);
+    }
+
+    return [];
+  }
+
+  private _starter_adaptation_summary_items(source: any, kind: "preserve" | "replace" | "add") {
+    const key_map: Record<"preserve" | "replace" | "add", string[]> = {
+      preserve: [
+        "_preserve",
+        "preserve",
+        "_preserved",
+        "preserved",
+        "_kept",
+        "kept",
+      ],
+      replace: [
+        "_replace",
+        "replace",
+        "_replaced",
+        "replaced",
+        "_remove",
+        "remove",
+      ],
+      add: [
+        "_add",
+        "add",
+        "_added",
+        "added",
+        "_build",
+        "build",
+        "_build_next",
+        "build_next",
+      ],
+    };
+
+    const values = Array.isArray(source)
+      ? source.filter((item) => {
+        if (!is_obj(item)) return false;
+        const item_kind = this._first_display_text(item, [
+          "_kind",
+          "kind",
+          "_type",
+          "type",
+          "_section",
+          "section",
+          "_change",
+          "change",
+        ]).toLowerCase().replace(/_/g, "-");
+        return item_kind === kind ||
+          item_kind === `${kind}-item` ||
+          (kind === "preserve" && item_kind === "keep");
+      })
+      : this._starter_adaptation_summary_values(source, key_map[kind]);
+
+    return values
+      .map((item) => this._starter_adaptation_visible_label(item).replace(/^\s*[-*•]\s*/, "").trim())
+      .filter((item) => item.length > 0);
+  }
+
+  private _starter_adaptation_summary(recommendation: any) {
+    const source = this._starter_adaptation_source(recommendation);
+    if (!source) {
+      return {
+        _preserve: [],
+        _replace: [],
+        _add: [],
+      };
+    }
+
+    return {
+      _preserve: this._starter_adaptation_summary_items(source, "preserve"),
+      _replace: this._starter_adaptation_summary_items(source, "replace"),
+      _add: this._starter_adaptation_summary_items(source, "add"),
+    };
+  }
+
+  private _starter_adaptation_summary_has_items(summary: {
+    _preserve: string[];
+    _replace: string[];
+    _add: string[];
+  }) {
+    return summary._preserve.length > 0 ||
+      summary._replace.length > 0 ||
+      summary._add.length > 0;
+  }
+
+  private _is_starter_adaptation_recommendation(recommendation: any) {
+    if (!is_obj(recommendation)) return false;
+
+    const type_text = this._starter_adaptation_type_text(recommendation);
+    const semantic_type_matches =
+      /\bstarter[-\s]*(adapt|adaptation)\b/.test(type_text) ||
+      /\badapt[-\s]*starter\b/.test(type_text);
+    if (!semantic_type_matches) return false;
+
+    return this._starter_adaptation_summary_has_items(
+      this._starter_adaptation_summary(recommendation),
+    );
+  }
+
+  private _starter_adaptation_description(recommendation: any) {
+    return this._first_display_text(recommendation, [
+      "_description",
+      "description",
+      "_reason",
+      "reason",
+      "_summary",
+      "summary",
+    ]);
+  }
+
+  private _starter_adaptation_status_label(active: any, status: XStudioGuideActiveRecommendationStatus | "") {
+    if (!active) return "Ready";
+    if (status === "failed") return "Failed · Retry available";
+    if (status === "completed") return "Completed";
+    return "Adapting";
+  }
+
+  private _starter_adaptation_action_label(active: any, status: XStudioGuideActiveRecommendationStatus | "") {
+    if (!active) return "Adapt starter";
+    if (status === "failed") return "Retry";
+    if (status === "completed") return "Completed";
+    return "Adapting";
+  }
+
+  private _starter_adaptation_summary_section(title: string, items: string[], id_suffix: string) {
+    return {
+      _type: "view",
+      class: [
+        "xstudio-guide-starter-adaptation-summary-section",
+        ...(items.length === 0 ? ["xstudio-guide-starter-adaptation-summary-section-empty"] : []),
+      ].join(" "),
+      _children: [
+        {
+          _type: "label",
+          class: "xstudio-guide-starter-adaptation-summary-title",
+          _text: title,
+        },
+        {
+          _type: "view",
+          class: "xstudio-guide-starter-adaptation-summary-list",
+          _children: items.map((item, index) => ({
+            _id: `xstudio-guide-starter-adaptation-${id_suffix}-${index}`,
+            _type: "label",
+            class: "xstudio-guide-starter-adaptation-summary-item",
+            _text: item,
+          })),
+        },
+      ],
+    };
+  }
+
+  private _starter_adaptation_debug_text(recommendation: any) {
+    try {
+      return JSON.stringify(
+        {
+          _recommendation: recommendation,
+          _starter_adaptation: this._starter_adaptation_source(recommendation),
+        },
+        null,
+        2,
+      );
+    } catch {
+      return "Starter adaptation metadata could not be serialized.";
+    }
+  }
+
+  private _guide_starter_adaptation_card(
+    recommendation: any,
+    active: any,
+    active_status: XStudioGuideActiveRecommendationStatus | "" = "",
+  ) {
+    const summary = this._starter_adaptation_summary(recommendation);
+    const prompt = typeof recommendation?._action?._prompt === "string"
+      ? recommendation._action._prompt.trim()
+      : "";
+    const disabled = Boolean(active && active_status !== "failed") || !prompt;
+
+    return {
+      _id: "xstudio-guide-starter-adaptation-card",
+      _type: "view",
+      class: [
+        "xstudio-guide-starter-adaptation-card",
+        ...(active ? ["xstudio-guide-starter-adaptation-card-active"] : []),
+        ...(active_status === "failed" ? ["xstudio-guide-starter-adaptation-card-failed"] : []),
+        ...(active_status === "completed" ? ["xstudio-guide-starter-adaptation-card-completed"] : []),
+      ].join(" "),
+      _children: [
+        {
+          _type: "view",
+          class: "xstudio-guide-starter-adaptation-heading",
+          _children: [
+            {
+              _id: STUDIO_GUIDE_RECOMMENDATION_LABEL_ID,
+              _type: "label",
+              class: "xstudio-guide-recommendation-label",
+              _text: "Recommended next",
+            },
+            {
+              _id: STUDIO_GUIDE_STARTER_ADAPTATION_STATUS_ID,
+              _type: "label",
+              class: "xstudio-guide-starter-adaptation-status",
+              _text: this._starter_adaptation_status_label(active, active_status),
+            },
+          ],
+        },
+        {
+          _id: STUDIO_GUIDE_RECOMMENDATION_TITLE_ID,
+          _type: "label",
+          class: "xstudio-guide-recommendation-title xstudio-guide-starter-adaptation-title",
+          _text: recommendation?._title || "Adapt selected starter",
+        },
+        {
+          _id: STUDIO_GUIDE_RECOMMENDATION_REASON_ID,
+          _type: "label",
+          class: "xstudio-guide-recommendation-reason xstudio-guide-starter-adaptation-description",
+          _text: this._starter_adaptation_description(recommendation),
+        },
+        {
+          _type: "view",
+          class: "xstudio-guide-starter-adaptation-summary",
+          _children: [
+            this._starter_adaptation_summary_section("Preserve", summary._preserve, "preserve"),
+            this._starter_adaptation_summary_section("Replace", summary._replace, "replace"),
+            this._starter_adaptation_summary_section("Add", summary._add, "add"),
+          ],
+        },
+        {
+          _id: STUDIO_GUIDE_RECOMMENDATION_DO_IT_ID,
+          _type: "button",
+          type: "button",
+          class: "xstudio-guide-recommendation-do-it xstudio-guide-starter-adaptation-do-it",
+          _text: this._starter_adaptation_action_label(active, active_status),
+          title: active
+            ? active_status === "failed"
+              ? "Retry starter adaptation"
+              : active_status === "completed"
+                ? "Starter adaptation completed"
+                : "Starter adaptation is in progress"
+            : "Adapt selected starter",
+          disabled,
+          _on: {
+            click: {
+              _module: "xem",
+              _op: "fire",
+              _params: {
+                event: "studio:guide-recommendation-do-it",
+              },
+            },
+          },
+        },
+        {
+          _type: "xhtml",
+          _html_tag: "details",
+          class: "xstudio-guide-starter-adaptation-debug",
+          _children: [
+            {
+              _type: "xhtml",
+              _html_tag: "summary",
+              class: "xstudio-guide-starter-adaptation-debug-summary",
+              _text: "Technical details",
+            },
+            {
+              _type: "label",
+              class: "xstudio-guide-starter-adaptation-debug-payload debug-payload",
+              _text: this._starter_adaptation_debug_text(recommendation),
+            },
+          ],
+        },
+      ],
+    };
+  }
+
+  private _project_memory_guide_unavailable_children() {
+    return [
+      {
+        _id: STUDIO_GUIDE_UNAVAILABLE_ID,
+        _type: "label",
+        class: "xstudio-guide-unavailable",
+        _text: "Complete and confirm the project plan to begin building.",
+      },
+      {
+        _id: STUDIO_GUIDE_UNAVAILABLE_DETAIL_ID,
+        _type: "label",
+        class: "xstudio-guide-unavailable-detail",
+        _text: "Your build steps will appear here once the plan is ready.",
+      },
+    ];
+  }
+
+  private _project_memory_guide_available_children(memory: any) {
+    const focus = this._project_memory_text(memory, "_current_focus", "");
+    const recommendations = this._normalize_guide_recommendations(
+      _xd.get(GUIDE_RECOMMENDATION_XD_KEY),
+    );
+    const recommendation = recommendations[0] ?? null;
+    const active_recommendation = this._active_guide_recommendation();
+    const active_status = this._active_guide_recommendation_status();
+    const show_lower_level_mode = this._guide_lower_level_actions_visible();
+    const materialization_recommendation = show_lower_level_mode
+      ? null
+      : this._guide_materialization_recommendation(memory);
+    const display_recommendation = active_recommendation ?? materialization_recommendation ?? recommendation;
+    const materialization_primary_visible =
+      Boolean(materialization_recommendation) &&
+      (!active_recommendation || this._is_materialize_confirmed_plan_recommendation(active_recommendation));
+    const display_recommendations = active_recommendation
+      ? [active_recommendation]
+      : materialization_recommendation
+        ? [materialization_recommendation]
+        : recommendations;
+    const show_lower_level_guide_cards =
+      !materialization_recommendation ||
+      Boolean(active_recommendation && !this._is_materialize_confirmed_plan_recommendation(active_recommendation));
+    const crud_recommendation_cards = show_lower_level_guide_cards
+      ? this._guide_crud_recommendation_cards(
+        display_recommendations,
+        active_recommendation ? active_status : "",
+      )
+      : [];
+    const starter_adaptation_card = display_recommendation &&
+      this._is_starter_adaptation_recommendation(display_recommendation)
+      ? this._guide_starter_adaptation_card(
+        display_recommendation,
+        active_recommendation,
+        active_recommendation ? active_status : "",
+      )
+      : null;
+    const milestone = materialization_primary_visible
+      ? null
+      : this._guide_current_milestone(memory, display_recommendation);
+    const milestone_children = this._project_memory_milestone_children(milestone);
+    const achievement_children = this._project_memory_achievement_children(memory);
+    const recommendation_matches_milestone = this._guide_recommendation_matches_milestone_item(
+      display_recommendation,
+      this._project_memory_milestone_next_item(milestone),
+    );
+    const next_item = this._project_memory_milestone_next_item(milestone);
+    const recommendation_blocker = display_recommendation
+      ? ""
+      : this._guide_recommendation_blocker_text(memory, milestone, next_item);
+
+    return [
+      {
+        _id: STUDIO_GUIDE_READY_MESSAGE_ID,
+        _type: "label",
+        class: "xstudio-guide-message",
+        _text: "Your app plan is confirmed and ready to start.",
+      },
+      this._project_memory_guide_empty_action_children(memory, display_recommendation),
+      {
+        _id: STUDIO_GUIDE_GOAL_ID,
+        _type: "label",
+        class: "xstudio-guide-line",
+        _text: `Goal: ${this._project_memory_text(memory, "_goal", "No goal set")}`,
+      },
+      {
+        _id: STUDIO_GUIDE_FOCUS_ID,
+        _type: "label",
+        class: "xstudio-guide-line",
+        _text: `Focus: ${this._project_memory_text(memory, "_current_focus", "No focus set")}`,
+      },
+      {
+        _type: "view",
+        class: "xstudio-guide-focus-row",
+        _children: [
+          {
+            _id: STUDIO_GUIDE_FOCUS_INPUT_ID,
+            _type: "input",
+            type: "text",
+            class: "xstudio-guide-focus-input",
+            placeholder: "Set current focus",
+            value: focus,
+            _text: focus,
+            _data_output: PROJECT_MEMORY_FOCUS_DRAFT_XD_KEY,
+            _update_data_source_event: "input",
+          },
+          {
+            _id: STUDIO_GUIDE_SET_FOCUS_ID,
+            _type: "button",
+            type: "button",
+            class: "xstudio-guide-set-focus",
+            _text: "Set Focus",
+            title: "Update guide focus",
+            _on: {
+              click: {
+                _module: "xem",
+                _op: "fire",
+                _params: {
+                  event: "studio:guide-set-focus",
+                },
+              },
+            },
+          },
+        ],
+      },
+      {
+        _id: STUDIO_GUIDE_MILESTONE_ID,
+        _type: "view",
+        class: [
+          "xstudio-guide-milestone",
+          ...(!milestone ? ["xstudio-guide-milestone-hidden"] : []),
+        ].join(" "),
+        _children: milestone ? [
+          {
+            _type: "label",
+            class: "xstudio-guide-milestone-label",
+            _text: "Current Milestone",
+          },
+          {
+            _id: STUDIO_GUIDE_MILESTONE_TITLE_ID,
+            _type: "label",
+            class: "xstudio-guide-milestone-title",
+            _text: milestone?._title || "",
+          },
+          {
+            _type: "label",
+            class: "xstudio-guide-milestone-label",
+            _text: "Progress",
+          },
+          {
+            _id: STUDIO_GUIDE_MILESTONE_PROGRESS_ID,
+            _type: "label",
+            class: "xstudio-guide-milestone-progress",
+            _text: milestone ? this._project_memory_milestone_progress_text(milestone) : "",
+          },
+          {
+            _id: STUDIO_GUIDE_MILESTONE_ITEMS_ID,
+            _type: "view",
+            class: "xstudio-guide-milestone-items",
+            _children: milestone_children,
+          },
+        ] : [],
+      },
+      {
+        _id: STUDIO_GUIDE_ACHIEVEMENTS_ID,
+        _type: "view",
+        class: [
+          "xstudio-guide-achievements",
+          ...(achievement_children.length === 0 ? ["xstudio-guide-achievements-hidden"] : []),
+        ].join(" "),
+        _children: [
+          {
+            _type: "label",
+            class: "xstudio-guide-achievements-label",
+            _text: "Achievements",
+          },
+          {
+            _id: STUDIO_GUIDE_ACHIEVEMENTS_LIST_ID,
+            _type: "view",
+            class: "xstudio-guide-achievements-list",
+            _children: achievement_children,
+          },
+        ],
+      },
+      {
+        _id: STUDIO_GUIDE_RECOMMENDATION_ID,
+        _type: "view",
+        class: [
+          "xstudio-guide-recommendation",
+          ...(crud_recommendation_cards.length > 0 ? ["xstudio-guide-recommendation-crud"] : []),
+          ...(starter_adaptation_card ? ["xstudio-guide-recommendation-starter-adaptation"] : []),
+          ...(!display_recommendation && !recommendation_blocker
+            ? ["xstudio-guide-recommendation-hidden"]
+            : []),
+        ].join(" "),
+        _children: crud_recommendation_cards.length > 0
+          ? crud_recommendation_cards
+          : starter_adaptation_card
+            ? [starter_adaptation_card]
+          : this._guide_recommendation_standard_children({
+            _memory: memory,
+            _display_recommendation: display_recommendation,
+            _active_recommendation: active_recommendation,
+            _active_status: active_recommendation ? active_status : "",
+            _milestone: milestone,
+            _next_item: next_item,
+            _recommendation_blocker: recommendation_blocker,
+            _recommendation_matches_milestone: recommendation_matches_milestone,
+          }),
+      },
+    ];
+  }
+
+  private _project_memory_guide_body_children(memory: any) {
+    return this._project_memory_guide_available(memory)
+      ? this._project_memory_guide_available_children(memory)
+      : this._project_memory_guide_unavailable_children();
+  }
+
+  private _set_guide_empty_action_visible(visible: boolean) {
+    const section = XUI.getObject(STUDIO_GUIDE_EMPTY_ACTION_ID) as any;
+    if (!section) return;
+    if (visible) {
+      section.removeClass?.("xstudio-guide-empty-action-hidden");
+      return;
+    }
+    section.addClass?.("xstudio-guide-empty-action-hidden");
+  }
+
+  private _normalize_guide_recommendation(value: any) {
+    const unwrapped = is_obj(value) && "_result" in value ? value._result : value;
+    const candidate_arrays = is_obj(unwrapped)
+      ? [
+        unwrapped._recommendations,
+        unwrapped.recommendations,
+        unwrapped._candidates,
+        unwrapped.candidates,
+        unwrapped._options,
+        unwrapped.options,
+        unwrapped._crud_recommendations,
+        unwrapped.crud_recommendations,
+      ]
+      : [];
+    const candidate_array = candidate_arrays.find((candidate) => Array.isArray(candidate)) as any[] | undefined;
+    const recommended_candidate = candidate_array
+      ?.find((candidate, candidate_index) =>
+        is_obj(candidate) &&
+        this._recommendation_is_marked_recommended(candidate, candidate_index)
+      );
+    const raw = is_obj(recommended_candidate)
+      ? recommended_candidate
+      : Array.isArray(candidate_array) && is_obj(candidate_array[0])
+        ? candidate_array[0]
+        : is_obj(unwrapped) && is_obj(unwrapped._recommendation)
+      ? unwrapped._recommendation
+      : is_obj(unwrapped) && is_obj(unwrapped.recommendation)
+        ? unwrapped.recommendation
+        : is_obj(unwrapped) && is_obj(unwrapped._guide_recommendation)
+          ? unwrapped._guide_recommendation
+          : unwrapped;
+    if (!is_obj(raw)) return null;
+
+    const title = typeof raw._title === "string"
+      ? raw._title.trim()
+      : typeof raw.title === "string"
+        ? raw.title.trim()
+        : "";
+    const reason = typeof raw._reason === "string"
+      ? raw._reason.trim()
+      : typeof raw.reason === "string"
+        ? raw.reason.trim()
+        : "";
+    const description = typeof raw._description === "string"
+      ? raw._description.trim()
+      : typeof raw.description === "string"
+        ? raw.description.trim()
+        : typeof raw._summary === "string"
+          ? raw._summary.trim()
+          : typeof raw.summary === "string"
+            ? raw.summary.trim()
+            : "";
+    const type = typeof raw._type === "string"
+      ? raw._type.trim()
+      : typeof raw.type === "string"
+        ? raw.type.trim()
+        : "";
+    const priority_raw = raw._priority ?? raw.priority;
+    const priority = typeof priority_raw === "number" && Number.isFinite(priority_raw)
+      ? priority_raw
+      : 0;
+    const action = this._recommendation_action_source(raw);
+    const prompt = typeof action._prompt === "string"
+      ? action._prompt.trim()
+      : typeof action.prompt === "string"
+        ? action.prompt.trim()
+        : "";
+    const milestone_source = [
+      raw._milestone,
+      raw.milestone,
+      raw._current_milestone,
+      raw.current_milestone,
+      raw._guide_milestone,
+      raw.guide_milestone,
+      is_obj(unwrapped) ? unwrapped._milestone : null,
+      is_obj(unwrapped) ? unwrapped.milestone : null,
+      is_obj(unwrapped) ? unwrapped._current_milestone : null,
+      is_obj(unwrapped) ? unwrapped.current_milestone : null,
+      is_obj(unwrapped) ? unwrapped._guide_milestone : null,
+      is_obj(unwrapped) ? unwrapped.guide_milestone : null,
+    ].find((candidate) => is_obj(candidate));
+    const milestone =
+      this._normalize_project_memory_milestone(milestone_source, 0);
+    const milestones_source = Array.isArray(raw._milestones)
+      ? raw._milestones
+      : Array.isArray(raw.milestones)
+        ? raw.milestones
+        : is_obj(unwrapped) && Array.isArray(unwrapped._milestones)
+          ? unwrapped._milestones
+          : is_obj(unwrapped) && Array.isArray(unwrapped.milestones)
+            ? unwrapped.milestones
+            : [];
+    const milestones = milestones_source
+      .map((raw_milestone: any, index: number) =>
+        this._normalize_project_memory_milestone(raw_milestone, index)
+      )
+      .filter((item: any) => item !== null);
+    const items_source = Array.isArray(raw._items)
+      ? raw._items
+      : Array.isArray(raw.items)
+        ? raw.items
+        : is_obj(unwrapped) && Array.isArray(unwrapped._items)
+          ? unwrapped._items
+          : is_obj(unwrapped) && Array.isArray(unwrapped.items)
+            ? unwrapped.items
+            : [];
+    const progress = raw._progress ??
+      raw.progress ??
+      (is_obj(unwrapped) ? unwrapped._progress : undefined) ??
+      (is_obj(unwrapped) ? unwrapped.progress : undefined);
+
+    if (!title && !reason && !prompt && !milestone && milestones.length === 0 && items_source.length === 0) return null;
+
+    return {
+      ...(raw._id !== undefined ? { _id: raw._id } : {}),
+      ...(raw.id !== undefined ? { _id: raw.id } : {}),
+      _title: title,
+      _reason: reason,
+      ...(description ? { _description: description } : {}),
+      _type: type,
+      _priority: priority,
+      _action: {
+        ...(is_obj(action) ? action : {}),
+        ...(prompt ? { _prompt: prompt } : {}),
+      },
+      ...(raw._recommendation_type !== undefined ? { _recommendation_type: raw._recommendation_type } : {}),
+      ...(raw.recommendation_type !== undefined ? { _recommendation_type: raw.recommendation_type } : {}),
+      ...(raw._semantic_type !== undefined ? { _semantic_type: raw._semantic_type } : {}),
+      ...(raw.semantic_type !== undefined ? { _semantic_type: raw.semantic_type } : {}),
+      ...(raw._conversation_message_id !== undefined ? { _conversation_message_id: raw._conversation_message_id } : {}),
+      ...(raw.conversation_message_id !== undefined ? { _conversation_message_id: raw.conversation_message_id } : {}),
+      ...(raw._conversation_action_id !== undefined ? { _conversation_action_id: raw._conversation_action_id } : {}),
+      ...(raw.conversation_action_id !== undefined ? { _conversation_action_id: raw.conversation_action_id } : {}),
+      ...(raw._conversation_action_key !== undefined ? { _conversation_action_key: raw._conversation_action_key } : {}),
+      ...(raw.conversation_action_key !== undefined ? { _conversation_action_key: raw.conversation_action_key } : {}),
+      ...(raw._resume_token !== undefined ? { _resume_token: raw._resume_token } : {}),
+      ...(raw.resume_token !== undefined ? { _resume_token: raw.resume_token } : {}),
+      ...(raw._materialization !== undefined ? { _materialization: raw._materialization } : {}),
+      ...(raw.materialization !== undefined ? { _materialization: raw.materialization } : {}),
+      ...(raw._starter_adaptation !== undefined ? { _starter_adaptation: raw._starter_adaptation } : {}),
+      ...(raw.starter_adaptation !== undefined ? { _starter_adaptation: raw.starter_adaptation } : {}),
+      ...(raw._adaptation !== undefined ? { _adaptation: raw._adaptation } : {}),
+      ...(raw.adaptation !== undefined ? { _adaptation: raw.adaptation } : {}),
+      ...(raw._change_summary !== undefined ? { _change_summary: raw._change_summary } : {}),
+      ...(raw.change_summary !== undefined ? { _change_summary: raw.change_summary } : {}),
+      ...(raw._starter_id !== undefined ? { _starter_id: raw._starter_id } : {}),
+      ...(raw.starter_id !== undefined ? { _starter_id: raw.starter_id } : {}),
+      ...(raw._starter_view_id !== undefined ? { _starter_view_id: raw._starter_view_id } : {}),
+      ...(raw.starter_view_id !== undefined ? { _starter_view_id: raw.starter_view_id } : {}),
+      _debug: {
+        _recommendation: raw,
+        _action: action,
+      },
+      ...(this._is_crud_recommendation(raw)
+        ? {
+          _recommendation_kind: "crud",
+          _recommendation_entity_name: this._recommendation_entity_name(raw),
+          _recommendation_expected_artifacts: this._recommendation_expected_artifacts(raw),
+          _recommendation_dependency: this._recommendation_dependency_text(raw, 0),
+          _recommended: this._recommendation_is_marked_recommended(raw, 0),
+        }
+        : {}),
+      ...(milestone ? { _milestone: milestone } : {}),
+      ...(milestones.length > 0 ? { _milestones: milestones } : {}),
+      ...(items_source.length > 0 ? { _items: items_source } : {}),
+      ...(progress !== undefined ? { _progress: progress } : {}),
+      ...(typeof raw._milestone_id === "string" ? { _milestone_id: raw._milestone_id } : {}),
+      ...(typeof raw.milestone_id === "string" ? { _milestone_id: raw.milestone_id } : {}),
+      ...(typeof raw._milestone_title === "string" ? { _milestone_title: raw._milestone_title } : {}),
+      ...(typeof raw.milestone_title === "string" ? { _milestone_title: raw.milestone_title } : {}),
+      ...(typeof raw._focus === "string" ? { _focus: raw._focus } : {}),
+      ...(typeof raw.focus === "string" ? { _focus: raw.focus } : {}),
+    };
+  }
+
+  private _normalize_guide_recommendations(value: any) {
+    const unwrapped = is_obj(value) && "_result" in value ? value._result : value;
+    const candidate_arrays = is_obj(unwrapped)
+      ? [
+        unwrapped._recommendations,
+        unwrapped.recommendations,
+        unwrapped._candidates,
+        unwrapped.candidates,
+        unwrapped._options,
+        unwrapped.options,
+        unwrapped._crud_recommendations,
+        unwrapped.crud_recommendations,
+      ]
+      : [];
+    const candidate_array = candidate_arrays.find((candidate) => Array.isArray(candidate)) as any[] | undefined;
+    if (Array.isArray(candidate_array)) {
+      return candidate_array
+        .map((candidate) => this._normalize_guide_recommendation(candidate))
+        .filter((candidate: any) => candidate !== null);
+    }
+
+    const single = this._normalize_guide_recommendation(value);
+    return single ? [single] : [];
+  }
+
+  private _normalize_guide_state(value: any) {
+    const unwrapped = is_obj(value) && "_result" in value ? value._result : value;
+    const raw = is_obj(unwrapped) && is_obj(unwrapped._guide_state)
+      ? unwrapped._guide_state
+      : is_obj(unwrapped) && is_obj(unwrapped.guide_state)
+        ? unwrapped.guide_state
+        : is_obj(unwrapped) && is_obj(unwrapped._guide)
+          ? unwrapped._guide
+          : is_obj(unwrapped) && is_obj(unwrapped.guide)
+            ? unwrapped.guide
+            : unwrapped;
+    return is_obj(raw) ? raw : null;
+  }
+
+  private _guide_recommendation_blocker_text(memory: any, milestone: any, next_item: any) {
+    if (!this._project_memory_guide_available(memory)) return "";
+
+    if (!next_item && milestone) return "";
+
+    const guide_state = this._normalize_guide_state(_xd.get(GUIDE_STATE_XD_KEY));
+    const message = typeof guide_state?._message === "string" && guide_state._message.trim()
+      ? guide_state._message.trim()
+      : "";
+    const reason = typeof guide_state?._blocked_reason === "string" && guide_state._blocked_reason.trim()
+      ? guide_state._blocked_reason.trim()
+      : typeof guide_state?._reason === "string" && guide_state._reason.trim()
+        ? guide_state._reason.trim()
+        : "";
+
+    if (message) return message;
+
+    if (next_item?._title) {
+      return `The guide could not produce an executable action for ${next_item._title}.`;
+    }
+
+    if (reason && reason !== "ready") {
+      return "No executable build action is available for the current guide focus.";
+    }
+
+    if (!milestone) {
+      return "No executable build action is available for the current guide focus.";
+    }
+
+    return "";
+  }
+
+  private async _load_guide_recommendation(reason: string) {
+    if (!this._server_ready()) {
+      this._debug_log("guide recommendation load skipped: server not ready", {
+        _reason: reason,
+      });
+      return;
+    }
+
+    let app_id = "";
+    let env = "default";
+    try {
+      app_id = this._client().getActiveAppId();
+      env = this._client().getActiveEnv() || "default";
+    } catch (err) {
+      this._error("guide recommendation load failed", {
+        _reason: reason,
+        _error: to_err(err),
+      });
+      return;
+    }
+
+    if (!app_id) {
+      _xd.set(GUIDE_RECOMMENDATION_XD_KEY, null, {
+        source: "xstudio-guide",
+      });
+      this._render_guide_recommendation();
+      this._log("guide recommendation load skipped: missing app id", {
+        _reason: reason,
+        _env: env,
+      });
+      return;
+    }
+
+    try {
+      let result: any;
+      try {
+        result = await this._send_planning_command("get-guide-recommendation", {
+          _app_id: app_id,
+          _env: env,
+          ...(this._conversation_id ? { _conversation_id: this._conversation_id } : {}),
+        });
+      } catch (planning_err) {
+        this._debug_log("planning guide recommendation unavailable; falling back to XVibe", {
+          _reason: reason,
+          _app_id: app_id,
+          _env: env,
+          _error: to_err(planning_err),
+        });
+        result = await this._send_xvibe_command("get-guide-recommendation", {
+          _app_id: app_id,
+          _env: env,
+        });
+      }
+      if (is_obj(result) && result._ok === false) {
+        _xd.set(GUIDE_RECOMMENDATION_XD_KEY, null, {
+          source: "xstudio-guide",
+        });
+        _xd.set(GUIDE_STATE_XD_KEY, this._normalize_guide_state(result), {
+          source: "xstudio-guide",
+        });
+        this._render_guide_recommendation();
+        this._error("guide recommendation load failed", {
+          _reason: reason,
+          _app_id: app_id,
+          _env: env,
+          _error: result._error ?? result,
+        });
+        return;
+      }
+
+      const recommendations = this._normalize_guide_recommendations(result);
+      const recommendation = recommendations.length > 1
+        ? { _recommendations: recommendations }
+        : recommendations[0] ?? null;
+      _xd.set(GUIDE_STATE_XD_KEY, this._normalize_guide_state(result), {
+        source: "xstudio-guide",
+      });
+      _xd.set(GUIDE_RECOMMENDATION_XD_KEY, recommendation, {
+        source: "xstudio-guide",
+      });
+      this._render_guide_recommendation();
+      if (!recommendation) {
+        this._log("guide recommendation empty", {
+          _reason: reason,
+          _app_id: app_id,
+          _env: env,
+          _result: result,
+        });
+        return;
+      }
+
+      this._log("guide recommendation loaded", {
+        _reason: reason,
+        _app_id: app_id,
+        _env: env,
+        _result: recommendation,
+        _title: recommendations[0]?._title ?? "",
+        _recommendation_count: recommendations.length,
+      });
+    } catch (err) {
+      _xd.set(GUIDE_RECOMMENDATION_XD_KEY, null, {
+        source: "xstudio-guide",
+      });
+      _xd.set(GUIDE_STATE_XD_KEY, null, {
+        source: "xstudio-guide",
+      });
+      this._render_guide_recommendation();
+      this._error("guide recommendation load failed", {
+        _reason: reason,
+        _app_id: app_id,
+        _env: env,
+        _error: to_err(err),
+      });
+    }
+  }
+
+  private _project_memory_guide_card_data() {
+    const memory = _xd.get(PROJECT_MEMORY_XD_KEY);
+    const active_recommendation = this._active_guide_recommendation();
+    const active_status = this._active_guide_recommendation_status();
+
+    return {
+      _id: STUDIO_GUIDE_CARD_ID,
+      _type: "view",
+      class: [
+        "xstudio-portlet",
+        "xstudio-section",
+        "xstudio-guide-card",
+        "xstudio-guide-portlet",
+        ...(active_recommendation ? ["xstudio-guide-active-task"] : []),
+        ...(active_status === "failed" ? ["xstudio-guide-active-task-failed"] : []),
+      ].join(" "),
+      _children: [
+        {
+          _type: "view",
+          class: "xstudio-portlet-header xstudio-guide-header",
+          _children: [
+            {
+              _type: "view",
+              class: "xstudio-guide-title-wrap",
+              _children: [
+                {
+                  _type: "label",
+                  class: "xstudio-guide-title",
+                  _text: "Build Guide",
+                },
+                {
+                  _id: STUDIO_GUIDE_COUNTS_ID,
+                  _type: "label",
+                  class: "xstudio-guide-counts",
+                  _text: this._project_memory_guide_status_text(memory),
+                },
+              ],
+            },
+          ],
+        },
+        {
+          _id: STUDIO_GUIDE_BODY_ID,
+          _type: "view",
+          class: "xstudio-portlet-body xstudio-guide-body",
+          _children: this._project_memory_guide_body_children(memory),
+        },
+      ],
+    };
+  }
+
+  private _append_project_memory_guide_to_shell(shell: Record<string, any>) {
+    if (this._find_view_data(shell, STUDIO_GUIDE_CARD_ID)) return;
+
+    const portlet_stack = this._find_view_data(shell, STUDIO_CONTAINER_ID);
+    if (!portlet_stack) return;
+
+    if (!Array.isArray(portlet_stack._children)) portlet_stack._children = [];
+
+    const guide = this._project_memory_guide_card_data();
+    const conversation_index = portlet_stack._children.findIndex((child: any) =>
+      is_obj(child) && child._id === STUDIO_CONVERSATION_SECTION_ID
+    );
+    if (conversation_index >= 0) {
+      portlet_stack._children.splice(conversation_index, 0, guide);
+      return;
+    }
+
+    portlet_stack._children.unshift(guide);
+  }
+
+  private _render_project_memory_guide() {
+    const memory = _xd.get(PROJECT_MEMORY_XD_KEY);
+    const body = XUI.getObject(STUDIO_GUIDE_BODY_ID) as any;
+    body?.update?.({
+      _children: this._project_memory_guide_body_children(memory),
+    });
+
+    if (!this._project_memory_guide_available(memory)) {
+      this._set_studio_label(STUDIO_GUIDE_COUNTS_ID, "");
+      this._set_studio_label(
+        STUDIO_GUIDE_UNAVAILABLE_ID,
+        "Complete and confirm the project plan to begin building.",
+      );
+      this._set_studio_label(
+        STUDIO_GUIDE_UNAVAILABLE_DETAIL_ID,
+        "Your build steps will appear here once the plan is ready.",
+      );
+      this._render_project_memory_milestone(memory);
+      this._render_project_memory_achievements(memory);
+      this._render_guide_recommendation();
+      return;
+    }
+
+    const goal = this._project_memory_text(memory, "_goal", "No goal set");
+    const focus = this._project_memory_text(memory, "_current_focus", "No focus set");
+    const raw_focus = this._project_memory_text(memory, "_current_focus", "");
+
+    this._set_studio_label(STUDIO_GUIDE_GOAL_ID, `Goal: ${goal}`);
+    this._set_studio_label(STUDIO_GUIDE_FOCUS_ID, `Focus: ${focus}`);
+    this._set_studio_label(STUDIO_GUIDE_COUNTS_ID, this._project_memory_guide_status_text(memory));
+    this._set_studio_label(
+      STUDIO_GUIDE_READY_MESSAGE_ID,
+      "Your app plan is confirmed and ready to start.",
+    );
+
+    const input = XUI.getObject(STUDIO_GUIDE_FOCUS_INPUT_ID) as any;
+    if (input?.setValue) {
+      input.setValue(raw_focus);
+    } else if (input?.dom && "value" in input.dom) {
+      input.dom.value = raw_focus;
+    }
+
+    _xd.set(PROJECT_MEMORY_FOCUS_DRAFT_XD_KEY, raw_focus, {
+      source: "xstudio-guide",
+    });
+    this._render_project_memory_milestone(memory);
+    this._render_project_memory_achievements(memory);
+    this._render_guide_recommendation();
+  }
+
+  private _render_project_memory_milestone(memory: any) {
+    if (!this._project_memory_guide_available(memory)) {
+      const section = XUI.getObject(STUDIO_GUIDE_MILESTONE_ID) as any;
+      const list = XUI.getObject(STUDIO_GUIDE_MILESTONE_ITEMS_ID) as any;
+      section?.addClass?.("xstudio-guide-milestone-hidden");
+      list?.update?.({ _children: [] });
+      this._set_guide_empty_action_visible(false);
+      return;
+    }
+
+    const focus = this._project_memory_text(memory, "_current_focus", "");
+    const milestones = this._project_memory_milestones(memory);
+    const recommendation = this._active_guide_recommendation() ??
+      this._normalize_guide_recommendation(_xd.get(GUIDE_RECOMMENDATION_XD_KEY));
+    const stored_milestone = this._project_memory_current_milestone(memory);
+    const milestone = stored_milestone ??
+      this._guide_recommendation_dynamic_milestone(recommendation);
+    const section = XUI.getObject(STUDIO_GUIDE_MILESTONE_ID) as any;
+    const list = XUI.getObject(STUDIO_GUIDE_MILESTONE_ITEMS_ID) as any;
+    _xlog.log("[xstudio] guide milestones render", {
+      _focus: focus,
+      _milestones_count: milestones.length,
+      _using_dynamic_milestone: !stored_milestone && Boolean(milestone),
+      _matched_milestone_id: milestone?._id ?? "",
+      _matched_items_count: Array.isArray(milestone?._items) ? milestone._items.length : 0,
+    });
+    if (!section || !list) return;
+
+    if (!milestone) {
+      section.addClass?.("xstudio-guide-milestone-hidden");
+      this._set_studio_label(STUDIO_GUIDE_MILESTONE_TITLE_ID, "");
+      this._set_studio_label(STUDIO_GUIDE_MILESTONE_PROGRESS_ID, "");
+      list.update?.({ _children: [] });
+      this._set_guide_empty_action_visible(!this._project_memory_guide_has_content(memory, recommendation));
+      return;
+    }
+
+    this._set_guide_empty_action_visible(false);
+    section.removeClass?.("xstudio-guide-milestone-hidden");
+    this._set_studio_label(STUDIO_GUIDE_MILESTONE_TITLE_ID, milestone._title);
+    this._set_studio_label(
+      STUDIO_GUIDE_MILESTONE_PROGRESS_ID,
+      this._project_memory_milestone_progress_text(milestone),
+    );
+    list.update?.({
+      _children: this._project_memory_milestone_children(milestone),
+    });
+  }
+
+  private _render_project_memory_achievements(memory: any) {
+    if (!this._project_memory_guide_available(memory)) {
+      const section = XUI.getObject(STUDIO_GUIDE_ACHIEVEMENTS_ID) as any;
+      const list = XUI.getObject(STUDIO_GUIDE_ACHIEVEMENTS_LIST_ID) as any;
+      section?.addClass?.("xstudio-guide-achievements-hidden");
+      list?.update?.({ _children: [] });
+      this._set_guide_empty_action_visible(false);
+      return;
+    }
+
+    const section = XUI.getObject(STUDIO_GUIDE_ACHIEVEMENTS_ID) as any;
+    const list = XUI.getObject(STUDIO_GUIDE_ACHIEVEMENTS_LIST_ID) as any;
+    if (!section || !list) return;
+
+    const children = this._project_memory_achievement_children(memory);
+    if (children.length === 0) {
+      section.addClass?.("xstudio-guide-achievements-hidden");
+      list.update?.({ _children: [] });
+      return;
+    }
+
+    this._set_guide_empty_action_visible(false);
+    section.removeClass?.("xstudio-guide-achievements-hidden");
+    list.update?.({ _children: children });
+  }
+
+  private _render_guide_recommendation() {
+    if (!this._project_memory_guide_available(_xd.get(PROJECT_MEMORY_XD_KEY))) {
+      const section = XUI.getObject(STUDIO_GUIDE_RECOMMENDATION_ID) as any;
+      section?.addClass?.("xstudio-guide-recommendation-hidden");
+      this._set_studio_control_disabled(STUDIO_GUIDE_RECOMMENDATION_DO_IT_ID, true);
+      this._set_guide_empty_action_visible(false);
+      return;
+    }
+
+    const recommendations = this._normalize_guide_recommendations(
+      _xd.get(GUIDE_RECOMMENDATION_XD_KEY),
+    );
+    const recommendation = recommendations[0] ?? null;
+    const active = this._active_guide_recommendation();
+    const active_status = this._active_guide_recommendation_status();
+    const memory = _xd.get(PROJECT_MEMORY_XD_KEY);
+    const show_lower_level_mode = this._guide_lower_level_actions_visible();
+    const materialization_recommendation = show_lower_level_mode
+      ? null
+      : this._guide_materialization_recommendation(memory);
+    const display_recommendation = active ?? materialization_recommendation ?? recommendation;
+    const materialization_primary_visible =
+      Boolean(materialization_recommendation) &&
+      (!active || this._is_materialize_confirmed_plan_recommendation(active));
+    const display_recommendations = active ? [active] : recommendations;
+    const show_lower_level_guide_cards =
+      !materialization_recommendation ||
+      Boolean(active && !this._is_materialize_confirmed_plan_recommendation(active));
+    const card_recommendations = active
+      ? [active]
+      : materialization_recommendation
+        ? [materialization_recommendation]
+        : display_recommendations;
+    const milestone = materialization_primary_visible
+      ? null
+      : this._guide_current_milestone(memory, display_recommendation);
+    const next_item = this._project_memory_milestone_next_item(milestone);
+    const recommendation_blocker = display_recommendation
+      ? ""
+      : this._guide_recommendation_blocker_text(
+        memory,
+        milestone,
+        next_item,
+      );
+    const recommendation_matches_milestone =
+      this._guide_recommendation_matches_milestone_item(display_recommendation, next_item);
+    const section = XUI.getObject(STUDIO_GUIDE_RECOMMENDATION_ID) as any;
+    if (!section) {
+      this._debug_log("guide recommendation render skipped: card not mounted", {
+        _has_recommendation: display_recommendation !== null,
+        _result_key: GUIDE_RECOMMENDATION_XD_KEY,
+      });
+      return;
+    }
+
+    if (!display_recommendation && !recommendation_blocker) {
+      section.addClass?.("xstudio-guide-recommendation-hidden");
+      section.removeClass?.("xstudio-guide-recommendation-crud");
+      section.removeClass?.("xstudio-guide-recommendation-starter-adaptation");
+      this._set_studio_label(STUDIO_GUIDE_RECOMMENDATION_LABEL_ID, "Next suggested step");
+      this._set_studio_label(STUDIO_GUIDE_RECOMMENDATION_TITLE_ID, "");
+      this._set_studio_label(STUDIO_GUIDE_RECOMMENDATION_REASON_ID, "");
+      this._set_studio_control_disabled(STUDIO_GUIDE_RECOMMENDATION_DO_IT_ID, true);
+      this._set_guide_empty_action_visible(!this._project_memory_guide_has_content(
+        memory,
+        display_recommendation,
+      ));
+      return;
+    }
+
+    this._set_guide_empty_action_visible(false);
+    section.removeClass?.("xstudio-guide-recommendation-hidden");
+    const crud_recommendation_cards = show_lower_level_guide_cards
+      ? this._guide_crud_recommendation_cards(
+        card_recommendations,
+        active ? active_status : "",
+      )
+      : [];
+    if (crud_recommendation_cards.length > 0) {
+      section.addClass?.("xstudio-guide-recommendation-crud");
+      section.removeClass?.("xstudio-guide-recommendation-starter-adaptation");
+      section.update?.({ _children: crud_recommendation_cards });
+      return;
+    }
+
+    section.removeClass?.("xstudio-guide-recommendation-crud");
+    if (this._is_starter_adaptation_recommendation(display_recommendation)) {
+      section.addClass?.("xstudio-guide-recommendation-starter-adaptation");
+      section.update?.({
+        _children: [
+          this._guide_starter_adaptation_card(
+            display_recommendation,
+            active,
+            active ? active_status : "",
+          ),
+        ],
+      });
+      return;
+    }
+
+    section.removeClass?.("xstudio-guide-recommendation-starter-adaptation");
+    const next_recommendation_section = this._project_memory_guide_available_children(memory)
+      .find((child: any) => is_obj(child) && child._id === STUDIO_GUIDE_RECOMMENDATION_ID);
+    if (is_obj(next_recommendation_section) && Array.isArray(next_recommendation_section._children)) {
+      section.update?.({ _children: next_recommendation_section._children });
+    }
+    this._set_studio_label(
+      STUDIO_GUIDE_RECOMMENDATION_LABEL_ID,
+      active
+        ? "Current task"
+        : display_recommendation || recommendation_blocker
+          ? "Recommended next"
+          : "Next suggested step",
+    );
+    this._set_studio_label(
+      STUDIO_GUIDE_RECOMMENDATION_TITLE_ID,
+      recommendation_blocker
+        ? "No executable action available"
+        : active
+          ? this._guide_task_title(active)
+          : this._guide_recommendation_title(display_recommendation, next_item),
+    );
+    this._set_studio_label(
+      STUDIO_GUIDE_RECOMMENDATION_REASON_ID,
+      recommendation_blocker || this._guide_recommendation_description(display_recommendation),
+    );
+    this._set_studio_label(
+      STUDIO_GUIDE_RECOMMENDATION_STATUS_ID,
+      this._guide_recommendation_status_text(active, active_status),
+    );
+    this._set_studio_label(
+      STUDIO_GUIDE_RECOMMENDATION_FOCUS_ID,
+      this._guide_recommendation_focus_text(memory, milestone),
+    );
+    this._set_studio_label(
+      STUDIO_GUIDE_RECOMMENDATION_PROGRESS_ID,
+      milestone ? this._project_memory_milestone_progress_text(milestone) : "",
+    );
+    const recommendation_button = XUI.getObject(STUDIO_GUIDE_RECOMMENDATION_DO_IT_ID) as any;
+    const recommendation_prompt = typeof display_recommendation?._action?._prompt === "string"
+      ? display_recommendation._action._prompt.trim()
+      : "";
+    const materialization_display =
+      !active && this._is_materialize_confirmed_plan_recommendation(display_recommendation);
+    const action_text = materialization_display
+      ? "Build app"
+      : this._guide_recommendation_action_text(active, active_status);
+    const action_title = materialization_display
+      ? "Build app"
+      : this._guide_recommendation_action_title(active, active_status);
+    recommendation_button?.setText?.(action_text);
+    if (recommendation_button?.dom instanceof HTMLElement) {
+      recommendation_button.dom.setAttribute("title", action_title);
+    }
+    this._set_studio_control_disabled(
+      STUDIO_GUIDE_RECOMMENDATION_DO_IT_ID,
+      this._guide_recommendation_action_disabled(
+        active,
+        active_status,
+        recommendation_blocker,
+        recommendation_prompt,
+      ),
+    );
+    this._set_studio_control_disabled(
+      STUDIO_GUIDE_RECOMMENDATION_CANCEL_ID,
+      active_status === "completed",
+    );
+  }
+
+  private async _start_guide_recommendation() {
+    if (this._conversation_analyzing) return;
+
+    const active = this._active_guide_recommendation();
+    if (active) {
+      if (this._active_guide_recommendation_status() === "failed") {
+        await this._retry_guide_active_recommendation();
+      }
+      return;
+    }
+
+    const materialization_recommendation = this._guide_lower_level_actions_visible()
+      ? null
+      : this._guide_materialization_recommendation(_xd.get(PROJECT_MEMORY_XD_KEY));
+    const recommendation = this._normalize_guide_recommendation(
+      _xd.get(GUIDE_RECOMMENDATION_XD_KEY),
+    ) ?? materialization_recommendation;
+    const actionable_recommendation = materialization_recommendation ?? recommendation;
+    const action_prompt = typeof actionable_recommendation?._action?._prompt === "string"
+      ? actionable_recommendation._action._prompt.trim()
+      : "";
+    if (!actionable_recommendation || !action_prompt) return;
+
+    _xd.set(GUIDE_ACTIVE_RECOMMENDATION_XD_KEY, actionable_recommendation, {
+      source: "xstudio-guide",
+    });
+    _xd.set(GUIDE_ACTIVE_RECOMMENDATION_STATUS_XD_KEY, this._is_starter_adaptation_recommendation(actionable_recommendation)
+      ? "adapting"
+      : "running", {
+      source: "xstudio-guide",
+    });
+    this._set_conversation_input_value(action_prompt);
+    this._render_guide_active_recommendation();
+    this._log("guide recommendation started", {
+      _title: actionable_recommendation._title,
+      _prompt: action_prompt,
+    });
+    await this._send_guide_recommendation_message(actionable_recommendation, action_prompt);
+  }
+
+  private async _retry_guide_active_recommendation() {
+    if (this._conversation_analyzing) return;
+    if (this._active_guide_recommendation_status() !== "failed") return;
+
+    const active = this._active_guide_recommendation();
+    const prompt = typeof active?._action?._prompt === "string"
+      ? active._action._prompt.trim()
+      : "";
+    if (!active || !prompt) return;
+
+    _xd.set(GUIDE_ACTIVE_RECOMMENDATION_STATUS_XD_KEY, this._is_starter_adaptation_recommendation(active)
+      ? "adapting"
+      : "running", {
+      source: "xstudio-guide",
+    });
+    this._set_conversation_input_value(prompt);
+    this._render_guide_active_recommendation();
+    this._log("guide active recommendation retry requested", {
+      _title: active._title,
+      _prompt: prompt,
+    });
+    await this._send_guide_recommendation_message(active, prompt, {
+      _append_visible_message: false,
+    });
+  }
+
+  private _guide_recommendation_execution_payload(recommendation: Record<string, any> | null) {
+    if (!recommendation) return null;
+
+    const action = is_obj(recommendation._action) ? recommendation._action : {};
+    return this._intent_action_execution_payload(action);
+  }
+
+  private _has_structured_guide_action(recommendation: Record<string, any> | null) {
+    return is_obj(this._guide_recommendation_execution_payload(recommendation));
+  }
+
+  private _is_primary_experience_guide_action(recommendation: Record<string, any> | null) {
+    if (!recommendation) return false;
+
+    const action = is_obj(recommendation._action) ? recommendation._action : {};
+    const command = this._guide_recommendation_execution_payload(recommendation);
+    if (!is_obj(command)) return false;
+
+    const identifiers = [
+      recommendation._id,
+      recommendation.id,
+      recommendation._type,
+      recommendation.type,
+      recommendation._semantic_type,
+      recommendation.semantic_type,
+      recommendation._role,
+      action._id,
+      action.id,
+      action._type,
+      action.type,
+      action._semantic_type,
+      action.semantic_type,
+      action._role,
+      command._params?._role,
+      command._params?._semantic_type,
+    ].map((item) => String(item ?? "").trim());
+
+    return identifiers.includes("primary-experience") ||
+      identifiers.includes("compose-primary-experience") ||
+      identifiers.includes("compose-and-verify-primary-experience");
+  }
+
+  private _guide_structured_action_id(recommendation: Record<string, any>) {
+    if (typeof recommendation._conversation_action_id === "string" && recommendation._conversation_action_id.trim()) {
+      return recommendation._conversation_action_id.trim();
+    }
+
+    if (this._is_primary_experience_guide_action(recommendation)) {
+      return "compose-and-verify-primary-experience";
+    }
+
+    const action = is_obj(recommendation._action) ? recommendation._action : {};
+    const id = [
+      action._id,
+      action.id,
+      action._role,
+      recommendation._id,
+      recommendation.id,
+      recommendation._semantic_type,
+      recommendation._role,
+    ].find((item) => typeof item === "string" && item.trim());
+    return typeof id === "string" ? id.trim() : "guide-action";
+  }
+
+  private _guide_structured_action_key(action_id: string, message_id: string) {
+    return [
+      this._conversation_app_id || "no-app",
+      this._conversation_env || "no-env",
+      this._conversation_id || "no-conversation",
+      message_id || "guide-message",
+      action_id || "guide-action",
+    ].map((part) => this._conversation_action_key_part(part)).join(":");
+  }
+
+  private _guide_structured_action_message_id(recommendation: Record<string, any>) {
+    return typeof recommendation._conversation_message_id === "string" &&
+      recommendation._conversation_message_id.trim()
+      ? recommendation._conversation_message_id.trim()
+      : "";
+  }
+
+  private _remember_guide_structured_action_identity(
+    recommendation: Record<string, any>,
+    action_id: string,
+    message_id: string,
+    action_key: string,
+    extra: Record<string, any> = {},
+  ) {
+    const remembered = {
+      ...recommendation,
+      _conversation_message_id: message_id,
+      _conversation_action_id: action_id,
+      _conversation_action_key: action_key,
+      ...extra,
+    };
+    _xd.set(GUIDE_ACTIVE_RECOMMENDATION_XD_KEY, remembered, {
+      source: "xstudio-guide",
+    });
+    return remembered;
+  }
+
+  private _enrich_guide_execution_payload(
+    command: Record<string, any>,
+    action_id: string,
+    message_id: string,
+    recommendation: Record<string, any>,
+  ) {
+    const params = is_obj(command._params)
+      ? (_xu.clone_json(command._params) as Record<string, any>)
+      : {};
+
+    return {
+      ...command,
+      _params: {
+        ...params,
+        _app_id: typeof params._app_id === "string" && params._app_id.trim()
+          ? params._app_id.trim()
+          : this._conversation_app_id,
+        _env: typeof params._env === "string" && params._env.trim()
+          ? params._env.trim()
+          : this._conversation_env,
+        ...(this._conversation_id ? { _conversation_id: this._conversation_id } : {}),
+        ...(message_id ? { _message_id: message_id } : {}),
+        ...(action_id ? { _action_id: action_id } : {}),
+        ...(command._module === "xvibe" && command._op === "materialize-confirmed-plan"
+          ? {
+            _resume_token:
+              typeof params._resume_token === "string" && params._resume_token.trim()
+                ? params._resume_token.trim()
+                : this._guide_materialization_resume_token(recommendation, action_id, message_id),
+          }
+          : {}),
+        _guide_action: _xu.clone_json(recommendation),
+      },
+    };
+  }
+
+  private _guide_structured_persisted_action(
+    recommendation: Record<string, any>,
+    action_id: string,
+  ) {
+    const action = is_obj(recommendation._action) ? recommendation._action : {};
+    const command = this._guide_recommendation_execution_payload(recommendation);
+    if (!is_obj(command)) return null;
+
+    const title = this._guide_task_title(recommendation) ||
+      (typeof action._title === "string" ? action._title.trim() : "") ||
+      (typeof action._prompt === "string" ? action._prompt.trim() : "") ||
+      "Guide action";
+    const action_type = typeof action._type === "string" && action._type.trim()
+      ? action._type.trim()
+      : typeof action._action_type === "string" && action._action_type.trim()
+        ? action._action_type.trim()
+        : "module-op";
+
+    return {
+      _id: action_id,
+      _type: action_type,
+      _action_type: action_type,
+      _title: title,
+      ...(typeof recommendation._reason === "string" && recommendation._reason.trim()
+        ? { _description: recommendation._reason.trim() }
+        : {}),
+      ...(typeof action._prompt === "string" && action._prompt.trim()
+        ? { _prompt: action._prompt.trim() }
+        : {}),
+      ...(typeof action._role === "string" && action._role.trim()
+        ? { _role: action._role.trim() }
+        : {}),
+      _status: STUDIO_INTENT_ACTION_STATUS_SUGGESTED,
+      _execution_payload: command,
+      _requires_approval: false,
+    };
+  }
+
+  private async _append_structured_guide_task_message(
+    recommendation: Record<string, any>,
+    prompt: string,
+    action_id: string,
+  ) {
+    if (!this._can_edit()) return null;
+    const preserve_transient_load = this._conversation_preserve_transient_load;
+    this._conversation_preserve_transient_load = true;
+    try {
+      await this._ensure_conversation_for_current_context();
+    } finally {
+      this._conversation_preserve_transient_load = preserve_transient_load;
+    }
+    if (!this._conversation_app_id || !this._conversation_env || !this._conversation_id) {
+      return null;
+    }
+
+    const persisted_action =
+      this._guide_structured_persisted_action(recommendation, action_id);
+    if (!persisted_action) return null;
+
+    const title = this._guide_task_title(recommendation) || prompt || "Guide action";
+    const append_result = await this._send_xvibe_command("append-message", {
+      _app_id: this._conversation_app_id,
+      _env: this._conversation_env,
+      _conversation_id: this._conversation_id,
+      _message: {
+        _role: "tool",
+        _text: title,
+        _intent: {
+          _message_type: "guide-action",
+          _execution_level: "deterministic",
+          _should_mutate: true,
+          _actions: [persisted_action],
+        },
+        _metadata: {
+          _source: "xstudio.guide.structured-action",
+          _normalized_prompt: this._conversation_prompt_key(prompt),
+          _guide_recommendation: _xu.clone_json(recommendation),
+        },
+      },
+    });
+    const message_id = this._conversation_append_message_id(append_result);
+    if (!message_id) return null;
+
+    await this._list_conversations(this._conversation_app_id, this._conversation_env);
+    await this._load_conversation_messages();
+    return {
+      _ok: true,
+      _message_id: message_id,
+      _append_result: append_result,
+    };
+  }
+
+  private _guide_structured_action_view(
+    recommendation: Record<string, any>,
+    message_id: string,
+  ): XStudioIntentActionView | null {
+    const action = is_obj(recommendation._action) ? recommendation._action : {};
+    const command = this._guide_recommendation_execution_payload(recommendation);
+    if (!is_obj(command)) return null;
+
+    const action_id = this._guide_structured_action_id(recommendation);
+    const title = this._guide_task_title(recommendation) ||
+      (typeof action._title === "string" ? action._title.trim() : "") ||
+      "Guide action";
+    const key = this._guide_structured_action_key(action_id, message_id);
+    const enriched_command = this._enrich_guide_execution_payload(
+      command,
+      action_id,
+      message_id,
+      recommendation,
+    );
+
+    return {
+      _key: key,
+      _render_key: key,
+      _id: action_id,
+      _message_id: message_id,
+      _action_index: 0,
+      _title: title,
+      _description: typeof recommendation._reason === "string" ? recommendation._reason : "",
+      _action_type: typeof action._action_type === "string" && action._action_type.trim()
+        ? action._action_type.trim()
+        : "module-op",
+      _confidence: typeof action._confidence === "string" ? action._confidence : "",
+      _status: STUDIO_INTENT_ACTION_STATUS_SUGGESTED,
+      _executable: true,
+      _has_execution_payload: true,
+      _execution_payload_error: "",
+      _execution_payload: enriched_command,
+      _requires_approval: false,
+      _params: is_obj(enriched_command._params) ? { ...enriched_command._params } : null,
+      _error: "",
+    };
+  }
+
+  private _guide_primary_experience_zero_planned_changes(result: any) {
+    if (!is_obj(result)) return false;
+    const sources = [
+      result,
+      result._result,
+      result._mutation_plan_result,
+      result._result?._mutation_plan_result,
+      result._mutation_plan,
+      result._result?._mutation_plan,
+    ].filter(is_obj);
+
+    return sources.some((source) => {
+      const explicit_count = source._planned_change_count ?? source.planned_change_count;
+      if (typeof explicit_count === "number") return explicit_count === 0;
+
+      const explicit_steps = source._planned_changes ?? source.planned_changes;
+      if (Array.isArray(explicit_steps)) return explicit_steps.length === 0;
+
+      const steps = source._steps ?? source.steps;
+      const status = String(source._status ?? source.status ?? "").trim().toLowerCase();
+      if (Array.isArray(steps) && steps.length === 0 && status !== "completed") return true;
+
+      return false;
+    });
+  }
+
+  private async _send_structured_guide_recommendation_message(
+    recommendation: Record<string, any>,
+    prompt: string,
+    options: { _append_visible_message?: boolean } = {},
+  ) {
+    let active_recommendation = recommendation;
+    let message_id = this._guide_structured_action_message_id(active_recommendation);
+    const action_id = this._guide_structured_action_id(active_recommendation);
+    let action_key = typeof active_recommendation._conversation_action_key === "string" &&
+      active_recommendation._conversation_action_key.trim()
+      ? active_recommendation._conversation_action_key.trim()
+      : this._guide_structured_action_key(action_id, message_id);
+
+    if (this._guide_structured_action_running_key === action_key) {
+      this._log("guide structured action ignored: already running", {
+        _action_key: action_key,
+        _action_id: action_id,
+        _message_id: message_id,
+      });
+      return;
+    }
+
+    if (!message_id && options._append_visible_message === false) {
+      this._retain_active_guide_recommendation_after_failure(
+        "guide-structured-action-message-missing",
+        "Guide action is missing its original conversation message.",
+      );
+      return;
+    }
+
+    if (!message_id && this._active_guide_recommendation_status() !== "failed") {
+      const append_result =
+        await this._append_structured_guide_task_message(
+          active_recommendation,
+          prompt,
+          action_id,
+        );
+      if (!is_obj(append_result) || append_result._ok !== true) {
+        this._retain_active_guide_recommendation_after_failure(
+          "guide-structured-action-message-missing",
+          "Guide action could not append the conversation message.",
+        );
+        return;
+      }
+
+      message_id = typeof append_result?._message_id === "string"
+        ? append_result._message_id
+        : "";
+      action_key = this._guide_structured_action_key(action_id, message_id);
+      const command = this._guide_recommendation_execution_payload(active_recommendation);
+      const resume_token =
+        is_obj(command) && command._module === "xvibe" && command._op === "materialize-confirmed-plan"
+          ? this._guide_materialization_resume_token(active_recommendation, action_id, message_id)
+          : "";
+      active_recommendation = this._remember_guide_structured_action_identity(
+        active_recommendation,
+        action_id,
+        message_id,
+        action_key,
+        resume_token
+          ? {
+            _resume_token: resume_token,
+            _materialization: {
+              ...(is_obj(active_recommendation._materialization) ? active_recommendation._materialization : {}),
+              _status: "running",
+              _resume_token: resume_token,
+              _conversation_message_id: message_id,
+              _conversation_action_id: action_id,
+              _conversation_action_key: action_key,
+              _stages: this._guide_materialization_default_stages("running"),
+            },
+          }
+          : {},
+      );
+      if (resume_token) {
+        this._set_guide_materialization_state({
+          ...(this._guide_materialization_state() ?? {}),
+          _status: "running",
+          _resume_token: resume_token,
+          _conversation_message_id: message_id,
+          _conversation_action_id: action_id,
+          _conversation_action_key: action_key,
+          _stages: this._guide_materialization_default_stages("running"),
+        });
+      }
+    }
+
+    const action = this._guide_structured_action_view(active_recommendation, message_id);
+    if (!action) {
+      this._retain_active_guide_recommendation_after_failure(
+        "guide-structured-action-missing",
+        "Guide action is missing execution payload.",
+      );
+      return;
+    }
+
+    this._guide_structured_action_running_key = action._key;
+    try {
+      await this._apply_conversation_execution_payload(action);
+    } finally {
+      if (this._guide_structured_action_running_key === action._key) {
+        this._guide_structured_action_running_key = "";
+      }
+    }
+  }
+
+  private async _send_guide_recommendation_message(
+    recommendation: Record<string, any>,
+    prompt: string,
+    options: { _append_visible_message?: boolean } = {},
+  ) {
+    if (this._has_structured_guide_action(recommendation)) {
+      await this._send_structured_guide_recommendation_message(recommendation, prompt, options);
+      return;
+    }
+
+    await this._send_conversation_message(prompt);
+  }
+
+  private _conversation_analyze_requires_follow_up(result: any) {
+    const intent = is_obj(result?._intent)
+      ? result._intent
+      : is_obj(result?._result?._intent)
+        ? result._result._intent
+        : is_obj(result?._message?._intent)
+          ? result._message._intent
+          : is_obj(result?._result?._message?._intent)
+            ? result._result._message._intent
+            : null;
+    if (!intent) return false;
+
+    const artifact_request = intent._artifact_request ?? intent.artifact_request;
+    if (is_obj(artifact_request)) return true;
+
+    const actions = intent._actions ?? intent.actions;
+    return Array.isArray(actions) && actions.length > 0;
+  }
+
+  private _active_guide_recommendation() {
+    return this._normalize_guide_recommendation(
+      _xd.get(GUIDE_ACTIVE_RECOMMENDATION_XD_KEY),
+    );
+  }
+
+  private _active_guide_recommendation_status(): XStudioGuideActiveRecommendationStatus | "" {
+    if (!this._active_guide_recommendation()) return "";
+
+    const status = String(_xd.get(GUIDE_ACTIVE_RECOMMENDATION_STATUS_XD_KEY) ?? "")
+      .trim()
+      .toLowerCase()
+      .replace(/_/g, "-");
+    if (status === "failed" || status === "failure" || status === "error") return "failed";
+    if (status === "completed" || status === "complete" || status === "done") return "completed";
+    if (status === "ready") return "ready";
+    if (status === "adapting" || status === "adapt-starter" || status === "starter-adaptation") return "adapting";
+    return "running";
+  }
+
+  private _render_guide_active_recommendation() {
+    const active = this._active_guide_recommendation();
+    const status = this._active_guide_recommendation_status();
+    const title = this._guide_task_title(active);
+    const header = XUI.getObject(STUDIO_CONVERSATION_ACTIVE_TASK_HEADER_ID) as any;
+    const card = XUI.getObject(STUDIO_CONVERSATION_ACTIVE_TASK_ID) as any;
+    const guide = XUI.getObject(STUDIO_GUIDE_CARD_ID) as any;
+    const retry = XUI.getObject(STUDIO_CONVERSATION_ACTIVE_TASK_RETRY_ID) as any;
+
+    if (!active || !title) {
+      header?.addClass?.("xstudio-conversation-active-task-hidden");
+      card?.addClass?.("xstudio-conversation-active-task-hidden");
+      guide?.removeClass?.("xstudio-guide-active-task");
+      guide?.removeClass?.("xstudio-guide-active-task-failed");
+      retry?.addClass?.("xstudio-conversation-active-task-hidden");
+      this._set_studio_label(STUDIO_CONVERSATION_ACTIVE_TASK_HEADER_TITLE_ID, "");
+      this._set_studio_label(STUDIO_CONVERSATION_ACTIVE_TASK_LABEL_ID, "Current Task");
+      this._set_studio_label(STUDIO_CONVERSATION_ACTIVE_TASK_TITLE_ID, "");
+      this._render_guide_recommendation();
+      return;
+    }
+
+    header?.removeClass?.("xstudio-conversation-active-task-hidden");
+    card?.removeClass?.("xstudio-conversation-active-task-hidden");
+    guide?.addClass?.("xstudio-guide-active-task");
+    if (status === "failed") {
+      guide?.addClass?.("xstudio-guide-active-task-failed");
+      retry?.removeClass?.("xstudio-conversation-active-task-hidden");
+    } else {
+      guide?.removeClass?.("xstudio-guide-active-task-failed");
+      retry?.addClass?.("xstudio-conversation-active-task-hidden");
+    }
+    this._set_studio_label(STUDIO_CONVERSATION_ACTIVE_TASK_HEADER_TITLE_ID, title);
+    this._set_studio_label(
+      STUDIO_CONVERSATION_ACTIVE_TASK_LABEL_ID,
+      status === "failed"
+        ? "Task Failed"
+        : status === "completed"
+          ? "Task Completed"
+          : "Current Task",
+    );
+    this._set_studio_label(STUDIO_CONVERSATION_ACTIVE_TASK_TITLE_ID, title);
+    this._set_studio_control_disabled(STUDIO_CONVERSATION_ACTIVE_TASK_RETRY_ID, status !== "failed");
+    this._set_studio_control_disabled(STUDIO_CONVERSATION_ACTIVE_TASK_CANCEL_ID, false);
+    this._render_guide_recommendation();
+  }
+
+  private _cancel_guide_active_recommendation() {
+    const active = this._active_guide_recommendation();
+    if (!active) return;
+
+    _xd.delete(GUIDE_ACTIVE_RECOMMENDATION_XD_KEY, {
+      source: "xstudio-guide",
+    });
+    _xd.delete(GUIDE_ACTIVE_RECOMMENDATION_STATUS_XD_KEY, {
+      source: "xstudio-guide",
+    });
+    this._render_guide_active_recommendation();
+    this._log("guide active recommendation cancelled", {
+      _title: active._title,
+    });
+  }
+
+  private async _refresh_guide_after_success(
+    reason: string,
+    opts: {
+      _clear_active_recommendation?: boolean;
+      _log_message?: string;
+      _detail?: Record<string, any>;
+    } = {},
+  ) {
+    const active = this._active_guide_recommendation();
+    const should_clear_active = opts._clear_active_recommendation === true && Boolean(active);
+
+    if (should_clear_active) {
+      _xd.delete(GUIDE_ACTIVE_RECOMMENDATION_XD_KEY, {
+        source: "xstudio-guide",
+      });
+      _xd.delete(GUIDE_ACTIVE_RECOMMENDATION_STATUS_XD_KEY, {
+        source: "xstudio-guide",
+      });
+      this._log("guide active recommendation completed", {
+        _reason: reason,
+        _title: active?._title,
+      });
+      this._render_guide_active_recommendation();
+    }
+
+    await this._load_project_memory_for_current_app(reason, {
+      _force: true,
+    });
+    await this._load_guide_recommendation(reason);
+    this._render_project_memory_guide();
+
+    if (opts._log_message) {
+      this._log(opts._log_message, {
+        _reason: reason,
+        _cleared_active_recommendation: should_clear_active,
+        ...(active ? { _active_recommendation_title: active._title } : {}),
+        ...(opts._detail ?? {}),
+      });
+    }
+  }
+
+  private async _complete_active_guide_recommendation(reason: string) {
+    if (!this._active_guide_recommendation()) return;
+
+    await this._refresh_guide_after_success(reason, {
+      _clear_active_recommendation: true,
+    });
+  }
+
+  private _retain_active_guide_recommendation_after_failure(reason: string, error?: any) {
+    const active = this._active_guide_recommendation();
+    if (!active) return;
+
+    _xd.set(GUIDE_ACTIVE_RECOMMENDATION_STATUS_XD_KEY, "failed", {
+      source: "xstudio-guide",
+    });
+    this._render_guide_active_recommendation();
+    this._log("guide active recommendation retained after failure", {
+      _reason: reason,
+      _title: active._title,
+      ...(error === undefined ? {} : { _error: to_err(error) }),
+    });
+  }
+
+  private _open_guide_portlet(reason: string) {
+    this._right_dock_collapsed = false;
+    this._portlet_visibility.guide = true;
+    this._apply_dock_state();
+
+    const card = XUI.getObject(STUDIO_GUIDE_CARD_ID) as any;
+    card?.removeClass?.("xstudio-guide-collapsed");
+
+    const toggle = XUI.getObject(STUDIO_GUIDE_TOGGLE_ID) as any;
+    toggle?.setText?.("▴");
+    if (toggle?.dom instanceof HTMLElement) {
+      toggle.dom.setAttribute("aria-expanded", "true");
+      toggle.dom.setAttribute("title", "Collapse Guide");
+    }
+
+    this._log("guide portlet opened", { _reason: reason });
+  }
+
+  private _toggle_project_memory_guide() {
+    const card = XUI.getObject(STUDIO_GUIDE_CARD_ID) as any;
+    const toggle = XUI.getObject(STUDIO_GUIDE_TOGGLE_ID) as any;
+    const collapsed = card?.dom?.classList?.contains("xstudio-guide-collapsed") !== false;
+    const next_collapsed = !collapsed;
+
+    if (next_collapsed) {
+      card?.addClass?.("xstudio-guide-collapsed");
+    } else {
+      card?.removeClass?.("xstudio-guide-collapsed");
+    }
+
+    toggle?.setText?.(next_collapsed ? "▾" : "▴");
+    if (toggle?.dom instanceof HTMLElement) {
+      toggle.dom.setAttribute("aria-expanded", String(!next_collapsed));
+      toggle.dom.setAttribute("title", next_collapsed ? "Expand Guide" : "Collapse Guide");
+    }
+  }
+
+  private async _set_project_memory_focus() {
+    const input = XUI.getObject(STUDIO_GUIDE_FOCUS_INPUT_ID) as any;
+    const focus = String(
+      input?.getValue?.() ??
+      input?.dom?.value ??
+      _xd.get(PROJECT_MEMORY_FOCUS_DRAFT_XD_KEY) ??
+      ""
+    ).trim();
+
+    if (!focus) {
+      this._log("project memory focus patch skipped: empty focus");
+      return;
+    }
+
+    const app_id = this._client().getActiveAppId();
+    const env = this._client().getActiveEnv() || "default";
+
+    this._set_studio_control_disabled(STUDIO_GUIDE_SET_FOCUS_ID, true);
+    this._log("project memory focus patch requested", {
+      _app_id: app_id,
+      _env: env,
+    });
+
+    try {
+      const result = await _x.execute({
+        _module: "project-memory-client",
+        _op: "patch",
+        _params: {
+          _app_id: app_id,
+          _env: env,
+          _patch: {
+            _current_focus: focus,
+          },
+          _result_key: PROJECT_MEMORY_XD_KEY,
+        },
+      });
+
+      if (is_obj(result) && result._ok === false) {
+        this._error("project memory focus patch failed", {
+          _app_id: app_id,
+          _env: env,
+          _error: result._error ?? result,
+        });
+        return;
+      }
+
+      this._project_memory_loaded_scope = this._project_memory_scope_key(app_id, env);
+      this._render_project_memory_guide();
+      this._log("project memory focus patched", {
+        _app_id: app_id,
+        _env: env,
+      });
+      await this._load_guide_recommendation("project-memory-focus-patched");
+    } catch (err) {
+      this._error("project memory focus patch failed", {
+        _app_id: app_id,
+        _env: env,
+        _error: to_err(err),
+      });
+    } finally {
+      this._set_studio_control_disabled(STUDIO_GUIDE_SET_FOCUS_ID, false);
     }
   }
 
@@ -1129,6 +5509,7 @@ export class XStudioModule extends XModule {
       if (evt._app_id !== this._client().getActiveAppId()) return;
       if (evt._env !== this._client().getActiveEnv()) return;
       void this._flush_pending_server_refreshes();
+      void this._load_project_memory_for_current_app("xvm-connected");
     });
 
     _xem.on("xvm:view-rendered", (payload: any) => {
@@ -1136,9 +5517,14 @@ export class XStudioModule extends XModule {
       if (!is_obj(evt)) return;
       if (evt._app_id !== this._client().getActiveAppId()) return;
       if (evt._env !== this._client().getActiveEnv()) return;
+      this._cancel_object_picker();
+      this._cancel_arrange_mode();
+      this._apply_left_sidebar_width_to_dom();
+      this._bind_left_sidebar_resize_divider();
       this._refresh_object_tree_for_current_view();
       void this._refresh_app_explorer();
       void this._ensure_conversation_for_current_context();
+      void this._load_project_memory_for_current_app("view-rendered");
     });
 
     _xem.on("xvm:view-navigated", (payload: any) => {
@@ -1150,6 +5536,8 @@ export class XStudioModule extends XModule {
       if (!view_id || view_id === STUDIO_VIEW_ID || region === STUDIO_REGION_ID) return;
       if (region && region !== this._resolve_app_view_region()) return;
 
+      this._cancel_object_picker();
+      this._cancel_arrange_mode();
       this._clear_selected_object();
       this._refresh_object_tree_for_current_view();
       this._render_cached_app_explorer();
@@ -1196,6 +5584,22 @@ export class XStudioModule extends XModule {
       this._toggle_right_dock();
     });
 
+    _xem.on("studio:object-picker-toggle", () => {
+      this._toggle_object_picker();
+    });
+
+    _xem.on("studio:arrange-toggle", () => {
+      this._toggle_arrange_mode();
+    });
+
+    _xem.on("studio:add-object", async () => {
+      await this._open_add_object_palette();
+    });
+
+    _xem.on("studio:object-palette-open", async () => {
+      await this._open_add_object_palette();
+    });
+
     _xem.on("studio:explorer-section:toggle", (payload: any) => {
       const evt = this._normalize_event_payload(payload);
       const section_id = this._normalize_explorer_section_id(
@@ -1220,6 +5624,49 @@ export class XStudioModule extends XModule {
       }
 
       this._toggle_app_explorer_section(section_id);
+    });
+
+    _xem.on("studio:guide-toggle", () => {
+      this._toggle_project_memory_guide();
+    });
+
+    _xem.on("studio:guide-open", () => {
+      this._open_guide_portlet("project-plan-card");
+    });
+
+    _xem.on("studio:guide-set-focus", async () => {
+      await this._set_project_memory_focus();
+    });
+
+    _xem.on("studio:guide-recommendation-do-it", () => {
+      void this._start_guide_recommendation();
+    });
+
+    _xem.on("studio:guide-active-recommendation-retry", () => {
+      void this._retry_guide_active_recommendation();
+    });
+
+    _xem.on("studio:guide-active-recommendation-cancel", () => {
+      this._cancel_guide_active_recommendation();
+    });
+
+    _xem.on("project-memory:loaded", () => {
+      this._render_project_memory_guide();
+      this._render_conversation_messages();
+      void this._load_guide_recommendation("project-memory-loaded-event");
+    });
+
+    _xem.on("project-memory:saved", () => {
+      this._render_project_memory_guide();
+      this._render_conversation_messages();
+      void this._load_guide_recommendation("project-memory-saved-event");
+    });
+
+    _xem.on("project-memory:error", (payload: any) => {
+      const evt = this._normalize_event_payload(payload);
+      this._error("project memory event error", {
+        _error: is_obj(evt) ? evt._error : evt,
+      });
     });
 
     _xem.on("studio:app-explorer:add-view-open", () => {
@@ -1264,6 +5711,18 @@ export class XStudioModule extends XModule {
       await this._send_conversation_message();
     });
 
+    _xem.on("studio:conversation-capability-guidance", async () => {
+      await this._send_capability_guidance_request();
+    });
+
+    _xem.on("studio:capability-example", (payload: any) => {
+      this._insert_capability_example_prompt(payload);
+    });
+
+    _xem.on("studio:planning-quick-start", async (payload: any) => {
+      await this._handle_planning_quick_start(payload);
+    });
+
     _xem.on("studio:conversation-new", async () => {
       await this._create_and_open_new_conversation();
     });
@@ -1294,6 +5753,30 @@ export class XStudioModule extends XModule {
 
     _xem.on("studio:artifact-request-dismiss", (payload: any) => {
       void this._dismiss_conversation_artifact_request(payload);
+    });
+
+    _xem.on("studio:mutation-plan-view-details", (payload: any) => {
+      this._show_mutation_plan_details(payload);
+    });
+
+    _xem.on("studio:project-plan-review-toggle", (payload: any) => {
+      this._toggle_project_plan_review(payload);
+    });
+
+    _xem.on("studio:project-plan-action", (payload: any) => {
+      this._insert_project_plan_action_prompt(payload);
+    });
+
+    _xem.on("studio:project-plan-confirm", (payload: any) => {
+      void this._confirm_project_plan(payload);
+    });
+
+    _xem.on("studio:planning-question-toggle", (payload: any) => {
+      this._toggle_planning_question_answer(payload);
+    });
+
+    _xem.on("studio:planning-question-send", async (payload: any) => {
+      await this._send_planning_question_answer(payload);
     });
 
     _xem.on("studio:apply-request", () => {
@@ -1369,10 +5852,45 @@ export class XStudioModule extends XModule {
     });
 
     this._render_cached_app_explorer();
+    this.register_shortcuts();
   }
 
   register_shortcuts() {
     this.unregister_shortcuts();
+    if (typeof document === "undefined") return;
+
+    this._shortcut_keydown_handler = (event: KeyboardEvent) => {
+      const key = String(event.key ?? "").toLowerCase();
+
+      if (key === "escape" && this._object_picker_active) {
+        event.preventDefault();
+        event.stopPropagation();
+        this._cancel_object_picker();
+        return;
+      }
+
+      if (key === "escape" && this._arrange_mode_active) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (this._arrange_drag_source || this._arrange_dragging || this._arrange_drop_preview) {
+          this._clear_arrange_drag_state();
+        } else {
+          this._cancel_arrange_mode();
+        }
+        return;
+      }
+
+      if (key !== "c" || event.shiftKey !== true || (event.metaKey !== true && event.ctrlKey !== true)) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      this._toggle_object_picker();
+    };
+    document.addEventListener("keydown", this._shortcut_keydown_handler, true);
+    this._shortcuts_registered = true;
+    XStudioModule._shortcut_owner = this;
   }
 
   unregister_shortcuts() {
@@ -1385,6 +5903,8 @@ export class XStudioModule extends XModule {
     if (XStudioModule._shortcut_owner === this) {
       XStudioModule._shortcut_owner = null;
     }
+    this._cancel_object_picker();
+    this._cancel_arrange_mode();
   }
 
   clear_active_generation() {
@@ -1440,6 +5960,8 @@ export class XStudioModule extends XModule {
 
   handle_xvm_update(update: StudioXVMUpdateEvt) {
     this._complete_generation_from_update(update);
+    this._cancel_object_picker();
+    this._cancel_arrange_mode();
     this._refresh_object_tree_for_current_view();
     void this._refresh_app_explorer();
   }
@@ -1474,6 +5996,288 @@ export class XStudioModule extends XModule {
     return this._normalize_studio_theme(value);
   }
 
+  private _left_sidebar_width_bounds() {
+    let available_width = 0;
+
+    if (typeof document !== "undefined") {
+      const body = document.getElementById?.("xstudio-body");
+      const body_rect_width = body?.getBoundingClientRect?.().width;
+      if (typeof body_rect_width === "number" && Number.isFinite(body_rect_width) && body_rect_width > 0) {
+        available_width = body_rect_width;
+      }
+    }
+
+    if (available_width <= 0 && typeof window !== "undefined") {
+      const inner_width = Number((window as any).innerWidth);
+      if (Number.isFinite(inner_width) && inner_width > 0) {
+        available_width = inner_width;
+      }
+    }
+
+    if (available_width <= 0) available_width = 1280;
+
+    let right_width = this._right_dock_collapsed ? 0 : STUDIO_RIGHT_SIDEBAR_WIDTH_FALLBACK;
+    if (!this._right_dock_collapsed) {
+      const right = XUI.getObject("xstudio-right-dock") as any;
+      const right_rect_width = right?.dom?.getBoundingClientRect?.().width;
+      if (typeof right_rect_width === "number" && Number.isFinite(right_rect_width) && right_rect_width > 0) {
+        right_width = right_rect_width;
+      }
+    }
+
+    const canvas_safe_max = available_width - right_width - STUDIO_CANVAS_MIN_WIDTH;
+    const max_width = Math.max(
+      STUDIO_LEFT_SIDEBAR_MIN_WIDTH,
+      Math.min(STUDIO_LEFT_SIDEBAR_MAX_WIDTH_FALLBACK, Math.floor(canvas_safe_max)),
+    );
+
+    return {
+      _min: STUDIO_LEFT_SIDEBAR_MIN_WIDTH,
+      _max: max_width,
+    };
+  }
+
+  private _normalize_left_sidebar_width(value: any, fallback = STUDIO_LEFT_SIDEBAR_DEFAULT_WIDTH) {
+    const raw = typeof value === "string" ? value.trim().replace(/px$/i, "") : value;
+    const numeric = Number(raw);
+    const base = Number.isFinite(numeric) ? numeric : fallback;
+    const bounds = this._left_sidebar_width_bounds();
+    return Math.min(bounds._max, Math.max(bounds._min, Math.round(base)));
+  }
+
+  private _read_persisted_left_sidebar_width() {
+    if (typeof window === "undefined") return STUDIO_LEFT_SIDEBAR_DEFAULT_WIDTH;
+
+    try {
+      const saved = window.localStorage?.getItem(STUDIO_LEFT_SIDEBAR_WIDTH_STORAGE_KEY);
+      if (saved === null || saved === undefined || String(saved).trim() === "") {
+        return STUDIO_LEFT_SIDEBAR_DEFAULT_WIDTH;
+      }
+      return this._normalize_left_sidebar_width(saved, STUDIO_LEFT_SIDEBAR_DEFAULT_WIDTH);
+    } catch (err) {
+      _xlog.debug("[xstudio] left sidebar width persistence read skipped", err);
+      return STUDIO_LEFT_SIDEBAR_DEFAULT_WIDTH;
+    }
+  }
+
+  private _persist_left_sidebar_width(width = this._left_sidebar_width) {
+    if (typeof window === "undefined") return;
+
+    try {
+      window.localStorage?.setItem(STUDIO_LEFT_SIDEBAR_WIDTH_STORAGE_KEY, String(width));
+    } catch (err) {
+      _xlog.debug("[xstudio] left sidebar width persistence write skipped", err);
+    }
+  }
+
+  private _apply_left_sidebar_width_to_view_data(root: Record<string, any>) {
+    root._style = {
+      ...(is_obj(root._style) ? root._style : {}),
+      "--xstudio-left-width": `${this._normalize_left_sidebar_width(this._left_sidebar_width)}px`,
+    };
+  }
+
+  private _apply_left_sidebar_width_to_dom() {
+    const shell = XUI.getObject(STUDIO_SHELL_ID) as any;
+    const dom = shell?.dom;
+    if (!(dom instanceof HTMLElement)) return;
+
+    const width = this._normalize_left_sidebar_width(this._left_sidebar_width);
+    this._left_sidebar_width = width;
+    dom.style.setProperty("--xstudio-left-width", `${width}px`);
+
+    const divider = XUI.getObject(STUDIO_LEFT_RESIZE_DIVIDER_ID) as any;
+    const divider_dom = divider?.dom;
+    if (divider_dom instanceof HTMLElement) {
+      const bounds = this._left_sidebar_width_bounds();
+      divider_dom.setAttribute("aria-valuemin", String(bounds._min));
+      divider_dom.setAttribute("aria-valuemax", String(bounds._max));
+      divider_dom.setAttribute("aria-valuenow", String(width));
+      divider_dom.setAttribute("aria-disabled", String(this._left_dock_collapsed));
+    }
+  }
+
+  private _set_left_sidebar_width(width: any, persist = false) {
+    this._left_sidebar_width = this._normalize_left_sidebar_width(width, this._left_sidebar_width);
+    this._apply_left_sidebar_width_to_dom();
+    if (persist) this._persist_left_sidebar_width();
+    return this._left_sidebar_width;
+  }
+
+  private _reset_left_sidebar_width() {
+    return this._set_left_sidebar_width(STUDIO_LEFT_SIDEBAR_DEFAULT_WIDTH, true);
+  }
+
+  private _set_left_sidebar_resizing(active: boolean) {
+    const shell = XUI.getObject(STUDIO_SHELL_ID) as any;
+    if (active) {
+      shell?.addClass?.("xstudio-left-resizing");
+    } else {
+      shell?.removeClass?.("xstudio-left-resizing");
+    }
+
+    if (typeof document !== "undefined" && document.body instanceof HTMLElement) {
+      document.body.classList.toggle("xstudio-left-resizing", active);
+    }
+  }
+
+  private _event_client_x(event: any) {
+    const touch = event?.touches?.[0] ?? event?.changedTouches?.[0];
+    const value = touch?.clientX ?? event?.clientX;
+    const numeric = Number(value);
+    return Number.isFinite(numeric) ? numeric : null;
+  }
+
+  private _start_left_sidebar_resize(event: any) {
+    if (this._left_dock_collapsed) return;
+    if (event?.button !== undefined && event.button !== 0) return;
+
+    const client_x = this._event_client_x(event);
+    if (client_x === null) return;
+    const pointer_id = Number(event?.pointerId);
+    if (!Number.isFinite(pointer_id)) return;
+
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    try {
+      event?.currentTarget?.setPointerCapture?.(pointer_id);
+    } catch (err) {
+      _xlog.debug("[xstudio] left sidebar pointer capture skipped", err);
+    }
+
+    this._left_sidebar_resize_drag_state = {
+      _start_x: client_x,
+      _start_width: this._left_sidebar_width,
+      _pointer_id: pointer_id,
+    };
+    this._set_left_sidebar_resizing(true);
+  }
+
+  private _move_left_sidebar_resize(event: any) {
+    if (!this._left_sidebar_resize_drag_state) return;
+    if (Number(event?.pointerId) !== this._left_sidebar_resize_drag_state._pointer_id) return;
+
+    const client_x = this._event_client_x(event);
+    if (client_x === null) return;
+
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+
+    const delta = client_x - this._left_sidebar_resize_drag_state._start_x;
+    this._set_left_sidebar_width(this._left_sidebar_resize_drag_state._start_width + delta, false);
+  }
+
+  private _finish_left_sidebar_resize(event?: any) {
+    if (!this._left_sidebar_resize_drag_state) return;
+    if (event && Number(event?.pointerId) !== this._left_sidebar_resize_drag_state._pointer_id) return;
+
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    try {
+      const target = event?.currentTarget;
+      const pointer_id = this._left_sidebar_resize_drag_state._pointer_id;
+      if (target?.hasPointerCapture?.(pointer_id) !== false) {
+        target?.releasePointerCapture?.(pointer_id);
+      }
+    } catch (err) {
+      _xlog.debug("[xstudio] left sidebar pointer capture release skipped", err);
+    }
+
+    this._left_sidebar_resize_drag_state = null;
+    this._set_left_sidebar_resizing(false);
+    this._persist_left_sidebar_width();
+  }
+
+  private _handle_left_sidebar_resize_keydown(event: KeyboardEvent) {
+    if (this._left_dock_collapsed) return;
+
+    const step = event.shiftKey ? 32 : 16;
+    const bounds = this._left_sidebar_width_bounds();
+    let next: number | null = null;
+
+    if (event.key === "ArrowLeft") next = this._left_sidebar_width - step;
+    if (event.key === "ArrowRight") next = this._left_sidebar_width + step;
+    if (event.key === "Home") next = bounds._min;
+    if (event.key === "End") next = bounds._max;
+    if (event.key === "Enter") next = STUDIO_LEFT_SIDEBAR_DEFAULT_WIDTH;
+
+    if (next === null) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    this._set_left_sidebar_width(next, true);
+  }
+
+  private _bind_left_sidebar_resize_divider() {
+    const divider = XUI.getObject(STUDIO_LEFT_RESIZE_DIVIDER_ID) as any;
+    const dom = divider?.dom;
+    if (!(dom instanceof HTMLElement)) return;
+
+    if (this._left_sidebar_resize_bound && this._left_sidebar_resize_divider_dom === dom) {
+      this._apply_left_sidebar_width_to_dom();
+      return;
+    }
+
+    if (this._left_sidebar_resize_bound && this._left_sidebar_resize_divider_dom) {
+      this._left_sidebar_resize_divider_dom.removeEventListener(
+        "pointerdown",
+        this._left_sidebar_pointer_down_handler as any,
+      );
+      this._left_sidebar_resize_divider_dom.removeEventListener(
+        "pointermove",
+        this._left_sidebar_move_handler as any,
+      );
+      this._left_sidebar_resize_divider_dom.removeEventListener(
+        "pointerup",
+        this._left_sidebar_up_handler as any,
+      );
+      this._left_sidebar_resize_divider_dom.removeEventListener(
+        "pointercancel",
+        this._left_sidebar_up_handler as any,
+      );
+      this._left_sidebar_resize_divider_dom.removeEventListener(
+        "dblclick",
+        this._left_sidebar_double_click_handler as any,
+      );
+      this._left_sidebar_resize_divider_dom.removeEventListener(
+        "keydown",
+        this._left_sidebar_keydown_handler as any,
+      );
+      window.removeEventListener?.("resize", this._left_sidebar_window_resize_handler as any);
+      this._left_sidebar_resize_bound = false;
+    }
+
+    const down_handler = (event: any) => this._start_left_sidebar_resize(event);
+    const double_click_handler = (event: any) => {
+      event?.preventDefault?.();
+      event?.stopPropagation?.();
+      this._reset_left_sidebar_width();
+    };
+    const keydown_handler = (event: KeyboardEvent) => this._handle_left_sidebar_resize_keydown(event);
+    const window_resize_handler = () => this._apply_left_sidebar_width_to_dom();
+    const move_handler = (event: any) => this._move_left_sidebar_resize(event);
+    const up_handler = (event: any) => this._finish_left_sidebar_resize(event);
+
+    this._left_sidebar_pointer_down_handler = down_handler;
+    this._left_sidebar_double_click_handler = double_click_handler;
+    this._left_sidebar_keydown_handler = keydown_handler;
+    this._left_sidebar_window_resize_handler = window_resize_handler;
+    this._left_sidebar_move_handler = move_handler;
+    this._left_sidebar_up_handler = up_handler;
+
+    dom.addEventListener("pointerdown", down_handler);
+    dom.addEventListener("pointermove", move_handler);
+    dom.addEventListener("pointerup", up_handler);
+    dom.addEventListener("pointercancel", up_handler);
+    dom.addEventListener("dblclick", double_click_handler);
+    dom.addEventListener("keydown", keydown_handler);
+    window.addEventListener?.("resize", window_resize_handler);
+
+    this._left_sidebar_resize_bound = true;
+    this._left_sidebar_resize_divider_dom = dom;
+    this._apply_left_sidebar_width_to_dom();
+  }
+
   private _studio_shell_class() {
     return [
       "xstudio-shell",
@@ -1497,6 +6301,18 @@ export class XStudioModule extends XModule {
 
   private _right_dock_toggle_title() {
     return this._right_dock_collapsed ? "Expand right dock" : "Collapse right dock";
+  }
+
+  private _object_picker_shortcut_text() {
+    const platform = typeof navigator !== "undefined"
+      ? String(navigator.platform ?? "").toLowerCase()
+      : "";
+    const is_mac = platform.includes("mac") || platform.includes("iphone") || platform.includes("ipad");
+    return is_mac || !platform ? "⌘⇧C" : "Ctrl+Shift+C";
+  }
+
+  private _object_picker_button_title() {
+    return `Select object from canvas (${this._object_picker_shortcut_text()})`;
   }
 
   private _explorer_section_is_open(section_id: XStudioExplorerSectionId) {
@@ -1536,6 +6352,7 @@ export class XStudioModule extends XModule {
     if (!button) return;
     button._text = text;
     button.title = title;
+    button["aria-label"] = title;
   }
 
   private _set_view_data_select_value(root: Record<string, any>, object_id: string, value: string) {
@@ -1646,6 +6463,39 @@ export class XStudioModule extends XModule {
     }
   }
 
+  private _set_view_data_object_picker_button_state(root: Record<string, any>) {
+    for (const object_id of STUDIO_OBJECT_PICKER_TOGGLE_IDS) {
+      const button = this._find_view_data(root, object_id);
+      if (!button) continue;
+
+      const title = this._object_picker_button_title();
+      button.title = title;
+      button["aria-label"] = title;
+      button["aria-pressed"] = String(this._object_picker_active);
+      this._set_class_token_on_data(
+        button,
+        STUDIO_OBJECT_PICKER_TOGGLE_ACTIVE_CLASS,
+        this._object_picker_active,
+      );
+    }
+  }
+
+  private _set_view_data_arrange_button_state(root: Record<string, any>) {
+    for (const object_id of STUDIO_ARRANGE_TOGGLE_IDS) {
+      const button = this._find_view_data(root, object_id);
+      if (!button) continue;
+
+      button.title = "Arrange objects";
+      button["aria-label"] = "Arrange objects";
+      button["aria-pressed"] = String(this._arrange_mode_active);
+      this._set_class_token_on_data(
+        button,
+        STUDIO_ARRANGE_TOGGLE_ACTIVE_CLASS,
+        this._arrange_mode_active,
+      );
+    }
+  }
+
   private _apply_topbar_state_to_view_data(view: Record<string, any>) {
     this._set_view_data_button_state(
       view,
@@ -1664,6 +6514,8 @@ export class XStudioModule extends XModule {
       STUDIO_THEME_SELECTOR_ID,
       this._studio_theme,
     );
+    this._set_view_data_object_picker_button_state(view);
+    this._set_view_data_arrange_button_state(view);
 
     for (const portlet_id of STUDIO_PORTLET_IDS) {
       this._set_view_data_portlet_button_state(view, portlet_id);
@@ -1699,6 +6551,7 @@ export class XStudioModule extends XModule {
     shell.class = this._studio_shell_class();
     shell._theme = this._studio_theme;
     shell["data-xstudio-theme"] = this._studio_theme;
+    this._apply_left_sidebar_width_to_view_data(shell);
 
     const canvas = this._find_view_data(shell, STUDIO_CANVAS_ID);
     if (canvas) {
@@ -1711,6 +6564,7 @@ export class XStudioModule extends XModule {
       ];
     }
 
+    this._append_project_memory_guide_to_shell(shell);
     this._apply_portlet_state_to_view_data(shell);
     this._apply_explorer_section_state_to_view_data(shell);
 
@@ -1764,6 +6618,7 @@ export class XStudioModule extends XModule {
     const button = XUI.getObject(object_id) as any;
     if (button?.dom?.setAttribute) {
       button.dom.setAttribute("title", title);
+      button.dom.setAttribute("aria-label", title);
     }
   }
 
@@ -1783,6 +6638,38 @@ export class XStudioModule extends XModule {
       object.addClass?.(class_name);
     } else {
       object.removeClass?.(class_name);
+    }
+  }
+
+  private _apply_object_picker_button_state() {
+    this._set_shell_class_enabled(STUDIO_OBJECT_PICKER_ACTIVE_CLASS, this._object_picker_active);
+    const title = this._object_picker_button_title();
+
+    for (const object_id of STUDIO_OBJECT_PICKER_TOGGLE_IDS) {
+      this._set_object_class_token(
+        object_id,
+        STUDIO_OBJECT_PICKER_TOGGLE_ACTIVE_CLASS,
+        this._object_picker_active,
+      );
+      this._set_object_attribute(object_id, "aria-pressed", String(this._object_picker_active));
+      this._set_button_title(object_id, title);
+    }
+  }
+
+  private _apply_arrange_button_state() {
+    this._set_shell_class_enabled(STUDIO_ARRANGE_ACTIVE_CLASS, this._arrange_mode_active);
+    if (typeof document !== "undefined") {
+      document.body?.classList?.toggle?.(STUDIO_ARRANGE_ACTIVE_CLASS, this._arrange_mode_active);
+    }
+
+    for (const object_id of STUDIO_ARRANGE_TOGGLE_IDS) {
+      this._set_object_class_token(
+        object_id,
+        STUDIO_ARRANGE_TOGGLE_ACTIVE_CLASS,
+        this._arrange_mode_active,
+      );
+      this._set_object_attribute(object_id, "aria-pressed", String(this._arrange_mode_active));
+      this._set_button_title(object_id, "Arrange objects");
     }
   }
 
@@ -1891,6 +6778,8 @@ export class XStudioModule extends XModule {
     this._conversation_action_status = {};
     this._conversation_action_error = {};
     this._conversation_action_result = {};
+    this._mutation_plan_collapsed = {};
+    this._mutation_plan_execution_state = {};
     this._debug_log("conversation action transient state reset", {
       _app_id: this._conversation_app_id,
       _env: this._conversation_env,
@@ -1933,6 +6822,7 @@ export class XStudioModule extends XModule {
           : "",
       ...(typeof value._id === "string" && value._id.trim() ? { _id: value._id.trim() } : {}),
       ...(is_obj(value._intent) ? { _intent: { ...value._intent } } : {}),
+      ...(is_obj(value._metadata) ? { _metadata: { ...value._metadata } } : {}),
     };
   }
 
@@ -1993,9 +6883,30 @@ export class XStudioModule extends XModule {
     };
   }
 
+  private _conversation_runtime_skills_context() {
+    let runtime_skills_raw: unknown = {};
+    try {
+      const get_skills = (_x as any).getSkills;
+      if (typeof get_skills === "function") {
+        runtime_skills_raw = get_skills.call(_x);
+      }
+    } catch (err) {
+      this._debug_log("runtime skill collection skipped", {
+        _error: to_err(err),
+      });
+    }
+
+    const snapshot = runtime_skill_compact_snapshot(runtime_skills_raw);
+    if (this._debug_enabled()) {
+      _xlog.debug("[xstudio] runtime component skills collected", snapshot._component_diagnostics);
+    }
+    return snapshot._runtime_skills;
+  }
+
   private _conversation_runtime_context() {
     const active_view_id = this._resolve_studio_target_view_id();
     const selected_object = this._conversation_selected_object_context();
+    const active_recommendation = this._active_guide_recommendation();
     const views = this._conversation_artifact_ids(_XD_KEYS.STUDIO_VIEWS);
     const flows = this._conversation_artifact_ids(_XD_KEYS.STUDIO_FLOWS);
     const modules = this._conversation_artifact_ids(
@@ -2011,9 +6922,20 @@ export class XStudioModule extends XModule {
     return {
       ...(active_view_id ? { _active_view_id: active_view_id } : {}),
       ...(selected_object ? { _selected_object: selected_object } : {}),
+      ...(active_recommendation
+        ? {
+          _guide_active_recommendation: {
+            _title: this._guide_task_title(active_recommendation),
+            _reason: active_recommendation._reason,
+            _type: active_recommendation._type,
+            _action: active_recommendation._action,
+          },
+        }
+        : {}),
       ...(Object.keys(available_artifacts).length > 0
         ? { _available_artifacts: available_artifacts }
         : {}),
+      _runtime_skills: this._conversation_runtime_skills_context(),
     };
   }
 
@@ -2026,6 +6948,116 @@ export class XStudioModule extends XModule {
     return typeof message?._id === "string" && message._id.trim()
       ? message._id.trim()
       : "";
+  }
+
+  private _conversation_prompt_key(text: string) {
+    return _xu.normalize_prompt_key(text) || text.trim().toLowerCase();
+  }
+
+  private _begin_conversation_analysis_request(text: string, message_id: string): XStudioConversationAnalysisRequest {
+    const request = {
+      _request_id: ++this._conversation_analysis_seq,
+      _app_id: this._conversation_app_id,
+      _env: this._conversation_env,
+      _conversation_id: this._conversation_id,
+      _message_id: message_id,
+      _prompt_key: this._conversation_prompt_key(text),
+    };
+    this._active_conversation_analysis_request = request;
+    return request;
+  }
+
+  private _conversation_analysis_request_is_current(request: XStudioConversationAnalysisRequest | null) {
+    const active = this._active_conversation_analysis_request;
+    return Boolean(
+      request &&
+      active &&
+      active._request_id === request._request_id &&
+      active._app_id === request._app_id &&
+      active._env === request._env &&
+      active._conversation_id === request._conversation_id &&
+      active._message_id === request._message_id,
+    );
+  }
+
+  private _finish_conversation_analysis_request(request: XStudioConversationAnalysisRequest | null) {
+    if (this._conversation_analysis_request_is_current(request)) {
+      this._active_conversation_analysis_request = null;
+    }
+  }
+
+  private _conversation_message_is_analyze_result(message: XStudioConversationMessage) {
+    return (
+      (message._role === "tool" || message._role === "assistant") &&
+      message._metadata?._source === "xvibe.analyze-message"
+    );
+  }
+
+  private _conversation_message_prompt_key(message: XStudioConversationMessage) {
+    const normalized_prompt =
+      typeof message._metadata?._normalized_prompt === "string"
+        ? message._metadata._normalized_prompt.trim()
+        : "";
+    if (normalized_prompt) return this._conversation_prompt_key(normalized_prompt);
+    return "";
+  }
+
+  private _remember_conversation_analysis_timeout(request: XStudioConversationAnalysisRequest | null) {
+    if (!request?._prompt_key) return;
+    this._timed_out_conversation_analysis_prompt_keys.add(request._prompt_key);
+    delete this._completed_conversation_analysis_prompt_keys[request._prompt_key];
+  }
+
+  private _remember_conversation_analysis_success(request: XStudioConversationAnalysisRequest | null) {
+    if (!request?._prompt_key) return;
+    if (!this._timed_out_conversation_analysis_prompt_keys.has(request._prompt_key)) return;
+    this._completed_conversation_analysis_prompt_keys[request._prompt_key] = new Date().toISOString();
+  }
+
+  private _filter_stale_conversation_analysis_messages(messages: XStudioConversationMessage[]) {
+    if (this._timed_out_conversation_analysis_prompt_keys.size === 0) return messages;
+
+    const ignored = new Set(this._ignored_conversation_analysis_message_ids);
+    for (const prompt_key of this._timed_out_conversation_analysis_prompt_keys) {
+      const candidates = messages
+        .map((message, index) => ({ message, index }))
+        .filter(({ message }) =>
+          this._conversation_message_is_analyze_result(message) &&
+          this._conversation_message_prompt_key(message) === prompt_key &&
+          typeof message._id === "string" &&
+          !ignored.has(message._id),
+        );
+      if (candidates.length === 0) continue;
+
+      const completed_at = this._completed_conversation_analysis_prompt_keys[prompt_key] || "";
+      const completed_time = Date.parse(completed_at);
+      if (!Number.isFinite(completed_time)) {
+        for (const { message } of candidates) {
+          ignored.add(message._id as string);
+        }
+        continue;
+      }
+
+      let keep_index = -1;
+      let keep_time = -Infinity;
+      for (const { message, index } of candidates) {
+        const created_time = Date.parse(message._created_at);
+        if (!Number.isFinite(created_time) || created_time > completed_time) continue;
+        if (created_time >= keep_time) {
+          keep_time = created_time;
+          keep_index = index;
+        }
+      }
+
+      for (const { message, index } of candidates) {
+        if (index !== keep_index) {
+          ignored.add(message._id as string);
+        }
+      }
+    }
+
+    this._ignored_conversation_analysis_message_ids = ignored;
+    return messages.filter((message) => !message._id || !ignored.has(message._id));
   }
 
   private async _analyze_conversation_message(text: string, message_id: string) {
@@ -2059,7 +7091,9 @@ export class XStudioModule extends XModule {
       ...(message_id ? { _message_id: message_id } : {}),
     });
 
-    const result = await this._send_xvibe_command("analyze-message", params);
+    const result = await this._send_xvibe_command("analyze-message", params, {
+      _timeout_ms: STUDIO_ANALYZE_MESSAGE_TIMEOUT_MS,
+    });
     this._log("analyze-message completed", {
       _app_id: this._conversation_app_id,
       _env: this._conversation_env,
@@ -2067,6 +7101,32 @@ export class XStudioModule extends XModule {
       ...(is_obj(result?._intent) ? { _intent: result._intent } : {}),
     });
     return result;
+  }
+
+  private _conversation_analyze_failed_message(err: any) {
+    return this._is_timeout_error(err)
+      ? STUDIO_ANALYZE_MESSAGE_TIMEOUT_TEXT
+      : `Analyze message failed: ${to_err(err)}`;
+  }
+
+  private _conversation_analyze_failure_debug_intent(err: any, request: XStudioConversationAnalysisRequest | null) {
+    const timeout = this._is_timeout_error(err);
+    return {
+      _message_type: "error",
+      _execution_level: "none",
+      _confidence: 0,
+      _error: timeout ? STUDIO_ANALYZE_MESSAGE_TIMEOUT_TEXT : to_err(err),
+      _details: {
+        _operation: "xvibe.analyze-message",
+        _request_id: request?._request_id,
+        _app_id: request?._app_id,
+        _env: request?._env,
+        _conversation_id: request?._conversation_id,
+        _message_id: request?._message_id,
+        _timeout_ms: timeout ? STUDIO_ANALYZE_MESSAGE_TIMEOUT_MS : undefined,
+        _raw_error: err,
+      },
+    };
   }
 
   private _conversation_label(conversation: XStudioConversationSummary) {
@@ -2088,6 +7148,7 @@ export class XStudioModule extends XModule {
         ? `Conversation: ${this._conversation_id}`
         : "No conversation open";
     this._set_studio_label(STUDIO_CONVERSATION_TITLE_ID, title);
+    this._render_guide_active_recommendation();
   }
 
   private _render_conversation_selector() {
@@ -2177,8 +7238,12 @@ export class XStudioModule extends XModule {
         .filter((item: XStudioConversationMessage | null): item is XStudioConversationMessage => item !== null)
       : [];
 
-    this._conversation_messages = messages;
+    this._conversation_messages = this._filter_stale_conversation_analysis_messages(messages);
+    if (!this._conversation_preserve_transient_load) {
+      this._conversation_transient_messages = [];
+    }
     this._reset_conversation_action_transient_state();
+    this._planning_question_multi_answers = {};
     this._render_conversation_messages();
   }
 
@@ -2241,6 +7306,7 @@ export class XStudioModule extends XModule {
       this._conversation_env = env;
       this._conversation_id = "";
       this._conversation_messages = [];
+      this._conversation_transient_messages = [];
       this._render_conversation_messages();
 
       const conversations = await this._list_conversations(app_id, env);
@@ -2264,6 +7330,7 @@ export class XStudioModule extends XModule {
     const { _app_id: app_id, _env: env } = this._current_conversation_context();
     const conversation = await this._create_conversation(app_id, env);
     this._conversation_messages = [];
+    this._conversation_transient_messages = [];
     this._render_conversation_messages();
     await this._open_conversation(app_id, env, conversation._id, {
       _log_switch: true,
@@ -2294,46 +7361,150 @@ export class XStudioModule extends XModule {
     });
   }
 
-  private async _append_conversation_message(text: string) {
+  private async _append_conversation_message(
+    text: string,
+    options: XStudioAppendConversationMessageOptions = {},
+  ) {
     if (!this._can_edit()) return;
-    await this._ensure_conversation_for_current_context();
-    if (!this._conversation_app_id || !this._conversation_env || !this._conversation_id) return;
+    this._render_pending_conversation_analysis(text);
+    const preserve_transient_load = this._conversation_preserve_transient_load;
+    this._conversation_preserve_transient_load = true;
+    try {
+      await this._ensure_conversation_for_current_context();
+    } finally {
+      this._conversation_preserve_transient_load = preserve_transient_load;
+    }
+    if (!this._conversation_app_id || !this._conversation_env || !this._conversation_id) {
+      this._retain_active_guide_recommendation_after_failure(
+        "conversation-context-missing",
+      );
+      return;
+    }
 
-    const append_result = await this._send_xvibe_command("append-message", {
-      _app_id: this._conversation_app_id,
-      _env: this._conversation_env,
-      _conversation_id: this._conversation_id,
-      _message: {
-        _role: "user",
-        _text: text,
-      },
-    });
-    this._log("conversation message appended", {
-      _app_id: this._conversation_app_id,
-      _env: this._conversation_env,
-      _conversation_id: this._conversation_id,
-      _role: "user",
-    });
-
-    this._set_conversation_input_value("");
+    let append_succeeded = false;
+    let analyze_succeeded = false;
+    let analyze_result: any = null;
+    let failed_message = "";
+    let failed_debug_intent: Record<string, any> | null = null;
+    let analysis_request: XStudioConversationAnalysisRequest | null = null;
 
     try {
-      await this._analyze_conversation_message(
+      const append_result = await this._send_xvibe_command("append-message", {
+        _app_id: this._conversation_app_id,
+        _env: this._conversation_env,
+        _conversation_id: this._conversation_id,
+        _message: {
+          _role: "user",
+          _text: text,
+        },
+      });
+      append_succeeded = true;
+      this._log("conversation message appended", {
+        _app_id: this._conversation_app_id,
+        _env: this._conversation_env,
+        _conversation_id: this._conversation_id,
+        _role: "user",
+      });
+
+      const message_id = this._conversation_append_message_id(append_result);
+      if (options._analyze === false) {
+        return {
+          _ok: true,
+          _message_id: message_id,
+          _append_result: append_result,
+        };
+      }
+
+      analysis_request = this._begin_conversation_analysis_request(text, message_id);
+      this._log("conversation analyze pending", {
+        _app_id: this._conversation_app_id,
+        _env: this._conversation_env,
+        _conversation_id: this._conversation_id,
+        ...(message_id ? { _message_id: message_id } : {}),
+      });
+      analyze_result = await this._analyze_conversation_message(
         text,
-        this._conversation_append_message_id(append_result),
+        message_id,
       );
+      if (!this._conversation_analysis_request_is_current(analysis_request)) {
+        this._log("conversation analyze result ignored", {
+          _reason: "stale-request",
+          _request_id: analysis_request._request_id,
+          _conversation_id: analysis_request._conversation_id,
+          _message_id: analysis_request._message_id,
+        });
+        return;
+      }
+      this._remember_conversation_analysis_success(analysis_request);
+      this._log("conversation analyze completed", {
+        _app_id: this._conversation_app_id,
+        _env: this._conversation_env,
+        _conversation_id: this._conversation_id,
+      });
+      analyze_succeeded = true;
     } catch (err) {
-      const message = `Analyze message failed: ${to_err(err)}`;
-      this._write_studio_status(message);
-      this._error("analyze-message failed", {
+      if (analysis_request && !this._conversation_analysis_request_is_current(analysis_request)) {
+        this._log("conversation analyze error ignored", {
+          _reason: "stale-request",
+          _request_id: analysis_request?._request_id,
+          _conversation_id: analysis_request?._conversation_id,
+          _message_id: analysis_request?._message_id,
+          _error: to_err(err),
+        });
+        return;
+      }
+      if (this._is_timeout_error(err)) {
+        this._remember_conversation_analysis_timeout(analysis_request);
+      }
+      failed_message = this._conversation_analyze_failed_message(err);
+      failed_debug_intent = this._conversation_analyze_failure_debug_intent(err, analysis_request);
+      this._write_studio_status(failed_message);
+      this._error("conversation analyze failed", {
         _app_id: this._conversation_app_id,
         _env: this._conversation_env,
         _conversation_id: this._conversation_id,
         _error: to_err(err),
       });
     } finally {
-      await this._list_conversations(this._conversation_app_id, this._conversation_env);
-      await this._load_conversation_messages();
+      if (analysis_request && !this._conversation_analysis_request_is_current(analysis_request)) {
+        return;
+      }
+
+      try {
+        if (this._conversation_app_id && this._conversation_env) {
+          try {
+            await this._list_conversations(this._conversation_app_id, this._conversation_env);
+            await this._load_conversation_messages();
+          } catch (load_err) {
+            if (!failed_message) {
+              failed_message = `Load conversation failed: ${to_err(load_err)}`;
+              this._write_studio_status(failed_message);
+              this._error("conversation analyze failed", {
+                _app_id: this._conversation_app_id,
+                _env: this._conversation_env,
+                _conversation_id: this._conversation_id,
+                _error: to_err(load_err),
+              });
+            }
+          }
+        }
+
+        if (failed_message) {
+          this._render_failed_conversation_analysis(text, failed_message, append_succeeded, failed_debug_intent);
+          this._retain_active_guide_recommendation_after_failure(
+            "conversation-analyze-failed",
+            failed_message,
+          );
+        } else if (
+          analyze_succeeded &&
+          !this._active_generation_id &&
+          !this._conversation_analyze_requires_follow_up(analyze_result)
+        ) {
+          await this._complete_active_guide_recommendation("conversation-analyze-completed");
+        }
+      } finally {
+        this._finish_conversation_analysis_request(analysis_request);
+      }
     }
   }
 
@@ -2358,9 +7529,394 @@ export class XStudioModule extends XModule {
   }
 
   private _intent_action_persisted_id(action: Record<string, any>) {
-    const raw = action._id;
+    const raw = action._id ?? action.id ?? action._action_id ?? action.action_id;
     if (raw === undefined || raw === null) return "";
     return String(raw).trim();
+  }
+
+  private _intent_action_optional_boolean(action: Record<string, any>, key: string) {
+    const raw = action[`_${key}`] ?? action[key];
+    return typeof raw === "boolean" ? raw : undefined;
+  }
+
+  private _first_present_value(source: Record<string, any>, keys: string[]) {
+    for (const key of keys) {
+      if (source[key] !== undefined && source[key] !== null && source[key] !== "") {
+        return source[key];
+      }
+    }
+    return undefined;
+  }
+
+  private _first_display_text(source: Record<string, any>, keys: string[]) {
+    const value = this._first_present_value(source, keys);
+    return typeof value === "string" && value.trim()
+      ? value.trim()
+      : value === undefined || value === null
+        ? ""
+        : String(value).trim();
+  }
+
+  private _recommendation_candidates(source: any): any[] {
+    const unwrapped = is_obj(source) && "_result" in source ? source._result : source;
+    if (Array.isArray(unwrapped)) return unwrapped.filter((item) => is_obj(item));
+    if (!is_obj(unwrapped)) return [];
+
+    const candidate_arrays = [
+      unwrapped._recommendations,
+      unwrapped.recommendations,
+      unwrapped._candidates,
+      unwrapped.candidates,
+      unwrapped._options,
+      unwrapped.options,
+      unwrapped._crud_recommendations,
+      unwrapped.crud_recommendations,
+    ];
+    for (const candidate_array of candidate_arrays) {
+      if (Array.isArray(candidate_array)) {
+        return candidate_array.filter((item) => is_obj(item));
+      }
+    }
+
+    const single = unwrapped._recommendation ??
+      unwrapped.recommendation ??
+      unwrapped._next_recommendation ??
+      unwrapped.next_recommendation ??
+      unwrapped._guide_recommendation ??
+      unwrapped.guide_recommendation;
+    if (is_obj(single)) return [single];
+
+    return is_obj(unwrapped) ? [unwrapped] : [];
+  }
+
+  private _recommendation_action_source(recommendation: Record<string, any>) {
+    const direct = recommendation._action ?? recommendation.action;
+    if (is_obj(direct)) return direct;
+    if (
+      recommendation._execution_payload !== undefined ||
+      recommendation.execution_payload !== undefined ||
+      recommendation._command !== undefined ||
+      recommendation.command !== undefined ||
+      recommendation._payload !== undefined ||
+      recommendation.payload !== undefined ||
+      recommendation._action_type !== undefined ||
+      recommendation.action_type !== undefined
+    ) {
+      return recommendation;
+    }
+    return {};
+  }
+
+  private _recommendation_type_text(recommendation: Record<string, any>) {
+    const action = this._recommendation_action_source(recommendation);
+    return [
+      this._first_display_text(recommendation, [
+        "_recommendation_type",
+        "recommendation_type",
+        "_type",
+        "type",
+        "_capability",
+        "capability",
+        "_capability_type",
+        "capability_type",
+        "_artifact_type",
+        "artifact_type",
+      ]),
+      this._first_display_text(action, [
+        "_recommendation_type",
+        "recommendation_type",
+        "_type",
+        "type",
+        "_action_type",
+        "action_type",
+        "_capability",
+        "capability",
+      ]),
+      this._first_display_text(recommendation, ["_title", "title"]),
+      this._first_display_text(action, ["_title", "title", "_label", "label", "_prompt", "prompt"]),
+    ].filter(Boolean).join(" ").toLowerCase();
+  }
+
+  private _is_crud_recommendation(recommendation: any) {
+    if (!is_obj(recommendation)) return false;
+    const type_text = this._recommendation_type_text(recommendation);
+    return /\bcrud\b/.test(type_text) ||
+      /\bcreate-read-update-delete\b/.test(type_text) ||
+      type_text.includes("data screens actions");
+  }
+
+  private _recommendation_entity_name(recommendation: Record<string, any>) {
+    const action = this._recommendation_action_source(recommendation);
+    const direct = this._first_display_text(recommendation, [
+      "_recommendation_entity_name",
+      "recommendation_entity_name",
+      "_entity_name",
+      "entity_name",
+      "_entity",
+      "entity",
+      "_data_name",
+      "data_name",
+      "_record_name",
+      "record_name",
+    ]) || this._first_display_text(action, [
+      "_entity_name",
+      "entity_name",
+      "_entity",
+      "entity",
+      "_data_name",
+      "data_name",
+      "_record_name",
+      "record_name",
+    ]);
+    if (direct) return direct;
+
+    const params = is_obj(action._params ?? action.params) ? action._params ?? action.params : null;
+    if (!is_obj(params)) return "";
+    return this._first_display_text(params, [
+      "_entity_name",
+      "entity_name",
+      "_entity",
+      "entity",
+      "_data_name",
+      "data_name",
+      "_record_name",
+      "record_name",
+    ]);
+  }
+
+  private _recommendation_artifact_label(value: any) {
+    if (typeof value === "string" && value.trim()) return value.trim();
+    if (!is_obj(value)) return "";
+
+    const label = this._first_display_text(value, [
+      "_label",
+      "label",
+      "_title",
+      "title",
+      "_name",
+      "name",
+      "_description",
+      "description",
+      "_id",
+      "id",
+    ]);
+    const kind = this._first_display_text(value, [
+      "_kind",
+      "kind",
+      "_type",
+      "type",
+      "_artifact_type",
+      "artifact_type",
+    ]);
+    if (label && kind && !label.toLowerCase().includes(kind.toLowerCase())) return `${label} ${kind}`;
+    return label || kind;
+  }
+
+  private _recommendation_expected_artifacts(recommendation: Record<string, any>) {
+    const action = this._recommendation_action_source(recommendation);
+    const source = this._first_present_value(recommendation, [
+      "_recommendation_expected_artifacts",
+      "recommendation_expected_artifacts",
+      "_expected_created_artifacts",
+      "expected_created_artifacts",
+      "_expected_artifacts",
+      "expected_artifacts",
+      "_created_artifacts",
+      "created_artifacts",
+      "_creates",
+      "creates",
+      "_artifacts",
+      "artifacts",
+    ]) ?? this._first_present_value(action, [
+      "_expected_created_artifacts",
+      "expected_created_artifacts",
+      "_expected_artifacts",
+      "expected_artifacts",
+      "_created_artifacts",
+      "created_artifacts",
+      "_creates",
+      "creates",
+      "_artifacts",
+      "artifacts",
+    ]) ?? this._first_present_value(
+      is_obj(action._artifact_request) ? action._artifact_request : {},
+      [
+        "_expected_created_artifacts",
+        "expected_created_artifacts",
+        "_expected_artifacts",
+        "expected_artifacts",
+        "_created_artifacts",
+        "created_artifacts",
+        "_creates",
+        "creates",
+        "_artifacts",
+        "artifacts",
+      ],
+    );
+
+    if (Array.isArray(source)) {
+      return source
+        .map((item) => this._recommendation_artifact_label(item))
+        .filter((item) => item.length > 0);
+    }
+
+    if (typeof source === "string" && source.trim()) {
+      return source
+        .split(/\r?\n|,/)
+        .map((item) => item.replace(/^\s*[-*•]\s*/, "").trim())
+        .filter((item) => item.length > 0);
+    }
+
+    return [];
+  }
+
+  private _recommendation_is_marked_recommended(recommendation: Record<string, any>, index: number) {
+    const raw = recommendation._recommended ??
+      recommendation.recommended ??
+      recommendation._is_recommended ??
+      recommendation.is_recommended ??
+      recommendation._primary ??
+      recommendation.primary;
+    if (typeof raw === "boolean") return raw;
+    if (typeof raw === "string") {
+      const normalized = raw.trim().toLowerCase();
+      if (normalized === "true" || normalized === "recommended" || normalized === "primary") return true;
+      if (normalized === "false") return false;
+    }
+    return index === 0;
+  }
+
+  private _recommendation_dependency_text(recommendation: Record<string, any>, index: number) {
+    const dependency = this._first_display_text(recommendation, [
+      "_recommendation_dependency",
+      "recommendation_dependency",
+      "_dependency",
+      "dependency",
+      "_dependency_text",
+      "dependency_text",
+      "_depends_on",
+      "depends_on",
+      "_after",
+      "after",
+      "_blocked_by",
+      "blocked_by",
+    ]);
+    if (dependency) {
+      if (
+        dependency.startsWith("After ") ||
+        dependency.startsWith("After:") ||
+        dependency.startsWith("Order:") ||
+        dependency.startsWith("Option ")
+      ) {
+        return dependency;
+      }
+      return `After: ${dependency}`;
+    }
+
+    const order = this._first_display_text(recommendation, [
+      "_order",
+      "order",
+      "_sequence",
+      "sequence",
+      "_step",
+      "step",
+    ]);
+    if (order) return `Order: ${order}`;
+
+    return `Option ${index + 1}`;
+  }
+
+  private _normalize_crud_recommendation_action(
+    recommendation: Record<string, any>,
+    index: number,
+    total: number,
+    message: XStudioConversationMessage | null = null,
+    message_index = 0,
+  ): Record<string, any> {
+    const raw_action = this._recommendation_action_source(recommendation);
+    const action = { ...raw_action };
+    const title = this._first_display_text(action, [
+      "_button_label",
+      "button_label",
+      "_label",
+      "label",
+      "_title",
+      "title",
+      "_prompt",
+      "prompt",
+    ]) || this._first_display_text(recommendation, ["_title", "title"]) || "Build CRUD foundation";
+    const description = this._first_display_text(recommendation, [
+      "_explanation",
+      "explanation",
+      "_description",
+      "description",
+      "_reason",
+      "reason",
+    ]) || this._first_display_text(action, ["_description", "description", "_reason", "reason"]);
+    const action_type = this._first_display_text(action, [
+      "_action_type",
+      "action_type",
+      "_type",
+      "type",
+    ]) || "crud-recommendation";
+    const action_id = this._intent_action_persisted_id(action);
+    const recommended = this._recommendation_is_marked_recommended(recommendation, index);
+    const badge = recommended
+      ? "Recommended"
+      : total > 1
+        ? `Option ${index + 1}`
+        : "Recommended";
+
+    if (!is_obj(action._execution_payload) && is_obj(recommendation._execution_payload)) {
+      action._execution_payload = recommendation._execution_payload;
+    }
+    if (!is_obj(action.execution_payload) && is_obj(recommendation.execution_payload)) {
+      action.execution_payload = recommendation.execution_payload;
+    }
+    if (!is_obj(action._command) && is_obj(recommendation._command)) {
+      action._command = recommendation._command;
+    }
+    if (!is_obj(action.command) && is_obj(recommendation.command)) {
+      action.command = recommendation.command;
+    }
+    if (!is_obj(action._payload) && is_obj(recommendation._payload)) {
+      action._payload = recommendation._payload;
+    }
+    if (!is_obj(action.payload) && is_obj(recommendation.payload)) {
+      action.payload = recommendation.payload;
+    }
+
+    if (typeof action._executable !== "boolean" && typeof action.executable !== "boolean") {
+      const recommendation_executable = this._intent_action_optional_boolean(recommendation, "executable");
+      action._executable = typeof recommendation_executable === "boolean"
+        ? recommendation_executable
+        : true;
+    }
+
+    return {
+      ...action,
+      _id: message ? action_id : "",
+      _title: title,
+      _description: description,
+      _action_type: action_type,
+      _message_id: typeof message?._id === "string" && message._id.trim()
+        ? message._id.trim()
+        : message
+          ? this._conversation_message_id(message, message_index)
+          : "",
+      _recommendation_kind: "crud",
+      _recommendation_badge: badge,
+      _recommendation_order: total > 1 ? `Option ${index + 1} of ${total}` : "",
+      _recommendation_dependency: this._recommendation_dependency_text(recommendation, index),
+      _recommendation_entity_name: this._recommendation_entity_name(recommendation),
+      _recommendation_expected_artifacts: this._recommendation_expected_artifacts(recommendation),
+      _recommendation_button_label: title,
+      _recommendation_debug: {
+        _recommendation: recommendation,
+        _action: raw_action,
+      },
+      _recommended: recommended,
+    };
   }
 
   private _missing_intent_action_persisted_id_error() {
@@ -2369,6 +7925,9 @@ export class XStudioModule extends XModule {
 
   private _intent_action_natural_title(edit_action: string) {
     switch (edit_action) {
+      case "add-child":
+      case "add-object":
+        return "Add object";
       case "hide-object":
         return "Hide selected object";
       case "show-object":
@@ -2379,20 +7938,673 @@ export class XStudioModule extends XModule {
         return "Duplicate selected object";
       case "move-object":
         return "Move selected object";
+      case "replace-object":
+        return "Replace selected object";
+      case "set-property":
+        return "Update selected object";
+      case "set-interaction":
+        return "Set selected object interaction";
       default:
         return "";
     }
   }
 
+  private _normalize_intent_action_type(value: string) {
+    return value.trim().toLowerCase().replace(/_/g, "-");
+  }
+
+  private _is_fix_project_views_action_type(action_type: string) {
+    return this._normalize_intent_action_type(action_type) === STUDIO_FIX_PROJECT_VIEWS_ACTION_TYPE;
+  }
+
+  private _is_fix_project_views_command(module_name: string, op: string) {
+    return module_name === "xvibe" && this._normalize_intent_action_type(op) === STUDIO_FIX_PROJECT_VIEWS_ACTION_TYPE;
+  }
+
+  private _intent_action_readable_text(value: any) {
+    if (value === undefined || value === null) return "";
+    const text = String(value)
+      .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+      .replace(/[_-]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (!text) return "";
+    return text.charAt(0).toLowerCase() + text.slice(1);
+  }
+
+  private _intent_action_display_text(value: any) {
+    if (value === undefined || value === null) return "";
+    return String(value)
+      .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+      .replace(/[_-]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  private _intent_action_first_display_text(params: Record<string, any>, keys: string[]) {
+    for (const key of keys) {
+      const value = this._intent_action_display_text(params[key]);
+      if (value) return value;
+    }
+    return "";
+  }
+
+  private _intent_action_first_readable_text(params: Record<string, any>, keys: string[]) {
+    for (const key of keys) {
+      const value = this._intent_action_readable_text(params[key]);
+      if (value) return value;
+    }
+    return "";
+  }
+
+  private _intent_action_display_text_from_fields(source: Record<string, any>) {
+    const keys = [
+      "_title",
+      "title",
+      "_label",
+      "label",
+      "_summary",
+      "summary",
+      "_description",
+      "description",
+      "_prompt",
+      "prompt",
+      "_instruction",
+      "instruction",
+      "_user_prompt",
+      "user_prompt",
+    ];
+
+    for (const key of keys) {
+      const value = this._intent_action_readable_text(source[key]);
+      if (value) return value.charAt(0).toUpperCase() + value.slice(1);
+    }
+
+    return "";
+  }
+
+  private _intent_action_object_title(value: any) {
+    if (!is_obj(value)) return this._intent_action_readable_text(value);
+
+    const raw_text = this._intent_action_readable_text(
+      value._text ??
+      value.text ??
+      value._label ??
+      value.label ??
+      value._title ??
+      value.title ??
+      value._name ??
+      value.name ??
+      value._id ??
+      value.id,
+    );
+    const text = raw_text.replace(/^new\s+/i, "").trim().toLowerCase();
+    const type = this._intent_action_readable_text(value._type ?? value.type).toLowerCase();
+
+    if (text && type && !text.toLowerCase().includes(type.toLowerCase())) return `${text} ${type}`;
+    return text || type || "object";
+  }
+
+  private _intent_action_target_title(params: Record<string, any>) {
+    let target_id = this._intent_action_readable_text(params._target_id ?? params.target_id);
+    const target_type = this._intent_action_readable_text(params._target_type ?? params.target_type);
+    const view_id = this._intent_action_readable_text(params._view_id ?? params.view_id);
+
+    if (target_type === "view" && target_id.startsWith("view ")) {
+      target_id = target_id.slice("view ".length).trim();
+    }
+
+    if (target_id && target_type && !target_id.includes(target_type)) return `${target_id} ${target_type}`;
+    if (target_id) return target_id;
+    if (view_id && !view_id.includes("view")) return `${view_id} view`;
+    return view_id || target_type || "current view";
+  }
+
+  private _intent_action_target_display_title(params: Record<string, any>) {
+    const explicit_title = this._intent_action_display_text(
+      params._target_title ??
+      params.target_title ??
+      params._target_label ??
+      params.target_label ??
+      params._object_title ??
+      params.object_title ??
+      params._object_label ??
+      params.object_label,
+    );
+    if (explicit_title) return explicit_title;
+    return this._intent_action_target_title(params);
+  }
+
+  private _intent_action_style_property_title(params: Record<string, any>) {
+    const property = this._intent_action_readable_text(
+      params._style_property ??
+      params.style_property ??
+      params._style_key ??
+      params.style_key ??
+      params._property_name ??
+      params.property_name ??
+      params._property ??
+      params.property,
+    ).replace(/^style\s+/i, "");
+    return property.toLowerCase();
+  }
+
+  private _intent_action_style_value_title(params: Record<string, any>) {
+    const value =
+      params._style_value ??
+      params.style_value ??
+      params._property_value ??
+      params.property_value ??
+      params._value ??
+      params.value;
+    if (value === undefined || value === null) return "";
+    return String(value).trim();
+  }
+
+  private _intent_action_styles_source(params: Record<string, any>) {
+    const source =
+      params._styles ??
+      params.styles ??
+      params._style ??
+      params.style ??
+      params._style_updates ??
+      params.style_updates ??
+      params._updates ??
+      params.updates;
+    return source;
+  }
+
+  private _intent_action_style_entries(params: Record<string, any>) {
+    const source = this._intent_action_styles_source(params);
+    const entries: Array<{ _property: string; _value: string }> = [];
+
+    if (Array.isArray(source)) {
+      for (const item of source) {
+        if (!is_obj(item)) continue;
+        const property = this._intent_action_readable_text(
+          item._property ??
+          item.property ??
+          item._property_name ??
+          item.property_name ??
+          item._style_property ??
+          item.style_property ??
+          item._key ??
+          item.key,
+        ).replace(/^style\s+/i, "").toLowerCase();
+        const value = item._value ?? item.value ?? item._style_value ?? item.style_value;
+        const value_text = value === undefined || value === null ? "" : String(value).trim();
+        if (property && value_text) entries.push({ _property: property, _value: value_text });
+      }
+      return entries;
+    }
+
+    if (is_obj(source)) {
+      for (const [key, value] of Object.entries(source)) {
+        const property = this._intent_action_readable_text(key).replace(/^style\s+/i, "").toLowerCase();
+        const value_text = value === undefined || value === null ? "" : String(value).trim();
+        if (property && value_text) entries.push({ _property: property, _value: value_text });
+      }
+      return entries;
+    }
+
+    const property = this._intent_action_style_property_title(params);
+    const value = this._intent_action_style_value_title(params);
+    if (property && value) entries.push({ _property: property, _value: value });
+    return entries;
+  }
+
+  private _intent_action_set_styles_title(params: Record<string, any>, target_display_title: string) {
+    const entries = this._intent_action_style_entries(params);
+    const style_value = (property: string) =>
+      entries.find((entry) => entry._property === property)?._value ?? "";
+    const font_size = style_value("font size");
+    const font_weight = style_value("font weight");
+
+    if (font_size && font_weight) {
+      return `Set ${target_display_title} to ${font_size} ${font_weight} text`;
+    }
+
+    if (entries.length === 1) {
+      const entry = entries[0];
+      return `Set ${target_display_title} ${entry._property} to ${entry._value}`;
+    }
+
+    return `Update ${target_display_title} styles`;
+  }
+
+  private _intent_action_class_title(params: Record<string, any>) {
+    return this._intent_action_readable_text(
+      params._class_name ??
+      params.class_name ??
+      params._class ??
+      params.class ??
+      params._class_token ??
+      params.class_token ??
+      params._value ??
+      params.value,
+    ).replace(/^\./, "");
+  }
+
+  private _intent_action_move_destination_title(params: Record<string, any>) {
+    return this._intent_action_first_display_text(params, [
+      "_destination_title",
+      "destination_title",
+      "_destination_label",
+      "destination_label",
+      "_target_parent_title",
+      "target_parent_title",
+      "_target_parent_label",
+      "target_parent_label",
+      "_parent_title",
+      "parent_title",
+      "_parent_label",
+      "parent_label",
+      "_container_title",
+      "container_title",
+      "_container_label",
+      "container_label",
+    ]) || this._intent_action_first_readable_text(params, [
+      "_destination_id",
+      "destination_id",
+      "_target_parent_id",
+      "target_parent_id",
+      "_parent_id",
+      "parent_id",
+      "_container_id",
+      "container_id",
+      "_to_parent_id",
+      "to_parent_id",
+    ]);
+  }
+
+  private _intent_action_move_anchor_title(params: Record<string, any>) {
+    return this._intent_action_first_display_text(params, [
+      "_anchor_title",
+      "anchor_title",
+      "_anchor_label",
+      "anchor_label",
+      "_sibling_title",
+      "sibling_title",
+      "_sibling_label",
+      "sibling_label",
+      "_before_title",
+      "before_title",
+      "_before_label",
+      "before_label",
+      "_after_title",
+      "after_title",
+      "_after_label",
+      "after_label",
+    ]) || this._intent_action_first_readable_text(params, [
+      "_anchor_id",
+      "anchor_id",
+      "_sibling_id",
+      "sibling_id",
+      "_before_id",
+      "before_id",
+      "_after_id",
+      "after_id",
+      "_destination_sibling_id",
+      "destination_sibling_id",
+    ]);
+  }
+
+  private _intent_action_move_position(params: Record<string, any>) {
+    return this._intent_action_first_readable_text(params, [
+      "_move_position",
+      "move_position",
+      "_position",
+      "position",
+      "_placement",
+      "placement",
+      "_relation",
+      "relation",
+      "_insert",
+      "insert",
+    ]).toLowerCase();
+  }
+
+  private _intent_action_move_title(params: Record<string, any>, target_display_title: string) {
+    const position = this._intent_action_move_position(params);
+    const destination = this._intent_action_move_destination_title(params);
+    const anchor = this._intent_action_move_anchor_title(params);
+    const direction = this._intent_action_readable_text(params._move_direction ?? params.move_direction);
+
+    if (position === "before" && anchor) return `Move ${target_display_title} before ${anchor}`;
+    if (position === "after" && anchor) return `Move ${target_display_title} after ${anchor}`;
+    if ((position === "into" || position === "inside" || position === "in") && destination) {
+      return `Move ${target_display_title} into ${destination}`;
+    }
+    if ((position === "top" || position === "first" || position === "start") && destination) {
+      return `Move ${target_display_title} to the top of ${destination}`;
+    }
+    if ((position === "bottom" || position === "last" || position === "end") && destination) {
+      return `Move ${target_display_title} to the bottom of ${destination}`;
+    }
+    if (destination) return `Move ${target_display_title} into ${destination}`;
+    if (direction) return `Move ${target_display_title} ${direction}`;
+    return `Move ${target_display_title}`;
+  }
+
+  private _intent_action_apply_view_edit_title(params: Record<string, any>, edit_action: string) {
+    const field_title = this._intent_action_display_text_from_fields(params);
+    if (field_title) return field_title;
+
+    const target_title = this._intent_action_target_title(params);
+    const target_display_title = this._intent_action_target_display_title(params);
+    const object_title = this._intent_action_object_title(
+      params._child ??
+      params.child ??
+      params._object_value ??
+      params.object_value ??
+      params._object ??
+      params.object,
+    );
+
+    switch (edit_action) {
+      case "add-child":
+      case "add-object":
+        return `Add ${object_title} to ${target_title}`;
+      case "replace-object":
+        return `Replace ${target_title} with ${object_title}`;
+      case "set-property": {
+        const property = this._intent_action_property_title(params);
+        if (property === "title" || property === "heading") return `Update ${property}`;
+        return property ? `Update ${property} on ${target_title}` : `Update ${target_title}`;
+      }
+      case "set-style": {
+        const property = this._intent_action_style_property_title(params);
+        const value = this._intent_action_style_value_title(params);
+        if (property && value) return `Set ${target_display_title} ${property} to ${value}`;
+        if (property) return `Set ${property} on ${target_display_title}`;
+        return `Set style on ${target_display_title}`;
+      }
+      case "set-styles":
+        return this._intent_action_set_styles_title(params, target_display_title);
+      case "remove-style": {
+        const property = this._intent_action_style_property_title(params);
+        return property
+          ? `Remove ${property} from ${target_display_title}`
+          : `Remove style from ${target_display_title}`;
+      }
+      case "add-class": {
+        const class_title = this._intent_action_class_title(params);
+        return class_title
+          ? `Add ${class_title} class to ${target_display_title}`
+          : `Add class to ${target_display_title}`;
+      }
+      case "remove-class": {
+        const class_title = this._intent_action_class_title(params);
+        return class_title
+          ? `Remove ${class_title} class from ${target_display_title}`
+          : `Remove class from ${target_display_title}`;
+      }
+      case "replace-text":
+      case "update-text":
+      case "set-text":
+        return `Update ${this._intent_action_property_title(params) || "text"}`;
+      case "set-interaction": {
+        const trigger = this._intent_action_readable_text(params._trigger ?? params.trigger);
+        return trigger ? `Set ${trigger} interaction on ${target_title}` : `Set interaction on ${target_title}`;
+      }
+      case "hide-object":
+        return `Hide ${target_title}`;
+      case "show-object":
+        return `Show ${target_title}`;
+      case "remove-object":
+        return `Delete ${target_title}`;
+      case "duplicate-object":
+        return `Duplicate ${target_title}`;
+      case "move-object": {
+        return this._intent_action_move_title(params, target_display_title);
+      }
+      default:
+        return "";
+    }
+  }
+
+  private _intent_action_property_title(params: Record<string, any>) {
+    const raw_property = this._intent_action_readable_text(
+      params._property_name ??
+      params.property_name ??
+      params._property ??
+      params.property ??
+      params._field ??
+      params.field,
+    );
+    const target_title = this._intent_action_target_title(params).toLowerCase();
+
+    if (
+      raw_property === "text" ||
+      raw_property === "_text" ||
+      raw_property === "label"
+    ) {
+      if (/\btitle\b/.test(target_title)) return "title";
+      if (/\bheading\b/.test(target_title)) return "heading";
+    }
+
+    return raw_property.replace(/^_+/, "");
+  }
+
+  private _normalize_intent_action_execution_payload(payload: any) {
+    if (!is_obj(payload)) return null;
+
+    const module_name = typeof payload._module === "string"
+      ? payload._module.trim()
+      : typeof payload.module === "string"
+        ? payload.module.trim()
+        : "";
+    const op = typeof payload._op === "string"
+      ? payload._op.trim()
+      : typeof payload.op === "string"
+        ? payload.op.trim()
+        : "";
+    if (!module_name || !op) return null;
+
+    const params = payload._params ?? payload.params;
+    return {
+      _module: module_name,
+      _op: op,
+      _params: is_obj(params) ? { ...params } : {},
+    };
+  }
+
+  private _raw_intent_action_execution_payload(action: Record<string, any>) {
+    const payloads = [
+      action._execution_payload,
+      action.execution_payload,
+      action._command,
+      action.command,
+      action._payload,
+      action.payload,
+    ];
+
+    return payloads.find((payload) => is_obj(payload)) ?? null;
+  }
+
+  private _intent_action_execution_payload(action: Record<string, any>) {
+    const raw_payload = this._raw_intent_action_execution_payload(action);
+    const normalized = this._normalize_intent_action_execution_payload(raw_payload);
+    if (normalized) return normalized;
+
+    const action_type = this._intent_action_text(action, "action_type");
+    if (this._is_fix_project_views_action_type(action_type)) {
+      return {
+        _module: "xvibe",
+        _op: STUDIO_FIX_PROJECT_VIEWS_ACTION_TYPE,
+        _params: {},
+      };
+    }
+
+    return null;
+  }
+
+  private _intent_action_execution_payload_error(action: Record<string, any>) {
+    const action_type = this._intent_action_text(action, "action_type");
+    if (this._is_fix_project_views_action_type(action_type)) return "";
+
+    const raw_payload = this._raw_intent_action_execution_payload(action);
+    if (!is_obj(raw_payload)) return "Action is missing execution payload";
+
+    const module_name = typeof raw_payload._module === "string"
+      ? raw_payload._module.trim()
+      : typeof raw_payload.module === "string"
+        ? raw_payload.module.trim()
+        : "";
+    const op = typeof raw_payload._op === "string"
+      ? raw_payload._op.trim()
+      : typeof raw_payload.op === "string"
+        ? raw_payload.op.trim()
+        : "";
+
+    if (!module_name && !op) return "Action execution payload is missing _module and _op";
+    if (!module_name) return "Action execution payload is missing _module";
+    if (!op) return "Action execution payload is missing _op";
+    return "";
+  }
+
+  private _intent_action_execution_params(action: Record<string, any>) {
+    const direct_params = action._params ?? action.params;
+    if (is_obj(direct_params)) return this._normalize_intent_action_execution_params(direct_params);
+
+    const execution_payload = this._intent_action_execution_payload(action);
+    if (is_obj(execution_payload?._params)) {
+      return this._normalize_intent_action_execution_params(execution_payload._params);
+    }
+
+    const payloads = [
+      action._execution_payload,
+      action.execution_payload,
+      action._execution,
+      action.execution,
+      action._payload,
+      action.payload,
+    ];
+
+    for (const payload of payloads) {
+      if (!is_obj(payload)) continue;
+      const payload_params = payload._params ?? payload.params;
+      if (is_obj(payload_params)) return this._normalize_intent_action_execution_params(payload_params);
+      if (
+        typeof payload._edit_action === "string" ||
+        typeof payload.edit_action === "string" ||
+        typeof payload._view_id === "string" ||
+        typeof payload.view_id === "string" ||
+        typeof payload._target_id === "string" ||
+        typeof payload.target_id === "string"
+      ) {
+        return this._normalize_intent_action_execution_params(payload);
+      }
+    }
+
+    return null;
+  }
+
+  private _normalize_intent_action_execution_params(params: Record<string, any>) {
+    const normalized = { ...params };
+    const string_aliases: [string, string][] = [
+      ["edit_action", "_edit_action"],
+      ["view_id", "_view_id"],
+      ["target_id", "_target_id"],
+      ["target_type", "_target_type"],
+      ["move_direction", "_move_direction"],
+      ["before_id", "_before_id"],
+      ["after_id", "_after_id"],
+    ];
+
+    string_aliases.forEach(([source_key, target_key]) => {
+      if (typeof normalized[target_key] === "string" && normalized[target_key].trim()) return;
+      if (typeof normalized[source_key] !== "string") return;
+      const value = normalized[source_key].trim();
+      if (value) normalized[target_key] = value;
+    });
+
+    if (
+      typeof normalized._requires_resolution !== "boolean" &&
+      typeof normalized.requires_resolution === "boolean"
+    ) {
+      normalized._requires_resolution = normalized.requires_resolution;
+    }
+
+    return normalized;
+  }
+
+  private _normalize_conversation_intent_action(raw_action: any): Record<string, any> | null {
+    if (typeof raw_action === "string") {
+      const action_id = raw_action.trim();
+      return action_id ? { _id: action_id } : null;
+    }
+
+    if (!is_obj(raw_action)) return null;
+
+    const action = { ...raw_action };
+    const action_id = this._intent_action_persisted_id(action);
+    if (action_id) action._id = action_id;
+
+    const action_type = this._intent_action_text(action, "action_type");
+    if (action_type) action._action_type = action_type;
+
+    const status = this._intent_action_text(action, "status");
+    if (status) action._status = status;
+
+    const executable = this._intent_action_optional_boolean(action, "executable");
+    if (typeof executable === "boolean") action._executable = executable;
+
+    const raw_execution_payload = this._raw_intent_action_execution_payload(action);
+    const execution_payload = this._intent_action_execution_payload(action);
+    action._has_execution_payload = is_obj(raw_execution_payload);
+    action._execution_payload_error = this._intent_action_execution_payload_error(action);
+    if (is_obj(execution_payload)) action._execution_payload = execution_payload;
+
+    const execution_params = this._intent_action_execution_params(action);
+    if (is_obj(execution_params)) action._params = execution_params;
+
+    return action;
+  }
+
   private _intent_action_display_title(raw_action: Record<string, any>, action_type: string, action_index: number) {
-    const edit_action = is_obj(raw_action._params) && typeof raw_action._params._edit_action === "string"
-      ? raw_action._params._edit_action.trim()
+    const params = this._intent_action_execution_params(raw_action);
+    const edit_action = is_obj(params) && typeof params._edit_action === "string"
+      ? params._edit_action.trim()
       : "";
+    const execution_payload = this._intent_action_execution_payload(raw_action);
+    const is_apply_view_edit = action_type === "apply-view-edit" ||
+      (
+        is_obj(execution_payload) &&
+        execution_payload._module === "xvibe" &&
+        execution_payload._op === "apply-view-edit"
+      );
+    const is_fix_project_views =
+      this._is_fix_project_views_action_type(action_type) ||
+      (
+        is_obj(execution_payload) &&
+        this._is_fix_project_views_command(execution_payload._module, execution_payload._op)
+      );
     const natural_title = this._intent_action_natural_title(edit_action);
     const raw_title = this._intent_action_text(raw_action, "title");
 
-    if (raw_title && raw_title !== action_type && raw_title !== edit_action) return raw_title;
+    if (is_fix_project_views) return "Fix project view IDs";
+    const raw_title_normalized = raw_title.trim().toLowerCase();
+    const raw_title_is_generic =
+      raw_title_normalized === "update text" ||
+      raw_title_normalized === "set style" ||
+      raw_title_normalized === "set styles" ||
+      raw_title_normalized === "remove style" ||
+      raw_title_normalized === "update styles" ||
+      raw_title_normalized === "add class" ||
+      raw_title_normalized === "remove class";
+    if (raw_title && raw_title !== action_type && raw_title !== edit_action && !raw_title_is_generic) return raw_title;
+    if (is_apply_view_edit && is_obj(params)) {
+      const apply_view_edit_title = this._intent_action_apply_view_edit_title(params, edit_action);
+      if (apply_view_edit_title) return apply_view_edit_title;
+    }
     if (natural_title) return natural_title;
+    if (is_obj(params)) {
+      const params_title = this._intent_action_display_text_from_fields(params);
+      if (params_title) return params_title;
+    }
+    const field_title = this._intent_action_display_text_from_fields(raw_action);
+    if (field_title && field_title !== action_type && field_title !== edit_action) return field_title;
     if (action_type && action_type !== "-" && action_type !== "apply-view-edit") return action_type;
     return `Action ${action_index + 1}`;
   }
@@ -2401,27 +8613,81 @@ export class XStudioModule extends XModule {
     if (message._role !== "tool" || !is_obj(message._intent)) return [];
 
     const raw_actions = message._intent._actions ?? message._intent.actions;
-    if (!Array.isArray(raw_actions)) return [];
+    const action_sources: Array<{
+      _raw: any;
+      _source_index: number;
+      _is_recommendation: boolean;
+    }> = Array.isArray(raw_actions)
+      ? raw_actions.map((raw_action, action_index) => ({
+        _raw: raw_action,
+        _source_index: action_index,
+        _is_recommendation: this._is_crud_recommendation(raw_action),
+      }))
+      : [];
+    const artifact_request = is_obj(message._intent._artifact_request ?? message._intent.artifact_request)
+      ? message._intent._artifact_request ?? message._intent.artifact_request
+      : null;
+    const raw_recommendations = [
+      ...this._recommendation_candidates(message._intent),
+      ...this._recommendation_candidates(artifact_request),
+    ]
+      .filter((recommendation) => this._is_crud_recommendation(recommendation));
+    raw_recommendations.forEach((recommendation, recommendation_index) => {
+      action_sources.push({
+        _raw: recommendation,
+        _source_index: recommendation_index,
+        _is_recommendation: true,
+      });
+    });
+    if (action_sources.length === 0) return [];
 
-    return raw_actions
-      .map((raw_action, action_index): XStudioIntentActionView | null => {
-        if (!is_obj(raw_action)) return null;
+    return action_sources
+      .map((source, action_index): XStudioIntentActionView | null => {
+        const normalized_action = source._is_recommendation
+          ? this._normalize_conversation_intent_action(
+            this._normalize_crud_recommendation_action(
+              source._raw,
+              source._source_index,
+              raw_recommendations.length,
+              message,
+              message_index,
+            ),
+          )
+          : this._normalize_conversation_intent_action(source._raw);
+        if (!is_obj(normalized_action)) return null;
 
-        const action_id = this._intent_action_persisted_id(raw_action);
+        const action_id = this._intent_action_persisted_id(normalized_action);
         const message_id = this._conversation_message_id(message, message_index);
         const action_key = this._conversation_action_key(
           message,
           message_index,
-          raw_action,
+          normalized_action,
           action_index,
         );
-        const action_type = this._intent_action_text(raw_action, "action_type", "-");
-        const title = this._intent_action_display_title(raw_action, action_type, action_index);
+        const action_type = this._intent_action_text(normalized_action, "action_type", "-");
+        const action_execution_payload = this._intent_action_execution_payload(normalized_action);
+        const normalized_action_type =
+          this._is_fix_project_views_action_type(action_type) ||
+          (
+            is_obj(action_execution_payload) &&
+            this._is_fix_project_views_command(action_execution_payload._module, action_execution_payload._op)
+          )
+          ? STUDIO_FIX_PROJECT_VIEWS_ACTION_TYPE
+          : action_type;
+        const title = this._intent_action_display_title(normalized_action, normalized_action_type, action_index);
         const source_status = this._intent_action_text(
-          raw_action,
+          normalized_action,
           "status",
           STUDIO_INTENT_ACTION_STATUS_SUGGESTED,
         );
+        const local_status = this._conversation_action_status[action_key] ?? source_status;
+        const source_error =
+          this._intent_action_text(normalized_action, "error") ||
+          this._intent_action_text(normalized_action, "reason");
+        const visible_source_error =
+          normalized_action._executable === false || local_status === STUDIO_INTENT_ACTION_STATUS_FAILED
+            ? source_error
+            : "";
 
         return {
           _key: action_key,
@@ -2430,18 +8696,62 @@ export class XStudioModule extends XModule {
           _message_id: message_id,
           _action_index: action_index,
           _title: title,
-          _description: this._intent_action_text(raw_action, "description"),
-          _action_type: action_type,
-          _confidence: this._intent_action_text(raw_action, "confidence"),
-          _status: this._conversation_action_status[action_key] ?? source_status,
-          ...(typeof raw_action._requires_approval === "boolean"
-            ? { _requires_approval: raw_action._requires_approval }
+          _description: this._intent_action_text(normalized_action, "description"),
+          _action_type: normalized_action_type,
+          _confidence: this._intent_action_text(normalized_action, "confidence"),
+          _status: local_status,
+          ...(typeof normalized_action._executable === "boolean"
+            ? { _executable: normalized_action._executable }
             : {}),
-          _params: is_obj(raw_action._params) ? { ...raw_action._params } : null,
+          _has_execution_payload: normalized_action._has_execution_payload === true,
+          _execution_payload_error:
+            this._intent_action_text(normalized_action, "execution_payload_error"),
+          _execution_payload: is_obj(normalized_action._execution_payload)
+            ? { ...normalized_action._execution_payload }
+            : null,
+          ...(typeof normalized_action._requires_approval === "boolean"
+            ? { _requires_approval: normalized_action._requires_approval }
+            : {}),
+          _params: is_obj(normalized_action._params) ? { ...normalized_action._params } : null,
+          _result:
+            this._conversation_action_result[action_key] ??
+            normalized_action._result ??
+            normalized_action.result,
           _error:
             this._conversation_action_error[action_key] ||
-            this._intent_action_text(raw_action, "error") ||
-            this._intent_action_text(raw_action, "reason"),
+            visible_source_error,
+          ...(typeof normalized_action._recommendation_kind === "string"
+            ? { _recommendation_kind: normalized_action._recommendation_kind }
+            : {}),
+          ...(typeof normalized_action._recommendation_badge === "string"
+            ? { _recommendation_badge: normalized_action._recommendation_badge }
+            : {}),
+          ...(typeof normalized_action._recommendation_order === "string"
+            ? { _recommendation_order: normalized_action._recommendation_order }
+            : {}),
+          ...(typeof normalized_action._recommendation_dependency === "string"
+            ? { _recommendation_dependency: normalized_action._recommendation_dependency }
+            : {}),
+          ...(typeof normalized_action._recommendation_entity_name === "string"
+            ? { _recommendation_entity_name: normalized_action._recommendation_entity_name }
+            : {}),
+          ...(Array.isArray(normalized_action._recommendation_expected_artifacts)
+            ? {
+              _recommendation_expected_artifacts:
+                normalized_action._recommendation_expected_artifacts.filter((item: any) =>
+                  typeof item === "string" && item.trim()
+                ),
+            }
+            : {}),
+          ...(typeof normalized_action._recommendation_button_label === "string"
+            ? { _recommendation_button_label: normalized_action._recommendation_button_label }
+            : {}),
+          ...(normalized_action._recommendation_debug !== undefined
+            ? { _recommendation_debug: normalized_action._recommendation_debug }
+            : {}),
+          ...(typeof normalized_action._recommended === "boolean"
+            ? { _recommended: normalized_action._recommended }
+            : {}),
         };
       })
       .filter((action): action is XStudioIntentActionView => action !== null);
@@ -2479,14 +8789,55 @@ export class XStudioModule extends XModule {
       (direction === "up" || direction === "down");
   }
 
-  private _intent_action_card_execute_state(action: XStudioIntentActionView) {
-    if (action._action_type !== "apply-view-edit") {
-      return {
-        _can_execute: false,
-        _disabled_reason: "unsupported action type",
-      };
+  private _intent_action_missing_required_fields(action: XStudioIntentActionView) {
+    const missing: string[] = [];
+
+    if (action._executable === true) {
+      if (!action._has_execution_payload) {
+        missing.push("_execution_payload");
+      } else if (!is_obj(action._execution_payload)) {
+        if (action._execution_payload_error.includes("_module")) {
+          missing.push("_execution_payload._module");
+        }
+        if (action._execution_payload_error.includes("_op")) {
+          missing.push("_execution_payload._op");
+        }
+      }
+      return missing;
     }
 
+    if (!action._id.trim()) missing.push("_action_id");
+    if (!action._action_type || action._action_type === "-") missing.push("_action_type");
+    if (!is_obj(action._params)) missing.push("_params");
+
+    if (action._action_type === "apply-view-edit") {
+      if (!is_obj(action._params)) {
+        return missing;
+      }
+
+      const edit_action = this._intent_action_edit_action(action);
+      if (!edit_action) {
+        missing.push("_params._edit_action");
+        return missing;
+      }
+
+      if (
+        edit_action === "move-object" &&
+        action._params._requires_resolution === true
+      ) {
+        const direction = typeof action._params._move_direction === "string"
+          ? action._params._move_direction.trim().toLowerCase()
+          : "";
+        if (direction !== "up" && direction !== "down") {
+          missing.push("_params._move_direction");
+        }
+      }
+    }
+
+    return missing;
+  }
+
+  private _intent_action_card_execute_state(action: XStudioIntentActionView) {
     if (
       action._status !== STUDIO_INTENT_ACTION_STATUS_SUGGESTED &&
       action._status !== STUDIO_INTENT_ACTION_STATUS_FAILED
@@ -2497,10 +8848,76 @@ export class XStudioModule extends XModule {
       };
     }
 
+    if (is_obj(action._execution_payload)) {
+      return {
+        _can_execute: true,
+        _disabled_reason: "",
+      };
+    }
+
+    if (action._executable === false) {
+      return {
+        _can_execute: false,
+        _disabled_reason: "action is not executable",
+      };
+    }
+
+    if (action._executable === true) {
+      if (!action._has_execution_payload) {
+        return {
+          _can_execute: false,
+          _disabled_reason: "Action is missing execution payload",
+        };
+      }
+
+      if (action._has_execution_payload && !is_obj(action._execution_payload)) {
+        return {
+          _can_execute: false,
+          _disabled_reason: action._execution_payload_error ||
+            "Action execution payload is invalid",
+        };
+      }
+
+      return {
+        _can_execute: true,
+        _disabled_reason: "",
+      };
+    }
+
+    if (!action._action_type || action._action_type === "-") {
+      return {
+        _can_execute: false,
+        _disabled_reason: is_obj(action._params)
+          ? "missing action type"
+          : "Action is missing execution payload",
+      };
+    }
+
+    if (action._action_type !== "apply-view-edit") {
+      return {
+        _can_execute: false,
+        _disabled_reason: "unsupported action type",
+      };
+    }
+
+    if (!action._id.trim()) {
+      return {
+        _can_execute: false,
+        _disabled_reason: "missing persisted action id",
+      };
+    }
+
     if (!is_obj(action._params)) {
       return {
         _can_execute: false,
-        _disabled_reason: "missing params",
+        _disabled_reason: "Action is missing execution payload",
+      };
+    }
+
+    if (!this._intent_action_edit_action(action)) {
+      return {
+        _can_execute: false,
+        _disabled_reason: "Action is missing execution payload",
       };
     }
 
@@ -2531,13 +8948,39 @@ export class XStudioModule extends XModule {
       if (action) return action;
     }
 
+    const guide_action = this._find_guide_recommendation_action(action_key);
+    if (guide_action) return guide_action;
+
+    return null;
+  }
+
+  private _find_guide_recommendation_action(action_key: string) {
+    if (!action_key) return null;
+
+    const active = this._active_guide_recommendation();
+    const recommendations = active
+      ? [active]
+      : this._normalize_guide_recommendations(_xd.get(GUIDE_RECOMMENDATION_XD_KEY));
+    const crud_recommendations = recommendations
+      .filter((recommendation) => this._is_crud_recommendation(recommendation));
+
+    for (let index = 0; index < crud_recommendations.length; index += 1) {
+      const action = this._guide_crud_recommendation_action_view(
+        crud_recommendations[index],
+        index,
+        crud_recommendations.length,
+        active ? this._active_guide_recommendation_status() : "",
+      );
+      if (action?._key === action_key) return action;
+    }
+
     return null;
   }
 
   private _set_conversation_action_status(
     action_key: string,
     status: XStudioIntentActionLocalStatus,
-    error = "",
+    error: any = "",
   ) {
     if (!action_key) return;
 
@@ -2551,6 +8994,29 @@ export class XStudioModule extends XModule {
       delete this._conversation_action_result[action_key];
     }
 
+    if (this._active_guide_recommendation()) {
+      if (status === STUDIO_INTENT_ACTION_STATUS_FAILED) {
+        _xd.set(GUIDE_ACTIVE_RECOMMENDATION_STATUS_XD_KEY, "failed", {
+          source: "xstudio-guide",
+        });
+        this._render_guide_active_recommendation();
+      } else if (status === STUDIO_INTENT_ACTION_STATUS_RUNNING) {
+        const active = this._active_guide_recommendation();
+        _xd.set(GUIDE_ACTIVE_RECOMMENDATION_STATUS_XD_KEY, this._is_starter_adaptation_recommendation(active)
+          ? "adapting"
+          : "running", {
+          source: "xstudio-guide",
+        });
+        this._render_guide_active_recommendation();
+      } else if (status === STUDIO_INTENT_ACTION_STATUS_DONE) {
+        _xd.set(GUIDE_ACTIVE_RECOMMENDATION_STATUS_XD_KEY, "completed", {
+          source: "xstudio-guide",
+        });
+        this._render_guide_active_recommendation();
+      }
+    }
+
+    this._render_guide_recommendation();
     this._render_conversation_messages();
   }
 
@@ -2577,6 +9043,17 @@ export class XStudioModule extends XModule {
       _action_id: action_id,
       _action_index: action._action_index,
       _status: status,
+      _action: {
+        _id: action_id,
+        _type: action._action_type || "module-op",
+        _action_type: action._action_type || "module-op",
+        _title: action._title,
+        ...(action._description ? { _description: action._description } : {}),
+        ...(is_obj(action._execution_payload)
+          ? { _execution_payload: action._execution_payload }
+          : {}),
+        _requires_approval: action._requires_approval === true,
+      },
     };
 
     if (error) {
@@ -2969,6 +9446,495 @@ export class XStudioModule extends XModule {
     };
   }
 
+  private _format_execution_payload_failure(
+    command: Record<string, any>,
+    result: any,
+  ) {
+    if (command._module === "xvibe" && command._op === "apply-view-edit") {
+      return this._format_apply_view_edit_failure(result, command);
+    }
+
+    if (is_obj(result)) {
+      const message = result._error ?? result.error ?? result._message ?? result.message;
+      if (typeof message === "string" && message.trim()) return message.trim();
+    }
+
+    return "Action execution failed.";
+  }
+
+  private async _refresh_project_memory_after_apply(action: XStudioIntentActionView) {
+    try {
+      await this._refresh_guide_after_success("project-memory-after-apply", {
+        _clear_active_recommendation: true,
+      });
+      this._log("project memory refreshed after apply", {
+        _action_key: action._key,
+        _action_id: action._id,
+        _result_key: PROJECT_MEMORY_XD_KEY,
+      });
+    } catch (err) {
+      this._error("project memory refresh after apply failed", {
+        _action_key: action._key,
+        _action_id: action._id,
+        _error: to_err(err),
+      });
+    }
+  }
+
+  private async _persist_conversation_action_status_if_possible(
+    action: XStudioIntentActionView,
+    status: XStudioIntentActionLocalStatus,
+    error = "",
+    action_result?: any,
+  ) {
+    if (action_result !== undefined) {
+      this._conversation_action_result[action._key] = action_result;
+    }
+
+    this._set_conversation_action_status(action._key, status, error);
+
+    if (action._id.trim()) {
+      return this._persist_conversation_action_status_and_reload(
+        action,
+        status,
+        error,
+        action_result,
+      );
+    }
+
+    this._log("conversation action status persist skipped: missing persisted action id", {
+      _action_key: action._key,
+      _message_id: action._message_id,
+      _action_index: action._action_index,
+      _status: status,
+    });
+    return false;
+  }
+
+  private _merge_fix_project_views_params(params: Record<string, any>) {
+    return {
+      ...params,
+      _app_id:
+        typeof params._app_id === "string" && params._app_id.trim()
+          ? params._app_id.trim()
+          : this._client().getActiveAppId(),
+      _env:
+        typeof params._env === "string" && params._env.trim()
+          ? params._env.trim()
+          : this._client().getActiveEnv(),
+      ...(this._conversation_id ? { _conversation_id: this._conversation_id } : {}),
+    };
+  }
+
+  private _is_fix_project_views_success(result: any) {
+    if (!is_obj(result)) return false;
+    if (result._ok === false || result.ok === false) return false;
+    if (result._error || result.error) return false;
+    return true;
+  }
+
+  private async _refresh_after_fix_project_views(result: any) {
+    const view_id = this._resolve_studio_target_view_id();
+    if (
+      view_id &&
+      typeof this._xvm_client?.request_structured_view_edit_refresh === "function"
+    ) {
+      try {
+        await this._xvm_client.request_structured_view_edit_refresh({
+          _view_id: view_id,
+          _action: STUDIO_FIX_PROJECT_VIEWS_ACTION_TYPE,
+          _version: this._extract_apply_view_edit_version(result),
+        });
+      } catch (err) {
+        this._error("fix project views current view refresh failed", {
+          _view_id: view_id,
+          _error: to_err(err),
+        });
+      }
+    }
+
+    await this._refresh_app_explorer();
+    this._refresh_object_tree_for_current_view();
+    await this._load_studio_current_view_json();
+  }
+
+  private async _refresh_after_conversation_executable_payload(
+    action: XStudioIntentActionView,
+    result: any,
+  ) {
+    const view_id = this._resolve_studio_target_view_id();
+    if (view_id && typeof this._xvm_client?.render_view === "function") {
+      try {
+        await this._xvm_client.render_view(view_id);
+      } catch (err) {
+        this._error("intent action current view refresh failed", {
+          _action_key: action._key,
+          _view_id: view_id,
+          _error: to_err(err),
+        });
+      }
+    }
+
+    this._refresh_object_tree_for_current_view();
+    try {
+      await this._refresh_app_explorer();
+    } catch (err) {
+      this._error("intent action app explorer refresh failed", {
+        _action_key: action._key,
+        _error: to_err(err),
+      });
+    }
+
+    if (view_id) await this._load_studio_current_view_json();
+    this._render_project_memory_guide();
+    this._log("intent action refreshed studio artifacts", {
+      _action_key: action._key,
+      _action_id: action._id,
+      _view_id: view_id,
+      _result: result,
+    });
+  }
+
+  private async _apply_conversation_execution_payload(action: XStudioIntentActionView) {
+    const command = action._execution_payload;
+    if (!is_obj(command)) {
+      const message = action._execution_payload_error || "Action is missing execution payload";
+      this._set_conversation_action_status(
+        action._key,
+        STUDIO_INTENT_ACTION_STATUS_FAILED,
+        message,
+      );
+      await this._persist_conversation_action_status_if_possible(
+        action,
+        STUDIO_INTENT_ACTION_STATUS_FAILED,
+        message,
+      );
+      this._write_studio_status(message);
+      this._error("intent action execution payload failed", {
+        _action_key: action._key,
+        _action_id: action._id,
+        _reason: message,
+      });
+      return;
+    }
+
+    const module_name = typeof command._module === "string" ? command._module.trim() : "";
+    const op = typeof command._op === "string" ? command._op.trim() : "";
+    let params = is_obj(command._params)
+      ? (_xu.clone_json(command._params) as Record<string, any>)
+      : {};
+    if (this._conversation_id && typeof params._conversation_id !== "string") {
+      params._conversation_id = this._conversation_id;
+    }
+    if (action._message_id && typeof params._message_id !== "string") {
+      params._message_id = action._message_id;
+    }
+    if (action._id && typeof params._action_id !== "string") {
+      params._action_id = action._id;
+    }
+    const is_fix_project_views = this._is_fix_project_views_command(module_name, op);
+    if (is_fix_project_views) {
+      params = this._merge_fix_project_views_params(params);
+    }
+    const is_primary_experience_composition =
+      module_name === "xvibe" && op === "compose-primary-experience";
+    const is_materialize_confirmed_plan =
+      module_name === "xvibe" && op === "materialize-confirmed-plan";
+
+    if (!module_name || !op) {
+      const message = !module_name && !op
+        ? "Action execution payload is missing _module and _op"
+        : !module_name
+          ? "Action execution payload is missing _module"
+          : "Action execution payload is missing _op";
+      this._set_conversation_action_status(
+        action._key,
+        STUDIO_INTENT_ACTION_STATUS_FAILED,
+        message,
+      );
+      await this._persist_conversation_action_status_if_possible(
+        action,
+        STUDIO_INTENT_ACTION_STATUS_FAILED,
+        message,
+      );
+      this._write_studio_status(message);
+      this._error("intent action execution payload failed", {
+        _action_key: action._key,
+        _action_id: action._id,
+        _module: module_name,
+        _op: op,
+        _reason: message,
+      });
+      return;
+    }
+
+    const structured_edit = {
+      _view_id: typeof params._view_id === "string" ? params._view_id : "",
+      _action: typeof params._edit_action === "string" ? params._edit_action : "",
+      _target_id: typeof params._target_id === "string" ? params._target_id : "",
+    };
+    const should_track_structured_edit =
+      module_name === "xvibe" &&
+      op === "apply-view-edit" &&
+      STUDIO_INTENT_APPLY_VIEW_EDIT_REFRESH_ACTIONS.has(structured_edit._action);
+
+    if (is_materialize_confirmed_plan) {
+      this._set_guide_materialization_state({
+        ...(this._guide_materialization_state() ?? {}),
+        _status: "running",
+        ...(typeof params._resume_token === "string" && params._resume_token.trim()
+          ? { _resume_token: params._resume_token.trim() }
+          : {}),
+        _conversation_message_id: action._message_id,
+        _conversation_action_id: action._id,
+        _conversation_action_key: action._key,
+        _stages: this._guide_materialization_running_stages(),
+      });
+    }
+
+    this._set_conversation_action_status(action._key, STUDIO_INTENT_ACTION_STATUS_RUNNING);
+    await this._persist_conversation_action_status_if_possible(
+      action,
+      STUDIO_INTENT_ACTION_STATUS_RUNNING,
+    );
+    this._write_studio_status(`Executing ${action._title || op}...`);
+    this._log("intent action execution payload requested", {
+      _action_key: action._key,
+      _action_id: action._id,
+      _module: module_name,
+      _op: op,
+      _has_params: is_obj(command._params),
+    });
+
+    try {
+      if (should_track_structured_edit) {
+        this._xvm_client?.note_structured_view_edit?.(structured_edit);
+      }
+
+      const result = await this._send_command(module_name, op, params);
+      const execution_succeeded =
+        is_obj(result) &&
+        (
+          (
+            result._ok === true &&
+            !is_primary_experience_composition &&
+            !is_materialize_confirmed_plan
+          ) ||
+          (
+            is_fix_project_views &&
+            this._is_fix_project_views_success(result)
+          ) ||
+          (
+            module_name === "server-xvm" &&
+            op === "patch-project-memory" &&
+            XStudioModule._is_project_memory_apply_success(result)
+          ) ||
+          (
+            is_primary_experience_composition &&
+            result._ok !== false &&
+            (
+              result._status === "completed" ||
+              result.status === "completed" ||
+              result._success === true ||
+              result.success === true
+            ) &&
+            !this._guide_primary_experience_zero_planned_changes(result)
+          ) ||
+          (
+            is_materialize_confirmed_plan &&
+            result._ok !== false &&
+            !result._error &&
+            !result.error &&
+            (
+              result._status === "completed" ||
+              result.status === "completed" ||
+              result._complete === true ||
+              result.complete === true ||
+              result._success === true ||
+              result.success === true
+            )
+          )
+        );
+
+      if (!execution_succeeded) {
+        if (should_track_structured_edit) {
+          this._xvm_client?.clear_pending_structured_view_edit?.(structured_edit);
+        }
+
+        const message = this._format_execution_payload_failure(command, result);
+        if (is_materialize_confirmed_plan) {
+          this._set_guide_materialization_state(
+            this._guide_materialization_result_state(
+              result,
+              "failed",
+              params,
+              action,
+              this._guide_materialization_safe_error(result, message),
+            ),
+          );
+        }
+        this._set_conversation_action_status(
+          action._key,
+          STUDIO_INTENT_ACTION_STATUS_FAILED,
+          message,
+        );
+        await this._persist_conversation_action_status_if_possible(
+          action,
+          STUDIO_INTENT_ACTION_STATUS_FAILED,
+          message,
+          result,
+        );
+        this._write_studio_status(message);
+        this._error("intent action execution payload failed", {
+          _action_key: action._key,
+          _action_id: action._id,
+          _module: module_name,
+          _op: op,
+          _structured_error: result,
+        });
+        return;
+      }
+
+      this._log("intent action execution payload succeeded", {
+        _action_key: action._key,
+        _action_id: action._id,
+        _module: module_name,
+        _op: op,
+        _has_project_memory: XStudioModule._is_project_memory_apply_success(result),
+      });
+
+      if (is_materialize_confirmed_plan) {
+        this._set_guide_materialization_state(
+          this._guide_materialization_result_state(result, "completed", params, action),
+        );
+      }
+
+      const new_target_id = params._edit_action === "duplicate-object"
+        ? this._extract_new_target_id(result)
+        : "";
+      if (new_target_id) {
+        this._selected_object_pending_select_id = new_target_id;
+      }
+
+      await this._persist_conversation_action_status_if_possible(
+        action,
+        STUDIO_INTENT_ACTION_STATUS_DONE,
+        "",
+        result,
+      );
+      if (module_name === "xvibe" && op === "apply-view-edit" && typeof params._edit_action === "string") {
+        this._append_conversation_apply_result_message(params._edit_action);
+      }
+      this._write_studio_status(`✓ Applied${action._title ? `: ${action._title}` : ""}`);
+      this._log("intent action execution payload completed", {
+        _action_key: action._key,
+        _action_id: action._id,
+        _module: module_name,
+        _op: op,
+        _result: result,
+      });
+      if (is_primary_experience_composition || is_materialize_confirmed_plan) {
+        try {
+          await this._refresh_studio_runtime();
+          await this._refresh_after_conversation_executable_payload(action, result);
+          await this._refresh_guide_after_success(
+            is_materialize_confirmed_plan
+              ? "materialize-confirmed-plan-success"
+              : "primary-experience-composition-success",
+            {
+            _clear_active_recommendation: false,
+            _log_message: is_materialize_confirmed_plan
+              ? "guide refreshed after materialize confirmed plan"
+              : "guide refreshed after primary experience composition",
+            _detail: {
+              _action_key: action._key,
+              _action_id: action._id,
+            },
+            },
+          );
+        } catch (err) {
+          this._error(is_materialize_confirmed_plan
+            ? "materialize confirmed plan refresh failed"
+            : "primary experience guide refresh failed", {
+            _action_key: action._key,
+            _action_id: action._id,
+            _error: to_err(err),
+          });
+        }
+      } else {
+        await this._refresh_project_memory_after_apply(action);
+      }
+
+      if (module_name === "xvibe" && op === "apply-view-edit") {
+        const refresh_payload = this._intent_action_execute_refresh_payload(params, result);
+        this._log("intent action execute refresh requested", refresh_payload);
+        try {
+          const refresh_result = await this._request_intent_action_execute_refresh(params, result);
+          this._log("intent action execute refresh completed", {
+            ...refresh_payload,
+            _refresh: refresh_result ?? null,
+          });
+        } catch (refresh_err) {
+          this._log("intent action execute refresh completed", {
+            ...refresh_payload,
+            _refresh: {
+              _ok: false,
+              _error: to_err(refresh_err),
+            },
+          });
+          this._error("intent action execute refresh failed", {
+            ...refresh_payload,
+            _error: to_err(refresh_err),
+          });
+        }
+        this._refresh_object_tree_for_current_view();
+        this._clear_conversation_action_selection_if_hidden_or_removed(params);
+      } else if (is_fix_project_views) {
+        await this._refresh_after_fix_project_views(result);
+        this._write_studio_status("Project views fixed");
+      } else if (is_materialize_confirmed_plan || is_primary_experience_composition) {
+        this._write_studio_status(is_materialize_confirmed_plan ? "Build complete" : "Primary experience composed");
+      } else {
+        await this._refresh_after_conversation_executable_payload(action, result);
+      }
+    } catch (err) {
+      if (should_track_structured_edit) {
+        this._xvm_client?.clear_pending_structured_view_edit?.(structured_edit);
+      }
+
+      const message = this._format_execution_payload_failure(command, err);
+      if (is_materialize_confirmed_plan) {
+        this._set_guide_materialization_state(
+          this._guide_materialization_result_state(
+            err,
+            "failed",
+            params,
+            action,
+            this._guide_materialization_safe_error(err, message),
+          ),
+        );
+      }
+      this._set_conversation_action_status(
+        action._key,
+        STUDIO_INTENT_ACTION_STATUS_FAILED,
+        message,
+      );
+      await this._persist_conversation_action_status_if_possible(
+        action,
+        STUDIO_INTENT_ACTION_STATUS_FAILED,
+        message,
+      );
+      this._write_studio_status(message);
+      this._error("intent action execution payload failed", {
+        _action_key: action._key,
+        _action_id: action._id,
+        _module: module_name,
+        _op: op,
+        _error: to_err(err),
+      });
+    }
+  }
+
   private async _apply_conversation_intent_action(payload?: any) {
     const payload_action = this._normalize_intent_action_event_payload(payload);
     if (!payload_action) return;
@@ -2978,6 +9944,10 @@ export class XStudioModule extends XModule {
       ...payload_action,
       ...(action
         ? {
+          _executable: action._executable,
+          _has_execution_payload: action._has_execution_payload,
+          _execution_payload_module: action._execution_payload?._module,
+          _execution_payload_op: action._execution_payload?._op,
           _requires_approval: action._requires_approval,
           _edit_action: action._params?._edit_action,
         }
@@ -2996,6 +9966,35 @@ export class XStudioModule extends XModule {
         ...payload_action,
         _message: message,
       });
+      return;
+    }
+
+    const execute_state = this._intent_action_card_execute_state(action);
+    if (!execute_state._can_execute) {
+      const message = execute_state._disabled_reason || "Action is not executable.";
+      this._set_conversation_action_status(
+        action._key,
+        STUDIO_INTENT_ACTION_STATUS_FAILED,
+        message,
+      );
+      await this._persist_conversation_action_status_if_possible(
+        action,
+        STUDIO_INTENT_ACTION_STATUS_FAILED,
+        message,
+      );
+      this._write_studio_status(message);
+      this._error("intent action execute failed", {
+        _action_key: action._key,
+        _message_id: action._message_id,
+        _action_id: action._id,
+        _action_type: action._action_type,
+        _reason: message,
+      });
+      return;
+    }
+
+    if (is_obj(action._execution_payload)) {
+      await this._apply_conversation_execution_payload(action);
       return;
     }
 
@@ -3127,7 +10126,7 @@ export class XStudioModule extends XModule {
         result,
       );
       this._append_conversation_apply_result_message(params._edit_action);
-      this._write_studio_status("Action applied");
+      this._write_studio_status(`✓ Applied${action._title ? `: ${action._title}` : ""}`);
       this._log("intent action execute completed", {
         _action_key: action._key,
         _action_type: action._action_type,
@@ -3135,6 +10134,7 @@ export class XStudioModule extends XModule {
         ...(new_target_id ? { _new_target_id: new_target_id } : {}),
         _result: result,
       });
+      await this._refresh_project_memory_after_apply(action);
 
       const refresh_payload = this._intent_action_execute_refresh_payload(params, result);
       this._log("intent action execute refresh requested", refresh_payload);
@@ -3164,7 +10164,7 @@ export class XStudioModule extends XModule {
         this._xvm_client?.clear_pending_structured_view_edit?.(structured_edit);
       }
 
-      const message = "Action execution failed.";
+      const message = this._format_apply_view_edit_failure(err, { _params: params });
       this._set_conversation_action_status(
         action._key,
         STUDIO_INTENT_ACTION_STATUS_FAILED,
@@ -3226,17 +10226,576 @@ export class XStudioModule extends XModule {
   }
 
   private _conversation_artifact_request(message: XStudioConversationMessage, index: number) {
-    return create_xstudio_artifact_request_view(message as any, {
+    const request = create_xstudio_artifact_request_view(message as any, {
       _key: this._conversation_artifact_request_key(message, index),
       _message_id: this._conversation_message_id(message, index),
     });
+    if (this._should_suppress_guide_owned_artifact_request(message, request)) {
+      return null;
+    }
+    return request;
+  }
+
+  private _message_has_primary_experience_structured_action(message: XStudioConversationMessage) {
+    const actions = is_obj(message._intent) && Array.isArray(message._intent._actions)
+      ? message._intent._actions
+      : [];
+    return actions.some((action: any) => {
+      if (!is_obj(action)) return false;
+      const command = this._intent_action_execution_payload(action);
+      return action._id === "compose-and-verify-primary-experience" ||
+        action._role === "compose-and-verify-primary-experience" ||
+        (
+          is_obj(command) &&
+          command._module === "xvibe" &&
+          command._op === "compose-primary-experience"
+        );
+    });
+  }
+
+  private _should_suppress_guide_owned_artifact_request(
+    message: XStudioConversationMessage,
+    request: XStudioArtifactRequestView | null,
+  ) {
+    if (!request || request._artifact_type !== MUTATION_PLAN_ARTIFACT_TYPE) return false;
+    if (!this._message_has_primary_experience_structured_action(message)) return false;
+    return this._guide_primary_experience_zero_planned_changes(request._artifact_request);
   }
 
   private _normalize_artifact_request_event_payload(payload?: any) {
     return normalize_xstudio_artifact_request_event_payload(payload);
   }
 
+  private _project_plan_action_prompt(payload?: any) {
+    const evt = this._normalize_event_payload(payload);
+    if (!is_obj(evt)) return "";
+
+    const action = String(evt._action ?? evt.action ?? "").trim();
+    const prompt = String(evt._prompt ?? evt.prompt ?? "");
+    if (!prompt.trim()) return "";
+
+    if (
+      action !== "confirm" &&
+      action !== "edit" &&
+      action !== "ask-questions" &&
+      action !== "suggestion" &&
+      action !== "answer"
+    ) {
+      return "";
+    }
+
+    return prompt;
+  }
+
+  private _project_plan_action_value(payload?: any) {
+    const evt = this._normalize_event_payload(payload);
+    if (!is_obj(evt)) return null;
+
+    const action = String(evt._action ?? evt.action ?? "").trim();
+    const prompt = String(evt._prompt ?? evt.prompt ?? "");
+    if (!action || !prompt.trim()) return null;
+
+    return {
+      _action: action,
+      _prompt: prompt,
+    };
+  }
+
+  private async _handle_planning_quick_start(payload?: any) {
+    const evt = this._normalize_event_payload(payload);
+    if (!is_obj(evt)) return;
+
+    const prompt = typeof evt._prompt === "string" ? evt._prompt : "";
+    if (!prompt.trim()) {
+      this._log("planning quick start ignored: missing prompt", {
+        _payload: evt,
+      });
+      return;
+    }
+
+    const should_send = evt._send === true;
+    if (!should_send) {
+      this._set_conversation_input_value(prompt);
+      this._log("planning quick start prompt inserted", {
+        _prompt: prompt,
+      });
+      return;
+    }
+
+    if (this._conversation_analyzing) {
+      this._log("planning quick start ignored: conversation analyzing", {
+        _prompt: prompt,
+      });
+      return;
+    }
+
+    this._set_conversation_input_value(prompt);
+    this._log("planning quick start send requested", {
+      _prompt: prompt,
+    });
+    await this._send_conversation_message(prompt);
+  }
+
+  private async _send_capability_guidance_request() {
+    if (this._conversation_analyzing) {
+      this._log("capability guidance ignored: conversation analyzing");
+      return;
+    }
+
+    this._set_conversation_input_value(STUDIO_CAPABILITY_GUIDANCE_PROMPT);
+    this._log("capability guidance send requested", {
+      _prompt: STUDIO_CAPABILITY_GUIDANCE_PROMPT,
+    });
+    await this._send_conversation_message(STUDIO_CAPABILITY_GUIDANCE_PROMPT);
+  }
+
+  private _insert_capability_example_prompt(payload?: any) {
+    const evt = this._normalize_event_payload(payload);
+    const prompt = is_obj(evt) && typeof evt._prompt === "string"
+      ? evt._prompt
+      : "";
+    if (!prompt.trim()) {
+      this._log("capability example ignored: missing prompt", {
+        _payload: evt,
+      });
+      return;
+    }
+
+    this._set_conversation_input_value(prompt);
+    this._log("capability example prompt inserted", {
+      _prompt: prompt,
+    });
+  }
+
+  private _insert_project_plan_action_prompt(payload?: any) {
+    const action = this._project_plan_action_value(payload);
+    const prompt = this._project_plan_action_prompt(payload);
+    if (!prompt || !action) {
+      this._log("project plan action ignored: missing prompt", {
+        _payload: this._normalize_event_payload(payload),
+      });
+      return;
+    }
+
+    this._set_conversation_input_value(prompt);
+    if (action._action === "answer") {
+      this._log("project plan answer send requested", {
+        _prompt: prompt,
+      });
+      void this._send_conversation_message(prompt);
+      return;
+    }
+
+    this._log("project plan action prompt inserted", {
+      _prompt: prompt,
+    });
+  }
+
+  private _planning_question_event(payload?: any) {
+    const evt = this._normalize_event_payload(payload);
+    if (!is_obj(evt)) return null;
+
+    const question_key = typeof evt._question_key === "string" ? evt._question_key.trim() : "";
+    if (!question_key) return null;
+
+    return {
+      _question_key: question_key,
+      _chip_id: typeof evt._chip_id === "string" ? evt._chip_id.trim() : "",
+      _value: typeof evt._value === "string" ? evt._value.trim() : "",
+    };
+  }
+
+  private _toggle_planning_question_answer(payload?: any) {
+    const evt = this._planning_question_event(payload);
+    if (!evt || !evt._value) {
+      this._log("planning question toggle ignored", {
+        _payload: this._normalize_event_payload(payload),
+      });
+      return;
+    }
+
+    const selected = this._planning_question_multi_answers[evt._question_key] ?? [];
+    const is_selected = selected.includes(evt._value);
+    const next = is_selected
+      ? selected.filter((value) => value !== evt._value)
+      : [...selected, evt._value];
+    this._planning_question_multi_answers[evt._question_key] = next;
+
+    if (evt._chip_id) {
+      this._set_object_class_token(
+        evt._chip_id,
+        "is-selected",
+        !is_selected,
+      );
+      this._set_object_class_token(
+        evt._chip_id,
+        "xstudio-project-plan-suggestion-selected",
+        !is_selected,
+      );
+      this._set_object_attribute(evt._chip_id, "aria-pressed", String(!is_selected));
+    }
+
+    this._log("planning question answer toggled", {
+      _question_key: evt._question_key,
+      _value: evt._value,
+      _selected: next,
+    });
+  }
+
+  private async _send_planning_question_answer(payload?: any) {
+    const evt = this._planning_question_event(payload);
+    if (!evt) return;
+
+    if (this._conversation_analyzing) {
+      this._log("planning question send ignored: conversation analyzing", {
+        _question_key: evt._question_key,
+      });
+      return;
+    }
+
+    const selected = this._planning_question_multi_answers[evt._question_key] ?? [];
+    const answer = selected
+      .map((value) => value.trim())
+      .filter(Boolean)
+      .join(", ");
+    if (!answer) {
+      this._log("planning question send ignored: no selected answers", {
+        _question_key: evt._question_key,
+      });
+      return;
+    }
+
+    delete this._planning_question_multi_answers[evt._question_key];
+    this._set_conversation_input_value(answer);
+    this._render_conversation_messages();
+    this._log("planning question answer send requested", {
+      _question_key: evt._question_key,
+      _answer: answer,
+    });
+    await this._send_conversation_message(answer);
+  }
+
+  private _project_plan_missing_questions(result: any) {
+    const parsed_result = result instanceof Error
+      ? this._parse_error_object_string(result.message)
+      : typeof result === "string"
+        ? this._parse_error_object_string(result)
+        : null;
+    const source = parsed_result ?? result;
+    const result_obj = is_obj(source?._result) ? source._result : source;
+    const raw_questions = is_obj(result_obj)
+      ? result_obj._missing_questions ??
+        result_obj.missing_questions ??
+        result_obj._questions ??
+        result_obj.questions
+      : null;
+    if (!Array.isArray(raw_questions)) return [];
+
+    return raw_questions
+      .map((question: any) => {
+        if (typeof question === "string") return question.trim();
+        if (!is_obj(question)) return "";
+        return String(
+          question._title ??
+          question.title ??
+          question._text ??
+          question.text ??
+          question._question ??
+          question.question ??
+          question._prompt ??
+          question.prompt ??
+          "",
+        ).trim();
+      })
+      .filter(Boolean);
+  }
+
+  private _format_project_plan_confirmation_failure(result: any) {
+    const missing_questions = this._project_plan_missing_questions(result);
+    if (missing_questions.length > 0) {
+      return `Missing planning questions: ${missing_questions.join("; ")}`;
+    }
+
+    const detail = this._server_failure_detail(result);
+    const source = is_obj(result?._error?._details)
+      ? result._error._details
+      : is_obj(result?._result?._error?._details)
+        ? result._result._error._details
+        : is_obj(result?._details)
+          ? result._details
+          : null;
+    const blockers = Array.isArray(source?._blockers)
+      ? source._blockers
+      : [];
+    const blocker_messages = blockers
+      .map((blocker: any) => {
+        if (typeof blocker === "string") return blocker.trim();
+        if (!is_obj(blocker)) return "";
+        return String(blocker._message ?? blocker.message ?? blocker._id ?? blocker.id ?? "").trim();
+      })
+      .filter(Boolean);
+    if (detail._code === "E_PLANNING_INCOMPLETE" && blocker_messages.length > 0) {
+      return `Plan is not ready: ${blocker_messages.join("; ")}`;
+    }
+
+    return this._format_server_failure(result, "Project plan confirmation failed.");
+  }
+
+  private _parse_error_object_string(value: string) {
+    const trimmed = value.trim();
+    if (!trimmed || (!trimmed.startsWith("{") && !trimmed.startsWith("["))) return null;
+
+    try {
+      const parsed = JSON.parse(trimmed);
+      return is_obj(parsed) ? parsed : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private _server_failure_detail(value: any): { _code: string; _message: string } {
+    if (value instanceof Error) {
+      const parsed = this._parse_error_object_string(value.message);
+      if (parsed) return this._server_failure_detail(parsed);
+      return { _code: "", _message: value.message || String(value) };
+    }
+
+    if (typeof value === "string") {
+      const parsed = this._parse_error_object_string(value);
+      if (parsed) return this._server_failure_detail(parsed);
+      return { _code: "", _message: value.trim() };
+    }
+
+    if (!is_obj(value)) return { _code: "", _message: "" };
+
+    const code = typeof value._code === "string" && value._code.trim()
+      ? value._code.trim()
+      : typeof value.code === "string" && value.code.trim()
+        ? value.code.trim()
+        : typeof value._error_code === "string" && value._error_code.trim()
+          ? value._error_code.trim()
+          : typeof value.error_code === "string" && value.error_code.trim()
+            ? value.error_code.trim()
+            : "";
+    const message = typeof value._message === "string" && value._message.trim()
+      ? value._message.trim()
+      : typeof value.message === "string" && value.message.trim()
+        ? value.message.trim()
+        : typeof value._reason === "string" && value._reason.trim()
+          ? value._reason.trim()
+          : typeof value.reason === "string" && value.reason.trim()
+            ? value.reason.trim()
+            : "";
+
+    if (code || message) return { _code: code, _message: message };
+
+    const nested_candidates = [
+      value._error,
+      value.error,
+      value._result,
+      value.result,
+      value._payload,
+      value.payload,
+    ].filter((candidate) => candidate !== value);
+    for (const candidate of nested_candidates) {
+      const detail = this._server_failure_detail(candidate);
+      if (detail._message || detail._code) return detail;
+    }
+
+    return { _code: code, _message: message };
+  }
+
+  private _format_server_failure(result: any, fallback: string) {
+    const detail = this._server_failure_detail(result);
+    if (detail._code && detail._message) return `${detail._code}: ${detail._message}`;
+    if (detail._message) return detail._message;
+    if (detail._code) return detail._code;
+    const artifact_message = this._format_artifact_request_failure(result);
+    return artifact_message && artifact_message !== "Artifact request failed."
+      ? artifact_message
+      : fallback;
+  }
+
+  private _is_confirm_project_plan_not_ok(result: any) {
+    if (result === undefined || result === null) return false;
+    if (!is_obj(result)) return false;
+    if (result._ok === false || result.ok === false) return true;
+    if (result._status === "failed" || result.status === "failed") return true;
+    if (result._success === false || result.success === false) return true;
+    if (result._error || result.error) return true;
+    return false;
+  }
+
+  private _project_plan_payload_from_artifact(artifact_request: Record<string, any> | null) {
+    if (!is_obj(artifact_request)) return null;
+
+    const candidates = [
+      this._artifact_request_field(artifact_request, "project_plan"),
+      this._artifact_request_field(artifact_request, "plan"),
+      this._artifact_request_field(artifact_request, "updated_plan"),
+      this._artifact_request_field(artifact_request, "plan_summary"),
+      this._artifact_request_field(artifact_request, "payload"),
+    ];
+
+    return candidates.find((candidate): candidate is Record<string, any> => is_obj(candidate)) ??
+      artifact_request;
+  }
+
+  private async _confirm_project_plan(payload?: any) {
+    const request = this._normalize_artifact_request_event_payload(payload);
+    if (!request) return;
+
+    if (request._artifact_type !== PROJECT_PLAN_ARTIFACT_TYPE) {
+      this._log("project plan confirm ignored: wrong artifact type", {
+        _artifact_type: request._artifact_type,
+        _message_id: request._message_id,
+      });
+      return;
+    }
+
+    if (this._conversation_action_status[request._request_key] === STUDIO_INTENT_ACTION_STATUS_RUNNING) {
+      return;
+    }
+
+    if (!this._conversation_app_id || !this._conversation_env || !this._conversation_id) {
+      const message = "No active conversation selected.";
+      this._set_conversation_action_status(
+        request._request_key,
+        STUDIO_INTENT_ACTION_STATUS_FAILED,
+        message,
+      );
+      this._write_studio_status(message);
+      this._error("project plan confirm failed", {
+        _message_id: request._message_id,
+        _error: message,
+      });
+      return;
+    }
+
+    this._set_conversation_action_status(
+      request._request_key,
+      STUDIO_INTENT_ACTION_STATUS_RUNNING,
+    );
+    this._write_studio_status("Confirming project plan...");
+    this._log("project plan confirm requested", {
+      _message_id: request._message_id,
+      _app_id: this._conversation_app_id,
+      _env: this._conversation_env,
+      _conversation_id: this._conversation_id,
+    });
+    this._render_conversation_messages();
+
+    const project_plan = this._project_plan_payload_from_artifact(request._artifact_request);
+    const params: Record<string, any> = {
+      _app_id: this._conversation_app_id,
+      _env: this._conversation_env,
+      _conversation_id: this._conversation_id,
+      ...(request._message_id ? { _message_id: request._message_id } : {}),
+      ...(project_plan ? { _project_plan: project_plan } : {}),
+      ...(request._artifact_request ? { _artifact_request: request._artifact_request } : {}),
+    };
+
+    try {
+      this._log("project plan confirm command", {
+        _module: "xvibe",
+        _op: "confirm-project-plan",
+        _params: params,
+      });
+      const result = await this._send_xvibe_command("confirm-project-plan", params);
+      if (this._is_confirm_project_plan_not_ok(result)) {
+        const message = this._format_project_plan_confirmation_failure(result);
+        this._set_conversation_action_status(
+          request._request_key,
+          STUDIO_INTENT_ACTION_STATUS_FAILED,
+          message,
+        );
+        this._write_studio_status(message);
+        this._error("project plan confirm failed", {
+          _message_id: request._message_id,
+          _result: result,
+          _error: message,
+        });
+        await this._persist_conversation_artifact_status_and_reload(
+          request,
+          STUDIO_INTENT_ACTION_STATUS_FAILED,
+          message,
+          result,
+        );
+        return;
+      }
+
+      this._conversation_action_result[request._request_key] = "Plan confirmed.";
+      this._set_conversation_action_status(
+        request._request_key,
+        STUDIO_INTENT_ACTION_STATUS_DONE,
+      );
+      this._planning_question_multi_answers = {};
+      this._conversation_transient_messages = [];
+      this._write_studio_status("✓ Plan confirmed. Guide is ready.");
+      this._log("project plan confirmed", {
+        _message_id: request._message_id,
+        _app_id: this._conversation_app_id,
+        _env: this._conversation_env,
+        _result: result,
+      });
+      try {
+        await this._persist_conversation_artifact_status_and_reload(
+          request,
+          STUDIO_INTENT_ACTION_STATUS_DONE,
+          "",
+          "Plan confirmed.",
+        );
+        await this._refresh_guide_after_success("project-plan-confirmed", {
+          _clear_active_recommendation: true,
+          _log_message: "guide refreshed after project plan confirmation",
+          _detail: {
+            _message_id: request._message_id,
+            _artifact_type: request._artifact_type,
+            _operation: request._operation,
+          },
+        });
+        this._open_guide_portlet("project-plan-confirmed");
+      } catch (refresh_err) {
+        this._error("project plan confirm post-success refresh failed", {
+          _message_id: request._message_id,
+          _artifact_type: request._artifact_type,
+          _operation: request._operation,
+          _error: to_err(refresh_err),
+        });
+        this._open_guide_portlet("project-plan-confirmed-refresh-failed");
+      }
+      this._render_conversation_messages();
+    } catch (err) {
+      const message = this._format_server_failure(err, "Project plan confirmation failed.");
+      this._set_conversation_action_status(
+        request._request_key,
+        STUDIO_INTENT_ACTION_STATUS_FAILED,
+        message,
+      );
+      this._write_studio_status(message);
+      this._error("project plan confirm failed", {
+        _message_id: request._message_id,
+        _error: message,
+        _raw_error: to_err(err),
+      });
+      await this._persist_conversation_artifact_status_and_reload(
+        request,
+        STUDIO_INTENT_ACTION_STATUS_FAILED,
+        message,
+      );
+    }
+  }
+
   private _format_artifact_request_failure(result: any) {
+    const structured = this._artifact_request_error_payload(result);
+    if (structured) {
+      const code = typeof structured._code === "string" ? structured._code.trim() : "";
+      const message = typeof structured._message === "string" ? structured._message.trim() : "";
+      if (code && message) return `${code}: ${message}`;
+      if (message) return message;
+      if (code) return code;
+    }
+
     const error =
       typeof result?._error === "string" && result._error.trim()
         ? result._error.trim()
@@ -3253,8 +10812,86 @@ export class XStudioModule extends XModule {
     return error || "Artifact request failed.";
   }
 
+  private _artifact_request_error_payload(result: any): Record<string, any> | null {
+    if (is_obj(result?._error)) return result._error;
+    if (is_obj(result?.error)) return result.error;
+    if (is_obj(result?._result?._error)) return result._result._error;
+    if (is_obj(result?.result?.error)) return result.result.error;
+    if (is_obj(result)) {
+      const parsed = typeof result.message === "string"
+        ? this._parse_error_object_string(result.message)
+        : null;
+      if (is_obj(parsed?._error)) return parsed._error;
+      if (typeof parsed?._code === "string") return parsed;
+    }
+    if (result instanceof Error) {
+      const parsed = this._parse_error_object_string(result.message);
+      if (is_obj(parsed?._error)) return parsed._error;
+      if (typeof parsed?._code === "string") return parsed;
+    }
+    return null;
+  }
+
   private _artifact_request_field(source: Record<string, any>, key: string) {
     return source[`_${key}`] ?? source[key];
+  }
+
+  private _artifact_request_pick_fields(
+    source: Record<string, any>,
+    fields: string[],
+  ) {
+    const out: Record<string, any> = {};
+    for (const field of fields) {
+      const value = source[field];
+      if (value !== undefined) out[field] = value;
+    }
+    return out;
+  }
+
+  private _normalized_artifact_apply_request(request: {
+    _artifact_type: string;
+    _artifact_request: Record<string, any> | null;
+  }) {
+    if (!is_obj(request._artifact_request)) return null;
+    const source = request._artifact_request;
+    const common_fields = ["_operation"];
+    if (request._artifact_type === "entity") {
+      return this._artifact_request_pick_fields(source, [
+        ...common_fields,
+        "_entity_name",
+        "_entity_title",
+        "_fields",
+      ]);
+    }
+    if (request._artifact_type === "flow") {
+      return this._artifact_request_pick_fields(source, [
+        ...common_fields,
+        "_action",
+        "_flow_id",
+        "_entity_name",
+        "_fields",
+        "_xdata_key",
+        "_xdata_value",
+      ]);
+    }
+    if (request._artifact_type === "form" || request._artifact_type === "table") {
+      return this._artifact_request_pick_fields(source, [
+        ...common_fields,
+        "_view_id",
+        "_entity_name",
+        "_fields",
+      ]);
+    }
+    if (request._artifact_type === "crud-evolution") {
+      return this._artifact_request_pick_fields(source, [
+        ...common_fields,
+        "_entity_name",
+        "_field_name",
+        "_old_field",
+        "_new_field",
+      ]);
+    }
+    return { ...source };
   }
 
   private _prepare_execution_graph_params(request: {
@@ -3303,6 +10940,14 @@ export class XStudioModule extends XModule {
       _graph_type: graph_type,
       _entity_name: entity_name,
     };
+    const fields = this._artifact_request_field(
+      request._artifact_request,
+      "fields",
+    );
+    if (Array.isArray(fields)) {
+      params._fields = fields;
+    }
+
     const execution_graph = this._artifact_request_field(
       request._artifact_request,
       "execution_graph",
@@ -3441,6 +11086,16 @@ export class XStudioModule extends XModule {
           _error: to_err(refresh_err),
         });
       }
+      await this._refresh_guide_after_success("execution-graph-success", {
+        _clear_active_recommendation: true,
+        _log_message: "guide refreshed after execution graph success",
+        _detail: {
+          _message_id: request._message_id,
+          _artifact_type: request._artifact_type,
+          _operation: request._operation,
+          _artifact_name: request._artifact_name,
+        },
+      });
     } catch (err) {
       const message = to_err(err) || "Execution graph failed.";
       this._set_conversation_action_status(
@@ -3464,6 +11119,28 @@ export class XStudioModule extends XModule {
     }
   }
 
+  private _crud_field_suggestion_execution_graph_request(
+    request: {
+      _request_key: string;
+      _message_id: string;
+      _artifact_type: string;
+      _operation: string;
+      _artifact_name: string;
+      _artifact_request: Record<string, any> | null;
+    },
+  ) {
+    if (!is_obj(request._artifact_request)) return request;
+
+    return {
+      ...request,
+      _artifact_request: {
+        ...request._artifact_request,
+        _operation: "plan",
+        _graph_type: "crud",
+      },
+    };
+  }
+
   private async _persist_conversation_artifact_status_and_reload(
     request: {
       _request_key: string;
@@ -3474,7 +11151,7 @@ export class XStudioModule extends XModule {
       _artifact_request: Record<string, any> | null;
     },
     status: XStudioIntentActionLocalStatus,
-    error = "",
+    error: any = "",
     artifact_result?: any,
   ) {
     if (!this._conversation_app_id || !this._conversation_env || !this._conversation_id) {
@@ -3544,6 +11221,474 @@ export class XStudioModule extends XModule {
     }
   }
 
+  private _mutation_plan_field(source: Record<string, any>, key: string) {
+    return source[`_${key}`] ?? source[key];
+  }
+
+  private _mutation_plan_step_array(value: any) {
+    return Array.isArray(value) ? value : [];
+  }
+
+  private _mutation_plan_status_key(value: any) {
+    return String(value ?? "")
+      .trim()
+      .toLowerCase()
+      .replace(/_/g, "-")
+      .replace(/\s+/g, "-");
+  }
+
+  private _mutation_plan_step_primitive(step: Record<string, any>) {
+    const primitive = step._primitive ?? step.primitive;
+    return is_obj(primitive) ? primitive : null;
+  }
+
+  private _mutation_plan_step_has_executable_primitive(step: Record<string, any>) {
+    const primitive = this._mutation_plan_step_primitive(step);
+    if (!primitive) return false;
+
+    const module_name = String(primitive._module ?? primitive.module ?? "").trim();
+    const op = String(primitive._op ?? primitive.op ?? "").trim();
+    return module_name === "xvibe" && (
+      op === "apply-view-edit" ||
+      op === "apply-generated-operation"
+    );
+  }
+
+  private _mutation_plan_step_blocks_apply(step: Record<string, any>) {
+    const status = this._mutation_plan_status_key(step._status ?? step.status);
+    const resolution_state = this._mutation_plan_status_key(
+      step._resolution_state ??
+      step.resolution_state ??
+      step._resolution_status ??
+      step.resolution_status ??
+      step._generation_state ??
+      step.generation_state ??
+      step._fallback_state ??
+      step.fallback_state,
+    );
+
+    if (
+      resolution_state === "generation-required" ||
+      resolution_state === "validation-failed" ||
+      resolution_state === "genuinely-unsupported" ||
+      resolution_state === "unsupported-after-generation-failure"
+    ) {
+      return true;
+    }
+
+    if (status === "unsupported") return true;
+    return !this._mutation_plan_step_has_executable_primitive(step);
+  }
+
+  private _mutation_plan_has_unsupported_steps(plan: Record<string, any>) {
+    const unsupported_value = this._mutation_plan_field(plan, "unsupported_steps") ??
+      this._mutation_plan_field(plan, "unsupported_step_count");
+    if (Array.isArray(unsupported_value) && unsupported_value.length > 0) return true;
+    if (typeof unsupported_value === "number" && Number.isFinite(unsupported_value) && unsupported_value > 0) {
+      return true;
+    }
+    if (typeof unsupported_value === "string" && unsupported_value.trim()) {
+      const parsed = Number(unsupported_value.trim());
+      if (Number.isFinite(parsed) && parsed > 0) return true;
+    }
+
+    const steps = this._mutation_plan_step_array(this._mutation_plan_field(plan, "steps"));
+    return steps.some((step) => is_obj(step) && this._mutation_plan_step_blocks_apply(step));
+  }
+
+  private _mutation_plan_can_apply(plan: Record<string, any>) {
+    const steps = this._mutation_plan_step_array(this._mutation_plan_field(plan, "steps"));
+    return this._mutation_plan_field(plan, "can_apply") === true &&
+      steps.length > 0 &&
+      !this._mutation_plan_has_unsupported_steps(plan);
+  }
+
+  private _mutation_plan_execution_state_key(message_id: string) {
+    const parts = [
+      this._conversation_id || "no-conversation",
+      message_id || "no-message",
+    ].map((part) => this._conversation_action_key_part(part));
+
+    return parts.join(":");
+  }
+
+  private _mutation_plan_execution_state_key_for_request(request: {
+    _message_id: string;
+  }) {
+    return this._mutation_plan_execution_state_key(request._message_id);
+  }
+
+  private _mutation_plan_result_source(result: any) {
+    if (!is_obj(result)) return null;
+    const nested_result = result._result ?? result.result;
+    return is_obj(nested_result) ? nested_result : result;
+  }
+
+  private _mutation_plan_result_view_id(result: any) {
+    const source = this._mutation_plan_result_source(result);
+    if (!source) return "";
+
+    const refresh = is_obj(source._refresh ?? source.refresh)
+      ? source._refresh ?? source.refresh
+      : null;
+    const app = is_obj(source._app ?? source.app)
+      ? source._app ?? source.app
+      : null;
+    const app_meta = is_obj(app?._meta ?? app?.meta)
+      ? app?._meta ?? app?.meta
+      : null;
+    const app_config = is_obj(app?._config ?? app?.config)
+      ? app?._config ?? app?.config
+      : null;
+    const app_start = is_obj(app_config?._start ?? app_config?.start)
+      ? app_config?._start ?? app_config?.start
+      : null;
+
+    const candidates = [
+      refresh?._default_view_id,
+      refresh?.default_view_id,
+      refresh?._active_view_id,
+      refresh?.active_view_id,
+      refresh?._view_id,
+      refresh?.view_id,
+      source._default_view_id,
+      source.default_view_id,
+      source._active_view_id,
+      source.active_view_id,
+      source._view_id,
+      source.view_id,
+      app_meta?._entry_view_id,
+      app_meta?.entry_view_id,
+      app_start?._view_id,
+      app_start?.view_id,
+    ];
+
+    for (const candidate of candidates) {
+      if (typeof candidate === "string" && candidate.trim()) return candidate.trim();
+    }
+
+    return "";
+  }
+
+  private _mutation_plan_result_steps(result: any, plan: Record<string, any> | null, status: string) {
+    const source = this._mutation_plan_result_source(result);
+    const returned_steps =
+      source?._steps ??
+      source?.steps ??
+      source?._step_results ??
+      source?.step_results ??
+      source?._results ??
+      source?.results;
+
+    if (Array.isArray(returned_steps) && returned_steps.length > 0) {
+      return _xu.clone_json(returned_steps) as any[];
+    }
+
+    const plan_steps = plan ? this._mutation_plan_field(plan, "steps") : null;
+    if (!Array.isArray(plan_steps)) return [];
+
+    return plan_steps.flatMap((step) => {
+      if (!is_obj(step)) return [step];
+      return [{
+        ...(_xu.clone_json(step) as Record<string, any>),
+        _status: status === STUDIO_INTENT_ACTION_STATUS_DONE ? "done" : step._status ?? step.status ?? "planned",
+      }];
+    });
+  }
+
+  private _mutation_plan_result_completed_count(result: any, steps: any[]) {
+    const source = this._mutation_plan_result_source(result);
+    const explicit_count = typeof source?._completed_count === "number"
+      ? source._completed_count
+      : typeof source?.completed_count === "number"
+        ? source.completed_count
+        : null;
+    if (explicit_count !== null) return explicit_count;
+
+    const completed_steps = source?._completed_steps ?? source?.completed_steps;
+    if (Array.isArray(completed_steps)) return completed_steps.length;
+
+    return steps.filter((step) => {
+      if (!is_obj(step)) return false;
+      const status = String(step._status ?? step.status ?? "").trim().toLowerCase();
+      return ["done", "completed", "applied", "success", "succeeded", "ok"].includes(status);
+    }).length;
+  }
+
+  private _mutation_plan_result_failed_count(result: any, steps: any[]) {
+    const source = this._mutation_plan_result_source(result);
+    const explicit_count = typeof source?._failed_count === "number"
+      ? source._failed_count
+      : typeof source?.failed_count === "number"
+        ? source.failed_count
+        : null;
+    if (explicit_count !== null) return explicit_count;
+
+    const failed_steps = source?._failed_steps ?? source?.failed_steps;
+    if (Array.isArray(failed_steps)) return failed_steps.length;
+    if (source?._failed_step || source?.failed_step) return 1;
+
+    return steps.filter((step) => {
+      if (!is_obj(step)) return false;
+      const status = String(step._status ?? step.status ?? "").trim().toLowerCase();
+      return ["failed", "error"].includes(status);
+    }).length;
+  }
+
+  private _mutation_plan_execution_state_from_result(
+    result: any,
+    plan: Record<string, any> | null,
+    status: string,
+    collapsed: boolean,
+  ): XStudioMutationPlanExecutionState {
+    const steps = this._mutation_plan_result_steps(result, plan, status);
+    return {
+      _status: status,
+      _collapsed: collapsed,
+      _completed_steps: this._mutation_plan_result_completed_count(result, steps),
+      _failed_steps: this._mutation_plan_result_failed_count(result, steps),
+      _steps: steps,
+      _result: result,
+    };
+  }
+
+  private _mutation_plan_execution_state_from_persisted_artifact(
+    request: XStudioArtifactRequestView | null,
+    collapsed_override?: boolean,
+  ): XStudioMutationPlanExecutionState | null {
+    if (!request || request._artifact_type !== MUTATION_PLAN_ARTIFACT_TYPE) return null;
+    if (
+      request._status !== STUDIO_INTENT_ACTION_STATUS_DONE &&
+      request._status !== STUDIO_INTENT_ACTION_STATUS_FAILED
+    ) {
+      return null;
+    }
+
+    return this._mutation_plan_execution_state_from_result(
+      request._result ?? {},
+      is_obj(request._artifact_request) ? request._artifact_request : null,
+      request._status,
+      typeof collapsed_override === "boolean"
+        ? collapsed_override
+        : request._status === STUDIO_INTENT_ACTION_STATUS_DONE,
+    );
+  }
+
+  private _set_mutation_plan_execution_state(
+    request: {
+      _message_id: string;
+    },
+    state: XStudioMutationPlanExecutionState,
+  ) {
+    const state_key = this._mutation_plan_execution_state_key_for_request(request);
+    this._mutation_plan_execution_state[state_key] = state;
+    this._log("mutation plan local state updated", {
+      _conversation_id: this._conversation_id,
+      _message_id: request._message_id,
+      _status: state._status,
+      _collapsed: state._collapsed,
+      _completed_steps: state._completed_steps,
+    });
+  }
+
+  private _is_apply_mutation_plan_failure(result: any) {
+    if (!is_obj(result)) return false;
+    if (result._ok === false || result.ok === false) return true;
+    if (result._success === false || result.success === false) return true;
+    if (result._status === "failed" || result.status === "failed") return true;
+    if (result._error || result.error) return true;
+    return false;
+  }
+
+  private async _refresh_after_apply_mutation_plan(result: any) {
+    const view_id = this._mutation_plan_result_view_id(result) || this._resolve_studio_target_view_id();
+    if (view_id && typeof this._xvm_client?.render_view === "function") {
+      try {
+        await this._xvm_client.render_view(view_id);
+      } catch (err) {
+        this._error("mutation plan active view refresh failed", {
+          _view_id: view_id,
+          _error: to_err(err),
+        });
+      }
+    }
+
+    this._refresh_object_tree_for_current_view();
+    await this._refresh_app_explorer();
+    await this._load_studio_current_view_json();
+    try {
+      await this._refresh_guide_after_success("mutation-plan-success", {
+        _clear_active_recommendation: true,
+        _log_message: "guide refreshed after mutation plan success",
+        _detail: {
+          _view_id: view_id,
+        },
+      });
+    } catch (err) {
+      this._error("mutation plan guide refresh failed", {
+        _view_id: view_id,
+        _error: to_err(err),
+      });
+    }
+    this._log("mutation plan refreshed live app", {
+      _view_id: view_id,
+      _result: result,
+    });
+  }
+
+  private async _apply_conversation_mutation_plan(request: {
+    _request_key: string;
+    _message_id: string;
+    _artifact_type: string;
+    _operation: string;
+    _artifact_name: string;
+    _artifact_request: Record<string, any> | null;
+  }) {
+    if (this._conversation_action_status[request._request_key] === STUDIO_INTENT_ACTION_STATUS_RUNNING) {
+      return;
+    }
+
+    const plan = is_obj(request._artifact_request) ? request._artifact_request : null;
+    if (!plan) {
+      const message = "Change plan payload is missing.";
+      delete this._mutation_plan_collapsed[request._request_key];
+      delete this._mutation_plan_execution_state[
+        this._mutation_plan_execution_state_key_for_request(request)
+      ];
+      this._set_conversation_action_status(request._request_key, STUDIO_INTENT_ACTION_STATUS_FAILED, message);
+      this._write_studio_status(message);
+      return;
+    }
+
+    if (!this._mutation_plan_can_apply(plan)) {
+      this._log("mutation plan apply ignored: plan is not ready", {
+        _message_id: request._message_id,
+        _artifact_type: request._artifact_type,
+      });
+      return;
+    }
+
+    if (!this._conversation_app_id || !this._conversation_env || !this._conversation_id) {
+      const message = "No active conversation selected.";
+      delete this._mutation_plan_collapsed[request._request_key];
+      delete this._mutation_plan_execution_state[
+        this._mutation_plan_execution_state_key_for_request(request)
+      ];
+      this._set_conversation_action_status(request._request_key, STUDIO_INTENT_ACTION_STATUS_FAILED, message);
+      this._write_studio_status(message);
+      return;
+    }
+
+    delete this._mutation_plan_collapsed[request._request_key];
+    this._set_mutation_plan_execution_state(
+      request,
+      this._mutation_plan_execution_state_from_result(
+        { _ok: true, _result: {} },
+        plan,
+        STUDIO_INTENT_ACTION_STATUS_RUNNING,
+        false,
+      ),
+    );
+    this._set_conversation_action_status(request._request_key, STUDIO_INTENT_ACTION_STATUS_RUNNING);
+    this._write_studio_status("Applying change plan...");
+    this._log("mutation plan apply requested", {
+      _message_id: request._message_id,
+      _artifact_type: request._artifact_type,
+      _operation: request._operation,
+    });
+
+    const params = {
+      _app_id: this._conversation_app_id,
+      _env: this._conversation_env,
+      _conversation_id: this._conversation_id,
+      _message_id: request._message_id,
+      _plan: plan,
+    };
+
+    try {
+      const result = await this._send_xvibe_command("apply-mutation-plan", params);
+      if (this._is_apply_mutation_plan_failure(result)) {
+        const message = this._format_server_failure(result, "Change plan failed.");
+        delete this._mutation_plan_collapsed[request._request_key];
+        this._set_mutation_plan_execution_state(
+          request,
+          this._mutation_plan_execution_state_from_result(
+            result,
+            plan,
+            STUDIO_INTENT_ACTION_STATUS_FAILED,
+            false,
+          ),
+        );
+        this._set_conversation_action_status(request._request_key, STUDIO_INTENT_ACTION_STATUS_FAILED, message);
+        this._conversation_action_result[request._request_key] = result;
+        this._render_conversation_messages();
+        this._write_studio_status(message);
+        this._error("mutation plan apply failed", {
+          _message_id: request._message_id,
+          _result: result,
+        });
+        await this._persist_conversation_artifact_status_and_reload(
+          request,
+          STUDIO_INTENT_ACTION_STATUS_FAILED,
+          message,
+          result,
+        );
+        return;
+      }
+
+      this._conversation_action_result[request._request_key] = result;
+      this._log("mutation plan apply completed", {
+        _message_id: request._message_id,
+        _result: result,
+      });
+      await this._refresh_after_apply_mutation_plan(result);
+      this._set_mutation_plan_execution_state(
+        request,
+        this._mutation_plan_execution_state_from_result(
+          result,
+          plan,
+          STUDIO_INTENT_ACTION_STATUS_DONE,
+          true,
+        ),
+      );
+      this._mutation_plan_collapsed[request._request_key] = true;
+      this._set_conversation_action_status(request._request_key, STUDIO_INTENT_ACTION_STATUS_DONE);
+      this._write_studio_status("✓ Change plan applied");
+      await this._persist_conversation_artifact_status_and_reload(
+        request,
+        STUDIO_INTENT_ACTION_STATUS_DONE,
+        "",
+        result,
+      );
+    } catch (err) {
+      const message = this._format_server_failure(err, "Change plan failed.");
+      delete this._mutation_plan_collapsed[request._request_key];
+      this._set_mutation_plan_execution_state(
+        request,
+        this._mutation_plan_execution_state_from_result(
+          err,
+          plan,
+          STUDIO_INTENT_ACTION_STATUS_FAILED,
+          false,
+        ),
+      );
+      this._set_conversation_action_status(request._request_key, STUDIO_INTENT_ACTION_STATUS_FAILED, message);
+      this._conversation_action_result[request._request_key] = err;
+      this._render_conversation_messages();
+      this._write_studio_status(message);
+      this._error("mutation plan apply failed", {
+        _message_id: request._message_id,
+        _error: to_err(err),
+      });
+      await this._persist_conversation_artifact_status_and_reload(
+        request,
+        STUDIO_INTENT_ACTION_STATUS_FAILED,
+        message,
+        is_obj(err) ? err : { _error: to_err(err) },
+      );
+    }
+  }
+
   private async _apply_conversation_artifact_request(payload?: any) {
     const request = this._normalize_artifact_request_event_payload(payload);
     if (!request) return;
@@ -3554,6 +11699,27 @@ export class XStudioModule extends XModule {
 
     if (request._artifact_type === EXECUTION_GRAPH_ARTIFACT_TYPE) {
       await this._continue_conversation_execution_graph(request);
+      return;
+    }
+
+    if (request._artifact_type === CRUD_FIELD_SUGGESTION_ARTIFACT_TYPE) {
+      await this._continue_conversation_execution_graph(
+        this._crud_field_suggestion_execution_graph_request(request),
+      );
+      return;
+    }
+
+    if (request._artifact_type === PROJECT_PLAN_ARTIFACT_TYPE) {
+      this._log("project plan apply ignored: actions are prompt-only in V1", {
+        _message_id: request._message_id,
+        _artifact_type: request._artifact_type,
+        _operation: request._operation,
+      });
+      return;
+    }
+
+    if (request._artifact_type === MUTATION_PLAN_ARTIFACT_TYPE) {
+      await this._apply_conversation_mutation_plan(request);
       return;
     }
 
@@ -3575,7 +11741,8 @@ export class XStudioModule extends XModule {
       return;
     }
 
-    if (!is_obj(request._artifact_request)) {
+    const artifact_request = this._normalized_artifact_apply_request(request);
+    if (!artifact_request) {
       const message = "Artifact request payload is missing.";
       this._set_conversation_action_status(
         request._request_key,
@@ -3606,7 +11773,7 @@ export class XStudioModule extends XModule {
       _app_id: this._conversation_app_id,
       _env: this._conversation_env,
       _artifact_type: request._artifact_type,
-      _artifact_request: request._artifact_request,
+      _artifact_request: artifact_request,
       _conversation_id: this._conversation_id,
       _message_id: request._message_id,
     };
@@ -3615,10 +11782,11 @@ export class XStudioModule extends XModule {
       const result = await this._send_xvibe_command("apply-artifact-request", params);
       if (!is_obj(result) || result._ok !== true) {
         const message = this._format_artifact_request_failure(result);
+        const artifact_error = this._artifact_request_error_payload(result) ?? message;
         this._set_conversation_action_status(
           request._request_key,
           STUDIO_INTENT_ACTION_STATUS_FAILED,
-          message,
+          artifact_error,
         );
         this._write_studio_status(message);
         this._error("artifact request apply failed", {
@@ -3631,7 +11799,8 @@ export class XStudioModule extends XModule {
         await this._persist_conversation_artifact_status_and_reload(
           request,
           STUDIO_INTENT_ACTION_STATUS_FAILED,
-          message,
+          artifact_error,
+          result,
         );
         return;
       }
@@ -3663,12 +11832,17 @@ export class XStudioModule extends XModule {
           _error: to_err(refresh_err),
         });
       }
+      await this._refresh_guide_after_success("artifact-request-success", {
+        _clear_active_recommendation: true,
+      });
     } catch (err) {
-      const message = "Artifact request failed.";
+      const artifact_error = this._artifact_request_error_payload(err) ??
+        (is_obj(err) ? err : "Artifact request failed.");
+      const message = this._format_artifact_request_failure(err);
       this._set_conversation_action_status(
         request._request_key,
         STUDIO_INTENT_ACTION_STATUS_FAILED,
-        message,
+        artifact_error,
       );
       this._write_studio_status(message);
       this._error("artifact request apply failed", {
@@ -3681,9 +11855,46 @@ export class XStudioModule extends XModule {
       await this._persist_conversation_artifact_status_and_reload(
         request,
         STUDIO_INTENT_ACTION_STATUS_FAILED,
-        message,
+        artifact_error,
+        is_obj(err) ? err : { _error: artifact_error },
       );
     }
+  }
+
+  private _show_mutation_plan_details(payload?: any) {
+    const request = this._normalize_artifact_request_event_payload(payload);
+    if (!request || request._artifact_type !== MUTATION_PLAN_ARTIFACT_TYPE) return;
+
+    const state_key = this._mutation_plan_execution_state_key_for_request(request);
+    const state = this._mutation_plan_execution_state[state_key];
+    if (state) {
+      this._set_mutation_plan_execution_state(request, {
+        ...state,
+        _collapsed: false,
+      });
+    } else {
+      this._mutation_plan_collapsed[request._request_key] = false;
+    }
+    this._log("mutation plan details expanded", {
+      _message_id: request._message_id,
+      _artifact_type: request._artifact_type,
+      _operation: request._operation,
+      _artifact_name: request._artifact_name,
+    });
+    this._render_conversation_messages();
+  }
+
+  private _toggle_project_plan_review(payload?: any) {
+    const request = this._normalize_artifact_request_event_payload(payload);
+    if (!request || request._artifact_type !== PROJECT_PLAN_ARTIFACT_TYPE) return;
+
+    this._project_plan_expanded[request._request_key] =
+      this._project_plan_expanded[request._request_key] !== true;
+    this._log("project plan review toggled", {
+      _message_id: request._message_id,
+      _expanded: this._project_plan_expanded[request._request_key] === true,
+    });
+    this._render_conversation_messages();
   }
 
   private async _dismiss_conversation_artifact_request(payload?: any) {
@@ -3694,6 +11905,26 @@ export class XStudioModule extends XModule {
       request._request_key,
       STUDIO_INTENT_ACTION_STATUS_DISMISSED,
     );
+
+    if (request._artifact_type === MUTATION_PLAN_ARTIFACT_TYPE) {
+      delete this._mutation_plan_collapsed[request._request_key];
+      delete this._mutation_plan_execution_state[
+        this._mutation_plan_execution_state_key_for_request(request)
+      ];
+      this._log("mutation plan dismissed locally", {
+        _message_id: request._message_id,
+        _artifact_type: request._artifact_type,
+        _operation: request._operation,
+        _artifact_name: request._artifact_name,
+      });
+      this._render_conversation_messages();
+      return;
+    }
+
+    if (request._artifact_type === PROJECT_PLAN_ARTIFACT_TYPE) {
+      delete this._project_plan_expanded[request._request_key];
+    }
+
     this._log("artifact request dismissed", {
       _message_id: request._message_id,
       _artifact_type: request._artifact_type,
@@ -3714,14 +11945,18 @@ export class XStudioModule extends XModule {
       .map((action) => {
         const execute_state = this._intent_action_card_execute_state(action);
         const edit_action = this._intent_action_edit_action(action);
+        const missing_required_fields = this._intent_action_missing_required_fields(action);
         this._log("intent action card state", {
           _action_id: action._id,
           _action_type: action._action_type,
           _status: action._status,
+          _executable: execute_state._can_execute,
+          _has_execution_payload: action._has_execution_payload,
+          _missing_required_fields: missing_required_fields,
+          _source_executable: action._executable,
           _requires_approval: action._requires_approval,
           _has_params: is_obj(action._params),
           _edit_action: edit_action,
-          _can_execute: execute_state._can_execute,
           _disabled_reason: execute_state._disabled_reason,
         });
 
@@ -3732,10 +11967,62 @@ export class XStudioModule extends XModule {
       });
   }
 
+  private _project_memory_stage() {
+    try {
+      const app_id = this._client().getActiveAppId();
+      const env = this._client().getActiveEnv() || "default";
+      if (!app_id || this._project_memory_loaded_scope !== this._project_memory_scope_key(app_id, env)) {
+        return "";
+      }
+    } catch {
+      return "";
+    }
+
+    const memory = _xd.get(PROJECT_MEMORY_XD_KEY);
+    const stage = is_obj(memory) ? memory._stage : "";
+    return typeof stage === "string" ? stage.trim() : "";
+  }
+
+  private _conversation_message_is_meaningful(message: XStudioConversationMessage) {
+    if (this._local_conversation_text(message._text)) return true;
+    if (is_obj(message._intent)) return true;
+    return message._pending_status === "pending" ||
+      message._pending_status === "analyzing" ||
+      message._pending_status === "failed";
+  }
+
+  private _should_render_planning_greeting(messages: XStudioConversationMessage[]) {
+    if (this._project_memory_stage() !== STUDIO_PLANNING_STAGE) return false;
+    return !messages.some((message) => this._conversation_message_is_meaningful(message));
+  }
+
+  private _planning_greeting_view(messages: XStudioConversationMessage[]) {
+    if (!this._should_render_planning_greeting(messages)) return null;
+    return {
+      _quick_starts: STUDIO_PLANNING_GREETING_QUICK_STARTS,
+    };
+  }
+
   private _conversation_render_message(message: XStudioConversationMessage, index: number): XStudioConversationRenderMessage {
     const artifact_request = this._conversation_artifact_request(message, index);
+    const mutation_plan_state_key = artifact_request?._artifact_type === MUTATION_PLAN_ARTIFACT_TYPE
+      ? this._mutation_plan_execution_state_key(artifact_request._message_id)
+      : "";
+    const mutation_plan_execution_state = mutation_plan_state_key
+      ? this._mutation_plan_execution_state[mutation_plan_state_key] ??
+        this._mutation_plan_execution_state_from_persisted_artifact(
+          artifact_request,
+          artifact_request && this._mutation_plan_collapsed[artifact_request._key] === false
+            ? false
+            : undefined,
+        )
+      : null;
     const artifact_status = artifact_request
-      ? (this._conversation_action_status[artifact_request._key] ?? artifact_request._status) || ""
+      ? (
+        mutation_plan_execution_state?._status ??
+        this._conversation_action_status[artifact_request._key] ??
+        artifact_request._status
+      ) || ""
       : "";
     const artifact_visible = artifact_request &&
       artifact_status !== STUDIO_INTENT_ACTION_STATUS_DISMISSED;
@@ -3743,22 +12030,49 @@ export class XStudioModule extends XModule {
       ? this._conversation_action_error[artifact_request._key] || artifact_request._error || ""
       : "";
     const artifact_result = artifact_request
-      ? this._conversation_action_result[artifact_request._key] ?? artifact_request._result
+      ? mutation_plan_execution_state?._result ??
+        this._conversation_action_result[artifact_request._key] ??
+        artifact_request._result
       : undefined;
     const artifact_success = artifact_request
       ? (typeof artifact_result === "string"
         ? artifact_result
         : xstudio_artifact_request_success_message(artifact_request))
       : "";
+    const visible_artifact_request = artifact_visible ? artifact_request : null;
+    const render_actions = (
+      visible_artifact_request?._artifact_type === PROJECT_PLAN_ARTIFACT_TYPE ||
+      visible_artifact_request?._artifact_type === MUTATION_PLAN_ARTIFACT_TYPE
+    )
+      ? []
+      : this._conversation_intent_render_actions(message, index);
+    const planning_question_key = xstudio_project_plan_current_question_key(visible_artifact_request, index);
+    const planning_question_selected_answers = planning_question_key &&
+      this._planning_question_multi_answers[planning_question_key]
+      ? {
+        [planning_question_key]: this._planning_question_multi_answers[planning_question_key],
+      }
+      : {};
+    const mutation_plan_collapsed = visible_artifact_request?._artifact_type === MUTATION_PLAN_ARTIFACT_TYPE
+      ? mutation_plan_execution_state?._collapsed === true ||
+        this._mutation_plan_collapsed[visible_artifact_request._key] === true
+      : false;
+    const project_plan_expanded = visible_artifact_request?._artifact_type === PROJECT_PLAN_ARTIFACT_TYPE
+      ? this._project_plan_expanded[visible_artifact_request._key] === true
+      : false;
 
     return {
       ...message,
-      _actions: this._conversation_intent_render_actions(message, index),
-      _artifact_request: artifact_visible ? artifact_request : null,
+      _actions: render_actions,
+      _artifact_request: visible_artifact_request,
       _artifact_status: artifact_status,
       _artifact_error: artifact_error,
       _artifact_success: artifact_success,
       _artifact_result: artifact_result,
+      _planning_question_selected_answers: planning_question_selected_answers,
+      _project_plan_expanded: project_plan_expanded,
+      _mutation_plan_collapsed: mutation_plan_collapsed,
+      _mutation_plan_execution_state: mutation_plan_execution_state,
     };
   }
 
@@ -3769,23 +12083,116 @@ export class XStudioModule extends XModule {
     dom.scrollTop = dom.scrollHeight;
   }
 
+  private _conversation_transient_created_at() {
+    return new Date().toISOString();
+  }
+
+  private _render_pending_conversation_analysis(text: string) {
+    const created_at = this._conversation_transient_created_at();
+    this._conversation_transient_messages = [
+      {
+        _id: `pending-user-${created_at}`,
+        _role: "user",
+        _text: text,
+        _created_at: created_at,
+        _pending_status: "pending",
+      },
+      {
+        _id: `pending-assistant-${created_at}`,
+        _role: "assistant",
+        _text: "Analyzing...",
+        _created_at: created_at,
+        _pending_status: "analyzing",
+      },
+    ];
+    this._render_conversation_messages();
+    this._log("conversation pending message rendered", {
+      _app_id: this._conversation_app_id,
+      _env: this._conversation_env,
+      _conversation_id: this._conversation_id,
+    });
+  }
+
+  private _render_failed_conversation_analysis(
+    text: string,
+    error: string,
+    append_succeeded: boolean,
+    debug_intent?: Record<string, any> | null,
+  ) {
+    const created_at = this._conversation_transient_created_at();
+    this._conversation_transient_messages = [
+      ...(!append_succeeded
+        ? [
+          {
+            _id: `failed-user-${created_at}`,
+            _role: "user" as const,
+            _text: text,
+            _created_at: created_at,
+            _pending_status: "failed" as const,
+            _error: error,
+          },
+        ]
+        : []),
+      {
+        _id: `failed-assistant-${created_at}`,
+        _role: "assistant",
+        _text: error,
+        _created_at: created_at,
+        _pending_status: "failed",
+        _error: error,
+        ...(is_obj(debug_intent) ? { _intent: debug_intent } : {}),
+      },
+    ];
+    this._render_conversation_messages();
+  }
+
   private _render_conversation_messages() {
     const list = XUI.getObject(STUDIO_CONVERSATION_MESSAGES_ID) as any;
     if (!list) return;
 
-    const messages = this._conversation_messages
+    const messages = [
+      ...this._conversation_messages,
+      ...this._conversation_transient_messages,
+    ];
+    const render_messages = messages
       .map((message, index) => this._conversation_render_message({ ...message }, index));
-    const children = create_xstudio_conversation_message_list(messages);
+    const active_planning_question_keys = new Set(
+      render_messages
+        .map((message, index) => xstudio_project_plan_current_question_key(message._artifact_request, index))
+        .filter(Boolean),
+    );
+    for (const question_key of Object.keys(this._planning_question_multi_answers)) {
+      if (!active_planning_question_keys.has(question_key)) {
+        delete this._planning_question_multi_answers[question_key];
+      }
+    }
+    const children = create_xstudio_conversation_message_list(render_messages, {
+      _planning_greeting: this._planning_greeting_view(messages),
+    });
 
     list.update?.({ _children: children });
     queueMicrotask(() => this._scroll_conversation_to_bottom());
   }
 
   private _set_conversation_send_enabled(enabled: boolean) {
-    this._set_studio_control_disabled(STUDIO_CONVERSATION_SEND_BUTTON_ID, !enabled);
+    this._set_studio_control_disabled(
+      STUDIO_CONVERSATION_SEND_BUTTON_ID,
+      this._conversation_analyzing || !enabled,
+    );
+  }
+
+  private _set_conversation_analyzing(analyzing: boolean) {
+    this._conversation_analyzing = analyzing;
+    this._set_studio_control_disabled(STUDIO_CONVERSATION_INPUT_ID, analyzing);
+    this._set_conversation_send_enabled(this._local_conversation_text(this._read_conversation_input_value()).length > 0);
   }
 
   private _update_conversation_input_state(payload?: any) {
+    if (this._conversation_analyzing) {
+      this._set_conversation_send_enabled(false);
+      return;
+    }
+
     const value = is_obj(payload) && typeof payload._value === "string"
       ? payload._value
       : this._read_conversation_input_value();
@@ -3813,11 +12220,16 @@ export class XStudioModule extends XModule {
     const input = XUI.getObject(STUDIO_CONVERSATION_INPUT_ID) as any;
     if (input?.setValue) {
       input.setValue(value);
-    } else if (input?.dom && "value" in input.dom) {
-      input.dom.value = value;
     }
+
+    if (input?.dom && "value" in input.dom) {
+      input.dom.value = value;
+      input.dom.dispatchEvent?.(new Event("input", { bubbles: true }));
+      input.dom.focus?.();
+    }
+
     _xd.set(STUDIO_CONVERSATION_INPUT_XD_KEY, value, { source: "xstudio-conversation" });
-    this._set_conversation_send_enabled(this._local_conversation_text(value).length > 0);
+    this._update_conversation_input_state({ _value: value });
   }
 
   private _apply_portlet_state() {
@@ -3866,6 +12278,8 @@ export class XStudioModule extends XModule {
   private _apply_dock_state() {
     this._set_shell_class_enabled("xstudio-left-collapsed", this._left_dock_collapsed);
     this._set_shell_class_enabled("xstudio-right-collapsed", this._right_dock_collapsed);
+    this._apply_left_sidebar_width_to_dom();
+    this._bind_left_sidebar_resize_divider();
     this._set_button_text(
       "xstudio-toggle-left-dock",
       this._left_dock_toggle_text(),
@@ -3884,6 +12298,7 @@ export class XStudioModule extends XModule {
     );
     this._apply_portlet_state();
     this._apply_explorer_section_state();
+    this._apply_object_picker_button_state();
   }
 
   private _toggle_left_dock() {
@@ -3894,6 +12309,1603 @@ export class XStudioModule extends XModule {
   private _toggle_right_dock() {
     this._right_dock_collapsed = !this._right_dock_collapsed;
     this._apply_dock_state();
+  }
+
+  private _object_picker_canvas() {
+    const canvas = XUI.getObject(STUDIO_CANVAS_ID) as any;
+    const dom = canvas?.dom ?? (typeof document !== "undefined" ? document.getElementById?.(STUDIO_CANVAS_ID) : null);
+    return dom instanceof HTMLElement ? dom : null;
+  }
+
+  private _element_is_within(parent: HTMLElement, child: HTMLElement) {
+    if (typeof parent.contains === "function") {
+      return parent === child || parent.contains(child);
+    }
+
+    let current: HTMLElement | null = child;
+    while (current) {
+      if (current === parent) return true;
+      current = current.parentElement;
+    }
+    return false;
+  }
+
+  private _event_target_element(target: EventTarget | null | undefined) {
+    if (target instanceof HTMLElement) return target;
+    const parent = (target as any)?.parentElement;
+    return parent instanceof HTMLElement ? parent : null;
+  }
+
+  private _suppress_object_picker_canvas_event(event: Event) {
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation?.();
+  }
+
+  private _find_object_tree_node_by_object_id(object_id: string) {
+    const id = object_id.trim();
+    if (!id) return null;
+
+    const flat_nodes = this._flatten_object_tree_nodes(this._object_tree_nodes);
+    return flat_nodes.find((node) =>
+      node._meta &&
+      (
+        node._meta._json_id.trim() === id ||
+        node._meta._id.trim() === id
+      )
+    ) ?? null;
+  }
+
+  private _object_tree_node_ancestor_keys(node: XStudioObjectTreeNode) {
+    const flat_nodes = this._flatten_object_tree_nodes(this._object_tree_nodes);
+    const by_key = new Map<string, XStudioObjectTreeNode>();
+    for (const item of flat_nodes) by_key.set(item._node_key, item);
+
+    const keys: string[] = [];
+    let parent_key = node._parent_node_key;
+    while (parent_key) {
+      const parent = by_key.get(parent_key);
+      if (!parent) break;
+      keys.unshift(parent._node_key);
+      parent_key = parent._parent_node_key;
+    }
+
+    return keys;
+  }
+
+  private _object_tree_results_dom() {
+    const results = XUI.getObject(STUDIO_OBJECT_TREE_RESULTS_ID) as any;
+    const dom = results?.dom ?? (typeof document !== "undefined" ? document.getElementById?.(STUDIO_OBJECT_TREE_RESULTS_ID) : null);
+    return dom instanceof HTMLElement ? dom : null;
+  }
+
+  private _reveal_object_tree_node(
+    node: XStudioObjectTreeNode,
+    options: { _rerender?: boolean; _highlight?: boolean; _row_id?: string } = {},
+  ) {
+    if (!node?._meta) return "";
+
+    const rerender = options._rerender !== false;
+    if (rerender) {
+      for (const key of this._object_tree_node_ancestor_keys(node)) {
+        this._object_tree_expanded_node_keys.add(key);
+      }
+      this._render_cached_object_tree_nodes();
+    }
+
+    const target_id = node._meta._json_id.trim() || node._meta._id.trim();
+    const fresh_node = target_id ? this._find_object_tree_node_by_object_id(target_id) ?? node : node;
+    const row_id = options._row_id || fresh_node._key || node._key;
+    const row = typeof document !== "undefined" && row_id ? document.getElementById(row_id) : null;
+    if (row instanceof HTMLElement) {
+      row.scrollIntoView?.({ block: "nearest", inline: "nearest" });
+      if (options._highlight !== false) {
+        row.classList.remove(STUDIO_OBJECT_TREE_REVEAL_CLASS);
+        void (row as any).offsetWidth;
+        row.classList.add(STUDIO_OBJECT_TREE_REVEAL_CLASS);
+      }
+    }
+
+    const results = this._object_tree_results_dom();
+    if (results) {
+      const next_scroll_left = Math.max(0, (fresh_node._depth * 14) - 24);
+      if (results.scrollLeft < next_scroll_left) {
+        results.scrollLeft = next_scroll_left;
+      }
+    }
+
+    return row_id;
+  }
+
+  private _resolve_picker_dom_target(target: EventTarget | null | undefined): XStudioPickerResolvedObject | null {
+    if (typeof document === "undefined") return null;
+    if (document.body?.classList?.contains?.("xstudio-left-resizing")) return null;
+
+    const canvas = this._object_picker_canvas();
+    const start = this._event_target_element(target);
+    if (!canvas || !start || !this._element_is_within(canvas, start)) return null;
+
+    if (this._object_tree_nodes.length === 0) {
+      this._refresh_object_tree_for_current_view();
+    }
+
+    const mounted_target = this._resolve_picker_mounted_dom_target(start, canvas);
+    if (mounted_target) return mounted_target;
+
+    let current: HTMLElement | null = start;
+    while (current && current !== canvas) {
+      const object_id = String(current.getAttribute?.("id") ?? current.id ?? "").trim();
+      if (object_id && object_id !== STUDIO_CANVAS_ID) {
+        const object = XUI.getObject(object_id) as any;
+        const node = this._find_object_tree_node_by_object_id(object_id);
+        if (object && node?._meta) {
+          return {
+            _id: node._meta._json_id.trim() || node._meta._id.trim() || object_id,
+            _type: node._meta._type.trim() || String(object._type ?? "object"),
+            _element: current,
+            _object: object,
+            _node: node,
+          };
+        }
+      }
+      current = current.parentElement;
+    }
+
+    return null;
+  }
+
+  private _resolve_picker_mounted_dom_target(start: HTMLElement, canvas: HTMLElement): XStudioPickerResolvedObject | null {
+    const flat_nodes = this._flatten_object_tree_nodes(this._object_tree_nodes);
+    let best: {
+      _resolved: XStudioPickerResolvedObject;
+      _depth: number;
+      _area: number;
+    } | null = null;
+
+    for (const node of flat_nodes) {
+      if (!node?._meta) continue;
+
+      const object_id = node._meta._json_id.trim() || node._meta._id.trim();
+      if (!object_id || object_id === STUDIO_CANVAS_ID) continue;
+
+      const object = XUI.getObject(object_id) as any;
+      const element = object?.dom;
+      if (!(element instanceof HTMLElement)) continue;
+      if (!this._element_is_within(canvas, element)) continue;
+      if (!this._element_is_within(element, start)) continue;
+
+      const rect = element.getBoundingClientRect();
+      const area = Math.max(1, Math.round(rect.width) * Math.round(rect.height));
+      const depth = node._depth;
+      if (
+        best &&
+        (
+          depth < best._depth ||
+          (depth === best._depth && area >= best._area)
+        )
+      ) {
+        continue;
+      }
+
+      best = {
+        _depth: depth,
+        _area: area,
+        _resolved: {
+          _id: object_id,
+          _type: node._meta._type.trim() || String(object._type ?? "object"),
+          _element: element,
+          _object: object,
+          _node: node,
+        },
+      };
+    }
+
+    return best?._resolved ?? null;
+  }
+
+  private _ensure_object_picker_overlay() {
+    if (typeof document === "undefined") return null;
+
+    if (!(this._object_picker_overlay_dom instanceof HTMLElement)) {
+      const overlay = document.createElement("div");
+      overlay.setAttribute("id", STUDIO_OBJECT_PICKER_OVERLAY_ID);
+      overlay.setAttribute("class", "xstudio-object-picker-overlay");
+      overlay.setAttribute("aria-hidden", "true");
+      document.body?.appendChild?.(overlay);
+      this._object_picker_overlay_dom = overlay;
+    }
+
+    if (!(this._object_picker_label_dom instanceof HTMLElement)) {
+      const label = document.createElement("div");
+      label.setAttribute("id", STUDIO_OBJECT_PICKER_LABEL_ID);
+      label.setAttribute("class", "xstudio-object-picker-label");
+      label.setAttribute("aria-hidden", "true");
+      document.body?.appendChild?.(label);
+      this._object_picker_label_dom = label;
+    }
+
+    return {
+      _overlay: this._object_picker_overlay_dom,
+      _label: this._object_picker_label_dom,
+    };
+  }
+
+  private _show_object_picker_overlay(resolved: XStudioPickerResolvedObject) {
+    const doms = this._ensure_object_picker_overlay();
+    if (!doms) return;
+
+    const rect = resolved._element.getBoundingClientRect();
+    const left = Math.round(rect.left);
+    const top = Math.round(rect.top);
+    const width = Math.max(1, Math.round(rect.width));
+    const height = Math.max(1, Math.round(rect.height));
+
+    doms._overlay.style.setProperty("left", `${left}px`);
+    doms._overlay.style.setProperty("top", `${top}px`);
+    doms._overlay.style.setProperty("width", `${width}px`);
+    doms._overlay.style.setProperty("height", `${height}px`);
+    doms._overlay.style.setProperty("display", "block");
+
+    doms._label.textContent = `${resolved._id} [${resolved._type}]`;
+    doms._label.style.setProperty("left", `${left}px`);
+    doms._label.style.setProperty("top", `${Math.max(4, top - 22)}px`);
+    doms._label.style.setProperty("display", "block");
+    this._object_picker_hover = resolved;
+  }
+
+  private _clear_object_picker_overlay() {
+    this._object_picker_hover = null;
+    this._object_picker_overlay_dom?.remove?.();
+    this._object_picker_label_dom?.remove?.();
+    this._object_picker_overlay_dom = null;
+    this._object_picker_label_dom = null;
+  }
+
+  private _handle_object_picker_pointer_move(event: PointerEvent) {
+    if (!this._object_picker_active) return;
+    this._suppress_object_picker_canvas_event(event);
+    const resolved = this._resolve_picker_dom_target(event.target);
+    if (!resolved) {
+      this._clear_object_picker_overlay();
+      return;
+    }
+    this._show_object_picker_overlay(resolved);
+  }
+
+  private _handle_object_picker_canvas_click(event: MouseEvent) {
+    if (!this._object_picker_active) return;
+    this._suppress_object_picker_canvas_event(event);
+
+    const resolved = this._resolve_picker_dom_target(event.target);
+    if (!resolved?._node?._meta) {
+      this._clear_object_picker_overlay();
+      return;
+    }
+
+    const row_id = this._reveal_object_tree_node(resolved._node, {
+      _rerender: true,
+      _highlight: true,
+    });
+    const node = this._find_object_tree_node_by_object_id(resolved._id) ?? resolved._node;
+    this._select_object_tree_node(node, row_id || node._key);
+    this._set_object_picker_active(false);
+  }
+
+  private _unbind_object_picker_canvas() {
+    const canvas = this._object_picker_canvas_dom;
+    if (canvas) {
+      if (this._object_picker_pointer_move_handler) {
+        canvas.removeEventListener("pointermove", this._object_picker_pointer_move_handler, true);
+      }
+      if (this._object_picker_pointer_leave_handler) {
+        canvas.removeEventListener("pointerleave", this._object_picker_pointer_leave_handler, true);
+      }
+      if (this._object_picker_pointer_down_handler) {
+        canvas.removeEventListener("pointerdown", this._object_picker_pointer_down_handler, true);
+      }
+      if (this._object_picker_click_handler) {
+        canvas.removeEventListener("click", this._object_picker_click_handler, true);
+      }
+    }
+
+    this._object_picker_canvas_dom = null;
+    this._object_picker_pointer_move_handler = null;
+    this._object_picker_pointer_leave_handler = null;
+    this._object_picker_pointer_down_handler = null;
+    this._object_picker_click_handler = null;
+  }
+
+  private _bind_object_picker_canvas() {
+    const canvas = this._object_picker_canvas();
+    if (!canvas) return;
+    if (this._object_picker_canvas_dom === canvas && this._object_picker_pointer_move_handler) return;
+
+    this._unbind_object_picker_canvas();
+    this._object_picker_canvas_dom = canvas;
+    this._object_picker_pointer_move_handler = (event: PointerEvent) => this._handle_object_picker_pointer_move(event);
+    this._object_picker_pointer_leave_handler = (event: PointerEvent) => {
+      this._suppress_object_picker_canvas_event(event);
+      this._clear_object_picker_overlay();
+    };
+    this._object_picker_pointer_down_handler = (event: PointerEvent) => {
+      if (!this._object_picker_active) return;
+      this._suppress_object_picker_canvas_event(event);
+    };
+    this._object_picker_click_handler = (event: MouseEvent) => this._handle_object_picker_canvas_click(event);
+
+    canvas.addEventListener("pointermove", this._object_picker_pointer_move_handler, true);
+    canvas.addEventListener("pointerleave", this._object_picker_pointer_leave_handler, true);
+    canvas.addEventListener("pointerdown", this._object_picker_pointer_down_handler, true);
+    canvas.addEventListener("click", this._object_picker_click_handler, true);
+  }
+
+  private _set_object_picker_active(active: boolean) {
+    if (active === this._object_picker_active) {
+      if (active) this._bind_object_picker_canvas();
+      this._apply_object_picker_button_state();
+      return;
+    }
+
+    this._object_picker_active = active;
+    if (active) {
+      this._cancel_arrange_mode();
+      this._refresh_object_tree_for_current_view();
+      this._bind_object_picker_canvas();
+    } else {
+      this._unbind_object_picker_canvas();
+      this._clear_object_picker_overlay();
+    }
+    this._apply_object_picker_button_state();
+  }
+
+  private _toggle_object_picker() {
+    this._set_object_picker_active(!this._object_picker_active);
+  }
+
+  private _cancel_object_picker() {
+    this._set_object_picker_active(false);
+  }
+
+  private _apply_arrange_mode_state() {
+    this._apply_arrange_button_state();
+  }
+
+  private _arrange_scope_key() {
+    try {
+      return {
+        _app_id: this._client().getActiveAppId(),
+        _env: this._client().getActiveEnv(),
+      };
+    } catch {
+      return {
+        _app_id: "",
+        _env: "",
+      };
+    }
+  }
+
+  private _ensure_arrange_overlay() {
+    if (typeof document === "undefined") return null;
+
+    if (!(this._arrange_overlay_dom instanceof HTMLElement)) {
+      const overlay = document.createElement("div");
+      overlay.setAttribute("id", STUDIO_ARRANGE_OVERLAY_ID);
+      overlay.setAttribute("class", "xstudio-arrange-overlay");
+      overlay.setAttribute("aria-hidden", "true");
+      document.body?.appendChild?.(overlay);
+      this._arrange_overlay_dom = overlay;
+    }
+
+    if (!(this._arrange_label_dom instanceof HTMLElement)) {
+      const label = document.createElement("div");
+      label.setAttribute("id", STUDIO_ARRANGE_LABEL_ID);
+      label.setAttribute("class", "xstudio-arrange-label");
+      label.setAttribute("aria-hidden", "true");
+      document.body?.appendChild?.(label);
+      this._arrange_label_dom = label;
+    }
+
+    if (!(this._arrange_indicator_dom instanceof HTMLElement)) {
+      const indicator = document.createElement("div");
+      indicator.setAttribute("id", STUDIO_ARRANGE_INDICATOR_ID);
+      indicator.setAttribute("class", "xstudio-arrange-indicator");
+      indicator.setAttribute("aria-hidden", "true");
+      document.body?.appendChild?.(indicator);
+      this._arrange_indicator_dom = indicator;
+    }
+
+    return {
+      _overlay: this._arrange_overlay_dom,
+      _label: this._arrange_label_dom,
+      _indicator: this._arrange_indicator_dom,
+    };
+  }
+
+  private _clear_arrange_overlay() {
+    this._arrange_hover = null;
+    this._arrange_drop_preview = null;
+    this._arrange_overlay_dom?.remove?.();
+    this._arrange_label_dom?.remove?.();
+    this._arrange_indicator_dom?.remove?.();
+    this._arrange_overlay_dom = null;
+    this._arrange_label_dom = null;
+    this._arrange_indicator_dom = null;
+  }
+
+  private _show_arrange_hover_overlay(resolved: XStudioPickerResolvedObject) {
+    const doms = this._ensure_arrange_overlay();
+    if (!doms) return;
+
+    const rect = resolved._element.getBoundingClientRect();
+    const left = Math.round(rect.left);
+    const top = Math.round(rect.top);
+    const width = Math.max(1, Math.round(rect.width));
+    const height = Math.max(1, Math.round(rect.height));
+
+    doms._overlay.setAttribute("class", "xstudio-arrange-overlay xstudio-arrange-overlay-hover");
+    doms._overlay.style.setProperty("left", `${left}px`);
+    doms._overlay.style.setProperty("top", `${top}px`);
+    doms._overlay.style.setProperty("width", `${width}px`);
+    doms._overlay.style.setProperty("height", `${height}px`);
+    doms._overlay.style.setProperty("display", "block");
+
+    doms._label.textContent = `${resolved._id} [${resolved._type}]`;
+    doms._label.setAttribute("class", "xstudio-arrange-label");
+    doms._label.style.setProperty("left", `${left}px`);
+    doms._label.style.setProperty("top", `${Math.max(4, top - 22)}px`);
+    doms._label.style.setProperty("display", "block");
+
+    doms._indicator.style.setProperty("display", "none");
+    this._arrange_hover = resolved;
+  }
+
+  private _show_arrange_drop_preview(preview: XStudioArrangeDropPreview) {
+    const doms = this._ensure_arrange_overlay();
+    if (!doms) return;
+
+    const rect = preview._target._element.getBoundingClientRect();
+    const left = Math.round(rect.left);
+    const top = Math.round(rect.top);
+    const width = Math.max(1, Math.round(rect.width));
+    const height = Math.max(1, Math.round(rect.height));
+    const valid = preview._validation._ok === true;
+    const mode = preview._mode;
+
+    doms._overlay.setAttribute(
+      "class",
+      [
+        "xstudio-arrange-overlay",
+        "xstudio-arrange-overlay-drop",
+        valid ? "xstudio-arrange-overlay-valid" : "xstudio-arrange-overlay-invalid",
+      ].join(" "),
+    );
+    doms._overlay.style.setProperty("left", `${left}px`);
+    doms._overlay.style.setProperty("top", `${top}px`);
+    doms._overlay.style.setProperty("width", `${width}px`);
+    doms._overlay.style.setProperty("height", `${height}px`);
+    doms._overlay.style.setProperty("display", "block");
+
+    doms._label.textContent = preview._validation._ok
+      ? `${mode} ${preview._target._id}`
+      : preview._validation._message;
+    doms._label.setAttribute(
+      "class",
+      `xstudio-arrange-label ${valid ? "xstudio-arrange-label-valid" : "xstudio-arrange-label-invalid"}`,
+    );
+    doms._label.style.setProperty("left", `${left}px`);
+    doms._label.style.setProperty("top", `${Math.max(4, top - 22)}px`);
+    doms._label.style.setProperty("display", "block");
+
+    const line_height = 3;
+    const indicator_top = mode === "before"
+      ? top
+      : mode === "after"
+        ? top + height - line_height
+        : top + Math.max(0, Math.round((height - line_height) / 2));
+    doms._indicator.setAttribute(
+      "class",
+      [
+        "xstudio-arrange-indicator",
+        `xstudio-arrange-indicator-${mode}`,
+        valid ? "xstudio-arrange-indicator-valid" : "xstudio-arrange-indicator-invalid",
+      ].join(" "),
+    );
+    doms._indicator.style.setProperty("left", `${left}px`);
+    doms._indicator.style.setProperty("top", `${indicator_top}px`);
+    doms._indicator.style.setProperty("width", `${width}px`);
+    doms._indicator.style.setProperty("height", `${line_height}px`);
+    doms._indicator.style.setProperty("display", "block");
+
+    this._arrange_drop_preview = preview;
+  }
+
+  private _stop_arrange_auto_scroll() {
+    const frame = this._arrange_scroll_frame;
+    this._arrange_scroll_frame = 0;
+    if (frame && typeof window !== "undefined") {
+      window.cancelAnimationFrame?.(frame);
+    }
+  }
+
+  private _arrange_scroll_canvas_once() {
+    const canvas = this._arrange_canvas_dom;
+    if (!(canvas instanceof HTMLElement)) return;
+
+    const rect = canvas.getBoundingClientRect();
+    let dx = 0;
+    let dy = 0;
+    if (this._arrange_last_x <= rect.left + STUDIO_ARRANGE_SCROLL_EDGE_PX) dx = -STUDIO_ARRANGE_SCROLL_STEP_PX;
+    if (this._arrange_last_x >= rect.right - STUDIO_ARRANGE_SCROLL_EDGE_PX) dx = STUDIO_ARRANGE_SCROLL_STEP_PX;
+    if (this._arrange_last_y <= rect.top + STUDIO_ARRANGE_SCROLL_EDGE_PX) dy = -STUDIO_ARRANGE_SCROLL_STEP_PX;
+    if (this._arrange_last_y >= rect.bottom - STUDIO_ARRANGE_SCROLL_EDGE_PX) dy = STUDIO_ARRANGE_SCROLL_STEP_PX;
+
+    if (dx) canvas.scrollLeft = Math.max(0, canvas.scrollLeft + dx);
+    if (dy) canvas.scrollTop = Math.max(0, canvas.scrollTop + dy);
+  }
+
+  private _schedule_arrange_auto_scroll() {
+    if (!this._arrange_dragging || this._arrange_scroll_frame) return;
+    if (typeof window === "undefined" || typeof window.requestAnimationFrame !== "function") {
+      this._arrange_scroll_canvas_once();
+      return;
+    }
+
+    this._arrange_scroll_frame = window.requestAnimationFrame(() => {
+      this._arrange_scroll_frame = 0;
+      if (!this._arrange_dragging) return;
+      this._arrange_scroll_canvas_once();
+      this._schedule_arrange_auto_scroll();
+    });
+  }
+
+  private _clear_arrange_drag_state() {
+    this._stop_arrange_auto_scroll();
+    if (
+      this._arrange_canvas_dom instanceof HTMLElement &&
+      this._arrange_pointer_id >= 0 &&
+      this._arrange_canvas_dom.hasPointerCapture?.(this._arrange_pointer_id)
+    ) {
+      this._arrange_canvas_dom.releasePointerCapture?.(this._arrange_pointer_id);
+    }
+
+    this._arrange_drag_source = null;
+    this._arrange_hover = null;
+    this._arrange_drop_preview = null;
+    this._arrange_dragging = false;
+    this._arrange_start_x = 0;
+    this._arrange_start_y = 0;
+    this._arrange_last_x = 0;
+    this._arrange_last_y = 0;
+    this._arrange_pointer_id = -1;
+    this._arrange_drag_app_id = "";
+    this._arrange_drag_env = "";
+    this._clear_arrange_overlay();
+  }
+
+  private _unbind_arrange_mode_canvas() {
+    const canvas = this._arrange_canvas_dom;
+    if (canvas) {
+      if (this._arrange_pointer_down_handler) {
+        canvas.removeEventListener("pointerdown", this._arrange_pointer_down_handler, true);
+      }
+      if (this._arrange_pointer_move_handler) {
+        canvas.removeEventListener("pointermove", this._arrange_pointer_move_handler, true);
+      }
+      if (this._arrange_pointer_up_handler) {
+        canvas.removeEventListener("pointerup", this._arrange_pointer_up_handler, true);
+      }
+      if (this._arrange_pointer_cancel_handler) {
+        canvas.removeEventListener("pointercancel", this._arrange_pointer_cancel_handler, true);
+      }
+      if (this._arrange_pointer_leave_handler) {
+        canvas.removeEventListener("pointerleave", this._arrange_pointer_leave_handler, true);
+      }
+      if (this._arrange_click_handler) {
+        canvas.removeEventListener("click", this._arrange_click_handler, true);
+      }
+      if (this._arrange_dblclick_handler) {
+        canvas.removeEventListener("dblclick", this._arrange_dblclick_handler, true);
+      }
+      if (this._arrange_contextmenu_handler) {
+        canvas.removeEventListener("contextmenu", this._arrange_contextmenu_handler, true);
+      }
+    }
+
+    this._arrange_canvas_dom = null;
+    this._arrange_pointer_down_handler = null;
+    this._arrange_pointer_move_handler = null;
+    this._arrange_pointer_up_handler = null;
+    this._arrange_pointer_cancel_handler = null;
+    this._arrange_pointer_leave_handler = null;
+    this._arrange_click_handler = null;
+    this._arrange_dblclick_handler = null;
+    this._arrange_contextmenu_handler = null;
+  }
+
+  private _handle_arrange_pointer_down(event: PointerEvent) {
+    if (!this._arrange_mode_active || this._arrange_committing) return;
+    this._suppress_object_picker_canvas_event(event);
+    if (typeof event.button === "number" && event.button !== 0) return;
+
+    const pointer_id = Number(event.pointerId ?? -1);
+    const source = this._resolve_arrange_drag_source(event.target);
+    const scope = this._arrange_scope_key();
+    this._arrange_drag_source = source;
+    this._arrange_pointer_id = Number.isFinite(pointer_id) ? pointer_id : -1;
+    this._arrange_start_x = Number(event.clientX ?? 0);
+    this._arrange_start_y = Number(event.clientY ?? 0);
+    this._arrange_last_x = this._arrange_start_x;
+    this._arrange_last_y = this._arrange_start_y;
+    this._arrange_dragging = false;
+    this._arrange_drag_app_id = scope._app_id;
+    this._arrange_drag_env = scope._env;
+
+    if (source._ok && this._arrange_pointer_id >= 0) {
+      this._arrange_canvas_dom?.setPointerCapture?.(this._arrange_pointer_id);
+      this._show_arrange_hover_overlay(source._resolved);
+    }
+  }
+
+  private _handle_arrange_pointer_move(event: PointerEvent) {
+    if (!this._arrange_mode_active || this._arrange_committing) return;
+    this._suppress_object_picker_canvas_event(event);
+
+    this._arrange_last_x = Number(event.clientX ?? this._arrange_last_x);
+    this._arrange_last_y = Number(event.clientY ?? this._arrange_last_y);
+
+    if (!this._arrange_drag_source) {
+      const hover = this._resolve_picker_dom_target(this._arrange_event_target(event));
+      if (hover) {
+        this._show_arrange_hover_overlay(hover);
+      } else {
+        this._clear_arrange_overlay();
+      }
+      return;
+    }
+
+    if (!this._arrange_drag_source._ok) return;
+
+    if (!this._arrange_dragging) {
+      const dx = this._arrange_last_x - this._arrange_start_x;
+      const dy = this._arrange_last_y - this._arrange_start_y;
+      if (Math.sqrt((dx * dx) + (dy * dy)) < STUDIO_ARRANGE_DRAG_THRESHOLD_PX) {
+        return;
+      }
+      this._arrange_dragging = true;
+      this._write_studio_status("Arranging object...");
+    }
+
+    const preview = this._resolve_arrange_drop_preview(event, this._arrange_drag_source._node);
+    if (preview) {
+      this._show_arrange_drop_preview(preview);
+    } else {
+      this._clear_arrange_overlay();
+    }
+    this._schedule_arrange_auto_scroll();
+  }
+
+  private _handle_arrange_pointer_up(event: PointerEvent) {
+    if (!this._arrange_mode_active || this._arrange_committing) return;
+    this._suppress_object_picker_canvas_event(event);
+    void this._finish_arrange_drop(event);
+  }
+
+  private _handle_arrange_pointer_cancel(event: PointerEvent) {
+    if (!this._arrange_mode_active) return;
+    this._suppress_object_picker_canvas_event(event);
+    this._clear_arrange_drag_state();
+    this._write_studio_status("Arrange cancelled");
+  }
+
+  private _handle_arrange_suppressed_event(event: Event) {
+    if (!this._arrange_mode_active) return;
+    this._suppress_object_picker_canvas_event(event);
+  }
+
+  private _arrange_event_target(event: PointerEvent) {
+    if (typeof document !== "undefined" && typeof document.elementFromPoint === "function") {
+      const x = Number(event.clientX ?? NaN);
+      const y = Number(event.clientY ?? NaN);
+      if (Number.isFinite(x) && Number.isFinite(y)) {
+        const element = document.elementFromPoint(x, y);
+        if (element instanceof HTMLElement) return element;
+      }
+    }
+    return event.target;
+  }
+
+  private _resolve_arrange_drop_mode(event: PointerEvent, target: XStudioPickerResolvedObject): XStudioArrangeDropMode {
+    const rect = target._element.getBoundingClientRect();
+    const y = Number(event.clientY ?? rect.top + (rect.height / 2));
+    const height = Math.max(1, rect.height);
+    const relative_y = Math.max(0, Math.min(height, y - rect.top));
+    if (relative_y <= height * 0.28) return "before";
+    if (relative_y >= height * 0.72) return "after";
+    return "inside";
+  }
+
+  private _resolve_arrange_drop_preview(
+    event: PointerEvent,
+    source_node: XStudioObjectTreeNode,
+  ): XStudioArrangeDropPreview | null {
+    const target = this._resolve_picker_dom_target(this._arrange_event_target(event));
+    if (!target?._node?._meta) return null;
+
+    const mode = this._resolve_arrange_drop_mode(event, target);
+    const validation = this._validate_arrange_drop(source_node, target._node, mode);
+    return {
+      _target: target,
+      _mode: mode,
+      _validation: validation,
+    };
+  }
+
+  private _arrange_active_scope_matches_drag() {
+    const scope = this._arrange_scope_key();
+    if (this._arrange_drag_app_id && scope._app_id && this._arrange_drag_app_id !== scope._app_id) return false;
+    if (this._arrange_drag_env && scope._env && this._arrange_drag_env !== scope._env) return false;
+    return true;
+  }
+
+  private _arrange_drop_is_noop(validation: Extract<XStudioArrangeDropValidation, { _ok: true }>) {
+    const source_meta = validation._source_node._meta;
+    if (!source_meta) return true;
+
+    const source_parent_path = source_meta._parent_path.trim() || "$";
+    const destination_parent_path = validation._parent_node._meta?._path.trim() || "$";
+    if (source_parent_path !== destination_parent_path) return false;
+
+    if (validation._mode === "before") {
+      return source_meta._next_sibling_id.trim() === validation._target_id;
+    }
+    if (validation._mode === "after") {
+      return source_meta._previous_sibling_id.trim() === validation._target_id;
+    }
+
+    return source_meta._next_sibling_id.trim() === "";
+  }
+
+  private _build_arrange_move_params(
+    validation: Extract<XStudioArrangeDropValidation, { _ok: true }>,
+  ): XStudioSelectedObjectApplyViewEditParams | null {
+    const app_id = this._client().getActiveAppId();
+    const env = this._client().getActiveEnv();
+    if (!app_id || !env) return null;
+
+    return {
+      _app_id: app_id,
+      _env: env,
+      _view_id: validation._source_view_id,
+      _edit_action: "move-object",
+      _target_id: validation._source_id,
+      _target_type: validation._source_node._meta?._type.trim() || validation._source_type || "object",
+      _target_parent_id: validation._parent_id,
+      _move_position: validation._mode,
+      ...(validation._before_id ? { _before_id: validation._before_id } : {}),
+      ...(validation._after_id ? { _after_id: validation._after_id } : {}),
+    };
+  }
+
+  private async _commit_arrange_drop(validation: Extract<XStudioArrangeDropValidation, { _ok: true }>) {
+    if (this._arrange_committing) return;
+    if (!this._arrange_active_scope_matches_drag()) {
+      this._write_studio_status("Arrange cancelled: app changed");
+      return;
+    }
+    if (this._arrange_drop_is_noop(validation)) {
+      this._write_studio_status("Arrange unchanged");
+      return;
+    }
+
+    const params = this._build_arrange_move_params(validation);
+    if (!params) {
+      this._write_studio_status("Arrange failed: no active app");
+      return;
+    }
+    const preserve_arrange_mode = this._arrange_mode_active === true;
+
+    this._arrange_committing = true;
+    this._write_studio_status("Moving arranged object...");
+    this._log("arrange move request", {
+      _source_view_id: params._view_id,
+      _target_id: params._target_id,
+      _target_parent_id: params._target_parent_id,
+      _move_position: params._move_position,
+      _before_id: params._before_id,
+      _after_id: params._after_id,
+    });
+
+    try {
+      const result = await this._send_xvibe_command("apply-view-edit", params);
+      if (!is_obj(result) || result._ok !== true) {
+        this._write_studio_status(this._format_apply_view_edit_failure(result, { _params: params }));
+        this._error("arrange move failed", {
+          _structured_error: result,
+        });
+        return;
+      }
+
+      await this._request_object_tree_structured_edit_refresh(params, result);
+      this._selected_object_pending_select_id = validation._source_id;
+      for (const key of this._object_tree_node_ancestor_keys(validation._parent_node)) {
+        this._object_tree_expanded_node_keys.add(key);
+      }
+      this._object_tree_expanded_node_keys.add(validation._parent_node._node_key);
+      this._refresh_object_tree_for_current_view();
+      this._reveal_moved_object_after_refresh(validation._source_id);
+      this._write_studio_status("Moved arranged object");
+    } catch (err) {
+      const message = `Arrange move failed: ${to_err(err)}`;
+      this._write_studio_status(message);
+      this._error("arrange move failed", {
+        _error: to_err(err),
+      });
+    } finally {
+      this._arrange_committing = false;
+      if (preserve_arrange_mode && !this._arrange_mode_active && this._arrange_active_scope_matches_drag()) {
+        this._set_arrange_mode_active(true);
+      }
+    }
+  }
+
+  private async _finish_arrange_drop(event: PointerEvent) {
+    const source = this._arrange_drag_source;
+    const was_dragging = this._arrange_dragging;
+    const preview = was_dragging && source?._ok
+      ? this._resolve_arrange_drop_preview(event, source._node) ?? this._arrange_drop_preview
+      : null;
+
+    if (
+      this._arrange_canvas_dom instanceof HTMLElement &&
+      this._arrange_pointer_id >= 0 &&
+      this._arrange_canvas_dom.hasPointerCapture?.(this._arrange_pointer_id)
+    ) {
+      this._arrange_canvas_dom.releasePointerCapture?.(this._arrange_pointer_id);
+    }
+    this._stop_arrange_auto_scroll();
+
+    if (!was_dragging) {
+      this._clear_arrange_drag_state();
+      return;
+    }
+
+    if (!preview) {
+      this._clear_arrange_drag_state();
+      this._write_studio_status("Arrange target rejected");
+      return;
+    }
+
+    this._show_arrange_drop_preview(preview);
+    if (!preview._validation._ok) {
+      const message = preview._validation._message || "Arrange target rejected";
+      this._clear_arrange_drag_state();
+      this._write_studio_status(message);
+      return;
+    }
+
+    const validation = preview._validation;
+    this._clear_arrange_drag_state();
+    await this._commit_arrange_drop(validation);
+  }
+
+  private _find_object_tree_node_by_row_id(row_id: string) {
+    const id = row_id.trim();
+    if (!id) return null;
+    return this._flatten_object_tree_nodes(this._object_tree_nodes)
+      .find((node) => node._key === id) ?? null;
+  }
+
+  private _nearest_object_tree_row(target: EventTarget | null | undefined) {
+    let current = target instanceof HTMLElement ? target : null;
+    while (current) {
+      if (current.getAttribute("data-xstudio-object-tree-row") === "true") return current;
+      current = current.parentElement;
+    }
+    return null;
+  }
+
+  private _object_tree_event_target(event: PointerEvent) {
+    if (typeof document !== "undefined" && typeof document.elementFromPoint === "function") {
+      const x = Number(event.clientX ?? NaN);
+      const y = Number(event.clientY ?? NaN);
+      if (Number.isFinite(x) && Number.isFinite(y)) {
+        const element = document.elementFromPoint(x, y);
+        if (element instanceof HTMLElement) return element;
+      }
+    }
+    return event.target;
+  }
+
+  private _resolve_object_tree_row_target(target: EventTarget | null | undefined) {
+    const row = this._nearest_object_tree_row(target);
+    const row_id = row?.getAttribute("data-xstudio-object-tree-row-id")?.trim() || row?.id?.trim() || "";
+    const node = row_id ? this._find_object_tree_node_by_row_id(row_id) : null;
+    if (!row || !node?._meta) return null;
+
+    const id = this._arrange_node_json_id(node);
+    return {
+      _id: id,
+      _type: node._meta._type.trim() || "object",
+      _element: row,
+      _object: node._object,
+      _node: node,
+    } as XStudioPickerResolvedObject;
+  }
+
+  private _resolve_object_tree_drag_source(
+    node: XStudioObjectTreeNode,
+    row_id: string,
+  ): XStudioArrangeSourceResolution {
+    const row = typeof document !== "undefined" ? document.getElementById(row_id) : null;
+    if (!(row instanceof HTMLElement) || !node._meta) {
+      return this._arrange_source_invalid("no-source", "No tree drag source resolved");
+    }
+
+    if (!this._object_tree_node_can_drag(node)) {
+      return this._arrange_source_invalid("not-draggable", "Object cannot be moved from the tree");
+    }
+
+    const id = this._arrange_node_json_id(node);
+    if (!id) {
+      return this._arrange_source_invalid("missing-source-id", "Tree drag source has no persisted object id");
+    }
+
+    if (!this._arrange_node_source_view_id(node)) {
+      return this._arrange_source_invalid("missing-source-view", "Tree drag source has no source view");
+    }
+
+    return {
+      _ok: true,
+      _id: id,
+      _type: node._meta._type.trim() || "object",
+      _resolved: {
+        _id: id,
+        _type: node._meta._type.trim() || "object",
+        _element: row,
+        _object: node._object,
+        _node: node,
+      },
+      _node: node,
+    };
+  }
+
+  private _object_tree_active_scope_matches_drag() {
+    const scope = this._arrange_scope_key();
+    if (this._object_tree_drag_app_id && scope._app_id && this._object_tree_drag_app_id !== scope._app_id) return false;
+    if (this._object_tree_drag_env && scope._env && this._object_tree_drag_env !== scope._env) return false;
+    return true;
+  }
+
+  private _bind_object_tree_drag_document_handlers() {
+    if (typeof document === "undefined") return;
+    if (!this._object_tree_pointer_move_handler) {
+      this._object_tree_pointer_move_handler = (event: PointerEvent) => this._handle_object_tree_pointer_move(event);
+      document.addEventListener("pointermove", this._object_tree_pointer_move_handler, true);
+    }
+    if (!this._object_tree_pointer_up_handler) {
+      this._object_tree_pointer_up_handler = (event: PointerEvent) => this._handle_object_tree_pointer_up(event);
+      document.addEventListener("pointerup", this._object_tree_pointer_up_handler, true);
+    }
+    if (!this._object_tree_pointer_cancel_handler) {
+      this._object_tree_pointer_cancel_handler = (event: PointerEvent) => this._handle_object_tree_pointer_cancel(event);
+      document.addEventListener("pointercancel", this._object_tree_pointer_cancel_handler, true);
+    }
+    if (!this._object_tree_keydown_handler) {
+      this._object_tree_keydown_handler = (event: KeyboardEvent) => this._handle_object_tree_drag_keydown(event);
+      document.addEventListener("keydown", this._object_tree_keydown_handler, true);
+    }
+    if (!this._object_tree_click_suppress_handler) {
+      this._object_tree_click_suppress_handler = (event: MouseEvent) => this._handle_object_tree_drag_click(event);
+      document.addEventListener("click", this._object_tree_click_suppress_handler, true);
+    }
+  }
+
+  private _unbind_object_tree_drag_document_handlers() {
+    if (typeof document === "undefined") return;
+    if (this._object_tree_pointer_move_handler) {
+      document.removeEventListener("pointermove", this._object_tree_pointer_move_handler, true);
+    }
+    if (this._object_tree_pointer_up_handler) {
+      document.removeEventListener("pointerup", this._object_tree_pointer_up_handler, true);
+    }
+    if (this._object_tree_pointer_cancel_handler) {
+      document.removeEventListener("pointercancel", this._object_tree_pointer_cancel_handler, true);
+    }
+    if (this._object_tree_keydown_handler) {
+      document.removeEventListener("keydown", this._object_tree_keydown_handler, true);
+    }
+    if (this._object_tree_click_suppress_handler && !this._object_tree_drag_suppress_click) {
+      document.removeEventListener("click", this._object_tree_click_suppress_handler, true);
+      this._object_tree_click_suppress_handler = null;
+    }
+    this._object_tree_pointer_move_handler = null;
+    this._object_tree_pointer_up_handler = null;
+    this._object_tree_pointer_cancel_handler = null;
+    this._object_tree_keydown_handler = null;
+  }
+
+  private _stop_object_tree_auto_scroll() {
+    const frame = this._object_tree_scroll_frame;
+    this._object_tree_scroll_frame = 0;
+    if (frame && typeof window !== "undefined") {
+      window.cancelAnimationFrame?.(frame);
+    }
+  }
+
+  private _stop_object_tree_auto_expand() {
+    const timer = this._object_tree_expand_timer;
+    this._object_tree_expand_timer = 0;
+    this._object_tree_expand_node_key = "";
+    if (timer && typeof window !== "undefined") {
+      window.clearTimeout?.(timer);
+    }
+  }
+
+  private _clear_object_tree_drop_preview() {
+    if (this._object_tree_drop_row) {
+      this._object_tree_drop_row.classList.remove(
+        "xstudio-object-tree-row-drop-before",
+        "xstudio-object-tree-row-drop-inside",
+        "xstudio-object-tree-row-drop-after",
+        "xstudio-object-tree-row-drop-invalid",
+      );
+      this._object_tree_drop_row.removeAttribute("data-xstudio-drop-position");
+    }
+    this._object_tree_drop_row = null;
+    this._object_tree_drop_preview = null;
+  }
+
+  private _clear_object_tree_drag_state(status?: string) {
+    const source_row = this._object_tree_drag_source_row;
+    if (
+      source_row instanceof HTMLElement &&
+      this._object_tree_drag_pointer_id >= 0 &&
+      source_row.hasPointerCapture?.(this._object_tree_drag_pointer_id)
+    ) {
+      source_row.releasePointerCapture?.(this._object_tree_drag_pointer_id);
+    }
+
+    this._stop_object_tree_auto_scroll();
+    this._stop_object_tree_auto_expand();
+    this._clear_object_tree_drop_preview();
+    this._unbind_object_tree_drag_document_handlers();
+    source_row?.classList.remove("xstudio-object-tree-row-drag-source");
+    this._object_tree_drag_source = null;
+    this._object_tree_dragging = false;
+    this._object_tree_drag_start_kind = "row";
+    this._object_tree_drag_start_x = 0;
+    this._object_tree_drag_start_y = 0;
+    this._object_tree_drag_last_x = 0;
+    this._object_tree_drag_last_y = 0;
+    this._object_tree_drag_pointer_id = -1;
+    this._object_tree_drag_app_id = "";
+    this._object_tree_drag_env = "";
+    this._object_tree_drag_source_row = null;
+    if (typeof document !== "undefined") {
+      document.body?.classList?.remove?.("xstudio-object-tree-drag-active");
+    }
+    if (status) this._write_studio_status(status);
+  }
+
+  private _start_object_tree_drag(
+    node: XStudioObjectTreeNode,
+    row_id: string,
+    event: PointerEvent | null,
+    kind: XStudioObjectTreeDragKind,
+  ) {
+    if (this._object_tree_drag_committing) return;
+    if (event && typeof event.button === "number" && event.button !== 0) return;
+
+    const source = this._resolve_object_tree_drag_source(node, row_id);
+    if (!source._ok) return;
+
+    const scope = this._arrange_scope_key();
+    const pointer_id = Number(event?.pointerId ?? -1);
+    const start_x = Number(event?.clientX ?? 0);
+    const start_y = Number(event?.clientY ?? 0);
+    this._clear_object_tree_drag_state();
+    this._object_tree_drag_source = source;
+    this._object_tree_drag_start_kind = kind;
+    this._object_tree_drag_start_x = start_x;
+    this._object_tree_drag_start_y = start_y;
+    this._object_tree_drag_last_x = start_x;
+    this._object_tree_drag_last_y = start_y;
+    this._object_tree_drag_pointer_id = Number.isFinite(pointer_id) ? pointer_id : -1;
+    this._object_tree_drag_app_id = scope._app_id;
+    this._object_tree_drag_env = scope._env;
+    this._object_tree_drag_source_row = source._resolved._element;
+    this._object_tree_drag_source_row.classList.add("xstudio-object-tree-row-drag-source");
+    if (this._object_tree_drag_pointer_id >= 0) {
+      this._object_tree_drag_source_row.setPointerCapture?.(this._object_tree_drag_pointer_id);
+    }
+    this._bind_object_tree_drag_document_handlers();
+  }
+
+  private _resolve_object_tree_drop_mode(event: PointerEvent, target: XStudioPickerResolvedObject): XStudioArrangeDropMode {
+    return this._resolve_arrange_drop_mode(event, target);
+  }
+
+  private _resolve_object_tree_drop_preview(
+    event: PointerEvent,
+    source_node: XStudioObjectTreeNode,
+  ): XStudioArrangeDropPreview | null {
+    const target = this._resolve_object_tree_row_target(this._object_tree_event_target(event));
+    if (!target?._node?._meta) return null;
+
+    const mode = this._resolve_object_tree_drop_mode(event, target);
+    const validation = this._validate_arrange_drop(source_node, target._node, mode);
+    return {
+      _target: target,
+      _mode: mode,
+      _validation: validation,
+    };
+  }
+
+  private _show_object_tree_drop_preview(preview: XStudioArrangeDropPreview) {
+    this._clear_object_tree_drop_preview();
+    const row = preview._target._element;
+    const valid = preview._validation._ok === true;
+    row.classList.add(
+      valid
+        ? `xstudio-object-tree-row-drop-${preview._mode}`
+        : "xstudio-object-tree-row-drop-invalid",
+    );
+    row.setAttribute("data-xstudio-drop-position", valid ? preview._mode : "invalid");
+    this._object_tree_drop_row = row;
+    this._object_tree_drop_preview = preview;
+  }
+
+  private _schedule_object_tree_auto_expand(preview: XStudioArrangeDropPreview | null) {
+    if (!preview || !preview._validation._ok || preview._mode !== "inside") {
+      this._stop_object_tree_auto_expand();
+      return;
+    }
+
+    const node = preview._validation._target_node;
+    if (node._children.length === 0) {
+      this._stop_object_tree_auto_expand();
+      return;
+    }
+    if (this._object_tree_expanded_node_keys.has(node._node_key)) {
+      this._stop_object_tree_auto_expand();
+      return;
+    }
+    if (this._object_tree_expand_node_key === node._node_key && this._object_tree_expand_timer) return;
+
+    this._stop_object_tree_auto_expand();
+    this._object_tree_expand_node_key = node._node_key;
+    if (typeof window === "undefined" || typeof window.setTimeout !== "function") {
+      this._object_tree_expanded_node_keys.add(node._node_key);
+      this._object_tree_touched_expansion_node_keys.add(node._node_key);
+      this._render_cached_object_tree_nodes();
+      return;
+    }
+
+    this._object_tree_expand_timer = window.setTimeout(() => {
+      this._object_tree_expand_timer = 0;
+      this._object_tree_expand_node_key = "";
+      if (!this._object_tree_dragging) return;
+      this._object_tree_expanded_node_keys.add(node._node_key);
+      this._object_tree_touched_expansion_node_keys.add(node._node_key);
+      this._render_cached_object_tree_nodes();
+    }, STUDIO_OBJECT_TREE_DRAG_EXPAND_DELAY_MS);
+  }
+
+  private _object_tree_scroll_once() {
+    const results = this._object_tree_results_dom();
+    if (!(results instanceof HTMLElement)) return;
+
+    const rect = results.getBoundingClientRect();
+    let dy = 0;
+    if (this._object_tree_drag_last_y <= rect.top + STUDIO_ARRANGE_SCROLL_EDGE_PX) dy = -STUDIO_ARRANGE_SCROLL_STEP_PX;
+    if (this._object_tree_drag_last_y >= rect.bottom - STUDIO_ARRANGE_SCROLL_EDGE_PX) dy = STUDIO_ARRANGE_SCROLL_STEP_PX;
+    if (dy) results.scrollTop = Math.max(0, results.scrollTop + dy);
+  }
+
+  private _schedule_object_tree_auto_scroll() {
+    if (!this._object_tree_dragging || this._object_tree_scroll_frame) return;
+    if (typeof window === "undefined" || typeof window.requestAnimationFrame !== "function") {
+      this._object_tree_scroll_once();
+      return;
+    }
+
+    this._object_tree_scroll_frame = window.requestAnimationFrame(() => {
+      this._object_tree_scroll_frame = 0;
+      if (!this._object_tree_dragging) return;
+      this._object_tree_scroll_once();
+      this._schedule_object_tree_auto_scroll();
+    });
+  }
+
+  private _handle_object_tree_pointer_move(event: PointerEvent) {
+    const source = this._object_tree_drag_source;
+    if (!source?._ok || this._object_tree_drag_committing) return;
+
+    this._object_tree_drag_last_x = Number(event.clientX ?? this._object_tree_drag_last_x);
+    this._object_tree_drag_last_y = Number(event.clientY ?? this._object_tree_drag_last_y);
+
+    if (!this._object_tree_dragging) {
+      const dx = this._object_tree_drag_last_x - this._object_tree_drag_start_x;
+      const dy = this._object_tree_drag_last_y - this._object_tree_drag_start_y;
+      const distance = Math.sqrt((dx * dx) + (dy * dy));
+      if (this._object_tree_drag_start_kind !== "handle" && distance < STUDIO_ARRANGE_DRAG_THRESHOLD_PX) {
+        return;
+      }
+      this._object_tree_dragging = true;
+      this._object_tree_drag_suppress_click = true;
+      if (typeof document !== "undefined") {
+        document.body?.classList?.add?.("xstudio-object-tree-drag-active");
+      }
+      this._write_studio_status("Moving object from tree...");
+    }
+
+    event.preventDefault?.();
+    event.stopPropagation?.();
+    const preview = this._resolve_object_tree_drop_preview(event, source._node);
+    if (preview) {
+      this._show_object_tree_drop_preview(preview);
+    } else {
+      this._clear_object_tree_drop_preview();
+    }
+    this._schedule_object_tree_auto_expand(preview);
+    this._schedule_object_tree_auto_scroll();
+  }
+
+  private _handle_object_tree_pointer_up(event: PointerEvent) {
+    if (this._object_tree_drag_committing) return;
+    if (this._object_tree_dragging) {
+      event.preventDefault?.();
+      event.stopPropagation?.();
+    }
+    void this._finish_object_tree_drop(event);
+  }
+
+  private _handle_object_tree_pointer_cancel(event: PointerEvent) {
+    event.preventDefault?.();
+    event.stopPropagation?.();
+    this._object_tree_drag_suppress_click = true;
+    this._clear_object_tree_drag_state("Tree move cancelled");
+  }
+
+  private _handle_object_tree_drag_keydown(event: KeyboardEvent) {
+    if (event.key !== "Escape") return;
+    event.preventDefault?.();
+    event.stopPropagation?.();
+    this._object_tree_drag_suppress_click = true;
+    this._clear_object_tree_drag_state("Tree move cancelled");
+  }
+
+  private _handle_object_tree_drag_click(event: MouseEvent) {
+    if (!this._object_tree_drag_suppress_click) return;
+    event.preventDefault?.();
+    event.stopPropagation?.();
+    event.stopImmediatePropagation?.();
+    this._clear_object_tree_click_suppression_handler();
+  }
+
+  private _clear_object_tree_click_suppression_handler() {
+    this._object_tree_drag_suppress_click = false;
+    if (typeof document !== "undefined" && this._object_tree_click_suppress_handler) {
+      document.removeEventListener("click", this._object_tree_click_suppress_handler, true);
+      this._object_tree_click_suppress_handler = null;
+    }
+  }
+
+  private async _commit_object_tree_drop(validation: Extract<XStudioArrangeDropValidation, { _ok: true }>) {
+    if (this._object_tree_drag_committing) return;
+    if (!this._object_tree_active_scope_matches_drag()) {
+      this._write_studio_status("Tree move cancelled: app changed");
+      return;
+    }
+    if (this._arrange_drop_is_noop(validation)) {
+      this._write_studio_status("Tree move unchanged");
+      return;
+    }
+
+    const params = this._build_arrange_move_params(validation);
+    if (!params) {
+      this._write_studio_status("Tree move failed: no active app");
+      return;
+    }
+
+    this._object_tree_drag_committing = true;
+    this._write_studio_status("Moving object from tree...");
+    this._log("object tree drag move request", {
+      _source_view_id: params._view_id,
+      _target_id: params._target_id,
+      _target_parent_id: params._target_parent_id,
+      _move_position: params._move_position,
+      _before_id: params._before_id,
+      _after_id: params._after_id,
+    });
+
+    try {
+      const result = await this._send_xvibe_command("apply-view-edit", params);
+      if (!is_obj(result) || result._ok !== true) {
+        this._write_studio_status(this._format_apply_view_edit_failure(result, { _params: params }));
+        this._error("object tree drag move failed", {
+          _structured_error: result,
+        });
+        return;
+      }
+
+      await this._request_object_tree_structured_edit_refresh(params, result);
+      this._selected_object_pending_select_id = validation._source_id;
+      for (const key of this._object_tree_node_ancestor_keys(validation._parent_node)) {
+        this._object_tree_expanded_node_keys.add(key);
+      }
+      this._object_tree_expanded_node_keys.add(validation._parent_node._node_key);
+      this._refresh_object_tree_for_current_view();
+      this._reveal_moved_object_after_refresh(validation._source_id);
+      this._write_studio_status("Moved object from tree");
+    } catch (err) {
+      const message = `Tree move failed: ${to_err(err)}`;
+      this._write_studio_status(message);
+      this._error("object tree drag move failed", {
+        _error: to_err(err),
+      });
+    } finally {
+      this._object_tree_drag_committing = false;
+    }
+  }
+
+  private async _finish_object_tree_drop(event: PointerEvent) {
+    const source = this._object_tree_drag_source;
+    const was_dragging = this._object_tree_dragging;
+    const preview = was_dragging && source?._ok
+      ? this._resolve_object_tree_drop_preview(event, source._node) ?? this._object_tree_drop_preview
+      : null;
+
+    this._stop_object_tree_auto_scroll();
+    this._stop_object_tree_auto_expand();
+
+    if (!was_dragging) {
+      this._object_tree_drag_suppress_click = false;
+      this._clear_object_tree_drag_state();
+      return;
+    }
+
+    this._object_tree_drag_suppress_click = true;
+    if (!preview) {
+      this._clear_object_tree_drag_state("Tree move target rejected");
+      return;
+    }
+
+    this._show_object_tree_drop_preview(preview);
+    if (!preview._validation._ok) {
+      const message = preview._validation._message || "Tree move target rejected";
+      this._clear_object_tree_drag_state(message);
+      return;
+    }
+
+    const validation = preview._validation;
+    this._clear_object_tree_drag_state();
+    await this._commit_object_tree_drop(validation);
+  }
+
+  private _bind_arrange_mode_canvas() {
+    const canvas = this._object_picker_canvas();
+    if (!canvas) return;
+    if (this._arrange_canvas_dom === canvas && this._arrange_pointer_down_handler) return;
+
+    this._unbind_arrange_mode_canvas();
+    this._arrange_canvas_dom = canvas;
+    this._arrange_pointer_down_handler = (event: PointerEvent) => this._handle_arrange_pointer_down(event);
+    this._arrange_pointer_move_handler = (event: PointerEvent) => this._handle_arrange_pointer_move(event);
+    this._arrange_pointer_up_handler = (event: PointerEvent) => this._handle_arrange_pointer_up(event);
+    this._arrange_pointer_cancel_handler = (event: PointerEvent) => this._handle_arrange_pointer_cancel(event);
+    this._arrange_pointer_leave_handler = (event: PointerEvent) => this._handle_arrange_pointer_cancel(event);
+    this._arrange_click_handler = (event: MouseEvent) => this._handle_arrange_suppressed_event(event);
+    this._arrange_dblclick_handler = (event: MouseEvent) => this._handle_arrange_suppressed_event(event);
+    this._arrange_contextmenu_handler = (event: MouseEvent) => this._handle_arrange_suppressed_event(event);
+
+    canvas.addEventListener("pointerdown", this._arrange_pointer_down_handler, true);
+    canvas.addEventListener("pointermove", this._arrange_pointer_move_handler, true);
+    canvas.addEventListener("pointerup", this._arrange_pointer_up_handler, true);
+    canvas.addEventListener("pointercancel", this._arrange_pointer_cancel_handler, true);
+    canvas.addEventListener("pointerleave", this._arrange_pointer_leave_handler, true);
+    canvas.addEventListener("click", this._arrange_click_handler, true);
+    canvas.addEventListener("dblclick", this._arrange_dblclick_handler, true);
+    canvas.addEventListener("contextmenu", this._arrange_contextmenu_handler, true);
+  }
+
+  private _set_arrange_mode_active(active: boolean) {
+    if (active === this._arrange_mode_active) {
+      if (active) this._bind_arrange_mode_canvas();
+      this._apply_arrange_mode_state();
+      return;
+    }
+
+    this._arrange_mode_active = active;
+    if (active) {
+      this._cancel_object_picker();
+      this._refresh_object_tree_for_current_view();
+      this._bind_arrange_mode_canvas();
+    } else {
+      this._clear_arrange_drag_state();
+      this._unbind_arrange_mode_canvas();
+    }
+    this._apply_arrange_mode_state();
+  }
+
+  private _toggle_arrange_mode() {
+    this._set_arrange_mode_active(!this._arrange_mode_active);
+  }
+
+  private _cancel_arrange_mode() {
+    this._set_arrange_mode_active(false);
+  }
+
+  private _arrange_invalid(reason: string, message: string): XStudioArrangeDropValidation {
+    return {
+      _ok: false,
+      _reason: reason,
+      _message: message,
+    };
+  }
+
+  private _arrange_source_invalid(reason: string, message: string): XStudioArrangeSourceResolution {
+    return {
+      _ok: false,
+      _reason: reason,
+      _message: message,
+    };
+  }
+
+  private _arrange_node_json_id(node: XStudioObjectTreeNode | null | undefined) {
+    return node?._meta?._json_id?.trim() || node?._meta?._id?.trim() || "";
+  }
+
+  private _arrange_node_source_view_id(node: XStudioObjectTreeNode | null | undefined) {
+    return node?._meta?._source_view_id?.trim() || "";
+  }
+
+  private _arrange_node_path(node: XStudioObjectTreeNode | null | undefined) {
+    return node?._meta?._path?.trim() || "";
+  }
+
+  private _resolve_arrange_drag_source(target: EventTarget | null | undefined): XStudioArrangeSourceResolution {
+    const resolved = this._resolve_picker_dom_target(target);
+    const node = resolved?._node ?? null;
+    if (!resolved || !node?._meta) {
+      return this._arrange_source_invalid("no-source", "No arrange source resolved");
+    }
+
+    const id = this._arrange_node_json_id(node);
+    if (!id) {
+      return this._arrange_source_invalid("missing-source-id", "Arrange source has no persisted object id");
+    }
+
+    if (!this._arrange_node_source_view_id(node)) {
+      return this._arrange_source_invalid("missing-source-view", "Arrange source has no source view");
+    }
+
+    if (this._selected_object_is_root_view(node._meta)) {
+      return this._arrange_source_invalid("root-source", "Root view cannot be arranged");
+    }
+
+    return {
+      _ok: true,
+      _id: id,
+      _type: node._meta._type.trim() || resolved._type || "object",
+      _resolved: resolved,
+      _node: node,
+    };
+  }
+
+  private _object_tree_node_is_arrange_descendant(
+    source_node: XStudioObjectTreeNode,
+    target_node: XStudioObjectTreeNode,
+  ) {
+    const source_view_id = this._arrange_node_source_view_id(source_node);
+    const target_view_id = this._arrange_node_source_view_id(target_node);
+    if (!source_view_id || source_view_id !== target_view_id) return false;
+
+    const source_path = this._arrange_node_path(source_node);
+    const target_path = this._arrange_node_path(target_node);
+    if (!source_path || !target_path || source_path === "$") return false;
+    return target_path.startsWith(`${source_path}._children[`);
+  }
+
+  private _arrange_parent_accepts_child(
+    parent_node: XStudioObjectTreeNode,
+    child_type: string,
+  ) {
+    const capability = this._object_tree_child_capability(parent_node);
+    if (capability._design_children_disallowed) {
+      return this._arrange_invalid("children-disallowed", "Destination rejects children");
+    }
+    if (!capability._allowed) {
+      return this._arrange_invalid("children-not-allowed", "Destination does not accept children");
+    }
+    if (!this._skill_children_accepts_type(capability._skill, child_type)) {
+      return this._arrange_invalid("rejected-child-type", "Destination rejects this object type");
+    }
+    return null;
+  }
+
+  private _resolve_arrange_relative_parent(target_node: XStudioObjectTreeNode) {
+    const meta = target_node._meta;
+    if (!meta) return null;
+    if (this._selected_object_is_root_view(meta)) return null;
+    return this._find_object_tree_node_by_path(meta._source_view_id, meta._parent_path || "$");
+  }
+
+  private _validate_arrange_drop(
+    source_node: XStudioObjectTreeNode,
+    target_node: XStudioObjectTreeNode,
+    mode: XStudioArrangeDropMode,
+  ): XStudioArrangeDropValidation {
+    const source_id = this._arrange_node_json_id(source_node);
+    const source_type = source_node._meta?._type?.trim().toLowerCase() || "";
+    const source_view_id = this._arrange_node_source_view_id(source_node);
+    const target_id = this._arrange_node_json_id(target_node);
+    const target_view_id = this._arrange_node_source_view_id(target_node);
+
+    if (!source_id) return this._arrange_invalid("missing-source-id", "Arrange source has no persisted object id");
+    if (!target_id) return this._arrange_invalid("missing-target-id", "Drop target has no persisted object id");
+    if (!source_type) return this._arrange_invalid("missing-source-type", "Arrange source has no object type");
+    if (!source_view_id || !target_view_id) return this._arrange_invalid("missing-source-view", "Drop target has no source view");
+    if (source_view_id !== target_view_id) {
+      return this._arrange_invalid("source-view-mismatch", "Arrange source and drop target are in different source views");
+    }
+    if (this._selected_object_is_root_view(source_node._meta)) {
+      return this._arrange_invalid("root-source", "Root view cannot be arranged");
+    }
+    if (source_id === target_id) {
+      return this._arrange_invalid("same-target", "Drop target is the arrange source");
+    }
+    if (this._object_tree_node_is_arrange_descendant(source_node, target_node)) {
+      return this._arrange_invalid("cycle", "Cannot move an object into its own descendants");
+    }
+
+    if (mode === "inside") {
+      const parent_error = this._arrange_parent_accepts_child(target_node, source_type);
+      if (parent_error) return parent_error;
+      if (!this._object_tree_node_can_insert_inside(target_node, source_type)) {
+        return this._arrange_invalid("insert-mode-not-allowed", "Drop target does not allow inside insertion");
+      }
+      return {
+        _ok: true,
+        _mode: mode,
+        _source_id: source_id,
+        _source_type: source_type,
+        _target_id: target_id,
+        _source_view_id: source_view_id,
+        _source_node: source_node,
+        _target_node: target_node,
+        _parent_node: target_node,
+        _parent_id: target_id,
+        _before_id: "",
+        _after_id: "",
+      };
+    }
+
+    const parent_node = this._resolve_arrange_relative_parent(target_node);
+    if (!parent_node) {
+      return this._arrange_invalid("missing-parent", "Drop target has no valid parent for relative insertion");
+    }
+
+    const parent_error = this._arrange_parent_accepts_child(parent_node, source_type);
+    if (parent_error) return parent_error;
+    if (!this._object_tree_node_can_insert_relative(target_node, mode)) {
+      return this._arrange_invalid("insert-mode-not-allowed", `Drop target does not allow ${mode} insertion`);
+    }
+
+    return {
+      _ok: true,
+      _mode: mode,
+      _source_id: source_id,
+      _source_type: source_type,
+      _target_id: target_id,
+      _source_view_id: source_view_id,
+      _source_node: source_node,
+      _target_node: target_node,
+      _parent_node: parent_node,
+      _parent_id: this._arrange_node_json_id(parent_node),
+      _before_id: mode === "before" ? target_id : "",
+      _after_id: mode === "after" ? target_id : "",
+    };
   }
 
   private _toggle_explorer_section(section_id: XStudioExplorerSectionId) {
@@ -3923,6 +13935,1890 @@ export class XStudioModule extends XModule {
       _section: section_id,
       _open: open,
     });
+  }
+
+  private _canonical_data_feature_id(value: any) {
+    const normalized = _xu.normalize_id(String(value ?? "")) ?? "";
+    return normalized.replace(/-/g, "_");
+  }
+
+  private _data_feature_valid_canonical_id(value: string) {
+    return /^[a-z][a-z0-9_]*$/.test(value);
+  }
+
+  private _data_feature_draft_snapshot() {
+    return JSON.stringify({
+      _suggestion_prompt: this._data_feature_state._suggestion_prompt,
+      _feature_name: this._data_feature_state._feature_name,
+      _entity_id: this._data_feature_state._entity_id,
+      _entity_id_touched: this._data_feature_state._entity_id_touched,
+      _options: this._data_feature_state._options,
+      _fields: this._data_feature_state._fields.map((field) => ({
+        _name: field._name,
+        _field_id: field._field_id,
+        _type: field._type,
+        _required: field._required,
+        _default: field._default,
+        _options: field._options,
+        _field_id_touched: field._field_id_touched,
+      })),
+    });
+  }
+
+  private _data_feature_has_unsaved_changes() {
+    if (!this._data_feature_state._open) return false;
+    if (this._data_feature_state._status === "running") return false;
+    return this._data_feature_draft_snapshot() !== this._data_feature_initial_snapshot;
+  }
+
+  private _confirm_data_feature_close_if_dirty() {
+    if (!this._data_feature_has_unsaved_changes()) return true;
+    if (typeof window === "undefined" || typeof window.confirm !== "function") return true;
+    return window.confirm("Discard unsaved Data Feature changes?");
+  }
+
+  private _set_data_feature_control_value(object_id: string, value: string) {
+    const control = XUI.getObject(object_id) as any;
+    if (!control) return;
+    const normalized = String(value ?? "");
+    if (typeof control.setValue === "function") {
+      control.setValue(normalized);
+    }
+    if (control.dom && "value" in control.dom) {
+      control.dom.value = normalized;
+    }
+    control.value = normalized;
+    control._value = normalized;
+  }
+
+  private _set_data_feature_control_disabled(object_id: string, disabled: boolean) {
+    const control = XUI.getObject(object_id) as any;
+    if (!control) return;
+    control.disabled = disabled;
+    if (control.dom && "disabled" in control.dom) {
+      control.dom.disabled = disabled;
+    }
+    if (disabled) {
+      control.dom?.setAttribute?.("disabled", "true");
+    } else {
+      control.dom?.removeAttribute?.("disabled");
+    }
+  }
+
+  private _data_feature_current_scope_key() {
+    const app_id = this._client().getActiveAppId() || "";
+    const env = this._client().getActiveEnv() || "";
+    return `${app_id}::${env}`;
+  }
+
+  private _data_feature_has_editable_draft() {
+    return Boolean(
+      this._data_feature_state._suggestion_prompt.trim() ||
+      this._data_feature_state._feature_name.trim() ||
+      this._data_feature_state._entity_id.trim() ||
+      this._data_feature_normalized_fields().length > 0 ||
+      this._data_feature_state._suggestion_status !== "idle" ||
+      this._data_feature_state._suggestion_assumptions.length > 0 ||
+      this._data_feature_state._suggestion_warnings.length > 0,
+    );
+  }
+
+  private _data_feature_field_control_id(field: XStudioDataFeatureFieldDraft, name: string) {
+    return `${STUDIO_APP_EXPLORER_DATA_FEATURE_FIELD_PREFIX}-${field._key}-${name}`;
+  }
+
+  private _data_feature_option_control_id(option_id: XStudioDataFeatureOptionId) {
+    return `${STUDIO_APP_EXPLORER_DATA_FEATURE_OPTION_PREFIX}-${option_id}`;
+  }
+
+  private _read_data_feature_control_value(object_id: string, fallback: string) {
+    const control = XUI.getObject(object_id) as any;
+    if (!control) return fallback;
+    if (typeof control.getValue === "function") {
+      return String(control.getValue() ?? "");
+    }
+    if (control.dom && "value" in control.dom) {
+      return String(control.dom.value ?? "");
+    }
+    if ("value" in control) return String(control.value ?? "");
+    if ("_value" in control) return String(control._value ?? "");
+    return fallback;
+  }
+
+  private _read_data_feature_control_checked(object_id: string, fallback: boolean) {
+    const control = XUI.getObject(object_id) as any;
+    if (!control) return fallback;
+    if (control.dom && "checked" in control.dom) return control.dom.checked === true;
+    if ("checked" in control) return control.checked === true;
+    if ("_checked" in control) return control._checked === true;
+    return fallback;
+  }
+
+  private _read_data_feature_field_type(object_id: string, fallback: XStudioDataFeatureFieldType) {
+    const value = this._read_data_feature_control_value(object_id, fallback);
+    return STUDIO_DATA_FEATURE_FIELD_TYPES.includes(value as XStudioDataFeatureFieldType)
+      ? value as XStudioDataFeatureFieldType
+      : fallback;
+  }
+
+  private _sync_data_feature_state_from_controls() {
+    const state = this._data_feature_state;
+    state._suggestion_prompt = this._read_data_feature_control_value(
+      STUDIO_APP_EXPLORER_DATA_FEATURE_ASK_INPUT_ID,
+      state._suggestion_prompt,
+    );
+    const previous_feature_name = state._feature_name;
+    state._feature_name = this._read_data_feature_control_value(
+      STUDIO_APP_EXPLORER_DATA_FEATURE_NAME_ID,
+      state._feature_name,
+    ).trimStart();
+    const entity_id_from_control = this._read_data_feature_control_value(
+      STUDIO_APP_EXPLORER_DATA_FEATURE_ENTITY_ID,
+      state._entity_id,
+    ).trimStart();
+    state._entity_id = entity_id_from_control;
+    if (state._entity_id && state._entity_id !== this._canonical_data_feature_id(state._feature_name)) {
+      state._entity_id_touched = true;
+    }
+    if (!state._entity_id_touched && state._feature_name !== previous_feature_name) {
+      state._entity_id = this._canonical_data_feature_id(state._feature_name);
+      this._set_data_feature_control_value(STUDIO_APP_EXPLORER_DATA_FEATURE_ENTITY_ID, state._entity_id);
+    }
+
+    for (const field of state._fields) {
+      const previous_name = field._name;
+      field._name = this._read_data_feature_control_value(
+        this._data_feature_field_control_id(field, "name"),
+        field._name,
+      ).trimStart();
+      field._field_id = this._read_data_feature_control_value(
+        this._data_feature_field_control_id(field, "id"),
+        field._field_id,
+      ).trimStart();
+      if (field._field_id && field._field_id !== this._canonical_data_feature_id(field._name)) {
+        field._field_id_touched = true;
+      }
+      if (!field._field_id_touched && field._name !== previous_name) {
+        field._field_id = this._canonical_data_feature_id(field._name);
+        this._set_data_feature_control_value(this._data_feature_field_control_id(field, "id"), field._field_id);
+      }
+      field._type = this._read_data_feature_field_type(
+        this._data_feature_field_control_id(field, "type"),
+        field._type,
+      );
+      field._required = this._read_data_feature_control_checked(
+        this._data_feature_field_control_id(field, "required"),
+        field._required,
+      );
+      field._default = this._read_data_feature_control_value(
+        this._data_feature_field_control_id(field, "default"),
+        field._default,
+      ).trimStart();
+      field._options = this._read_data_feature_control_value(
+        this._data_feature_field_control_id(field, "options"),
+        field._options,
+      ).trimStart();
+    }
+
+    for (const option_id of STUDIO_DATA_FEATURE_OPTION_IDS) {
+      state._options[option_id] = this._read_data_feature_control_checked(
+        this._data_feature_option_control_id(option_id),
+        state._options[option_id] === true,
+      );
+    }
+  }
+
+  private _clear_data_feature_error_for_input() {
+    if (!this._data_feature_state._error) return;
+    this._data_feature_state._error = "";
+    this._set_data_feature_error_label("");
+  }
+
+  private _data_feature_new_field() {
+    this._data_feature_field_seq += 1;
+    return create_data_feature_field(`field-${this._data_feature_field_seq}`);
+  }
+
+  private _data_feature_artifact_ids(entity_id = this._data_feature_state._entity_id) {
+    const id = entity_id.trim();
+    return {
+      _entity_id: id,
+      _list_view_id: id ? `${id}-list` : "",
+      _create_form_view_id: id ? `create-${id}` : "",
+      _create_flow_id: id ? `create-${id}` : "",
+      _update_flow_id: id ? `update-${id}` : "",
+      _delete_flow_id: id ? `delete-${id}` : "",
+    };
+  }
+
+  private _data_feature_existing_artifact_ids(type: XStudioAppExplorerArtifactType) {
+    const category =
+      type === "view" ? "views" :
+        type === "flow" ? "flows" :
+          type === "entity" ? "entities" :
+            "modules";
+    return new Set(
+      (this._app_explorer_artifacts[category] ?? [])
+        .map((artifact) => artifact._id.trim())
+        .filter(Boolean),
+    );
+  }
+
+  private _data_feature_duplicate_artifacts(entity_id = this._data_feature_state._entity_id) {
+    const artifacts = this._data_feature_artifact_ids(entity_id);
+    const options = this._data_feature_state._options;
+    const views = this._data_feature_existing_artifact_ids("view");
+    const flows = this._data_feature_existing_artifact_ids("flow");
+    const entities = this._data_feature_existing_artifact_ids("entity");
+    const duplicates: string[] = [];
+
+    if (options.entity && artifacts._entity_id && entities.has(artifacts._entity_id)) {
+      duplicates.push(`Entity '${artifacts._entity_id}' already exists.`);
+    }
+    if (options.list_view && artifacts._list_view_id && views.has(artifacts._list_view_id)) {
+      duplicates.push(`View '${artifacts._list_view_id}' already exists.`);
+    }
+    if (options.create_form && artifacts._create_form_view_id && views.has(artifacts._create_form_view_id)) {
+      duplicates.push(`View '${artifacts._create_form_view_id}' already exists.`);
+    }
+    if (options.create_flow && artifacts._create_flow_id && flows.has(artifacts._create_flow_id)) {
+      duplicates.push(`Flow '${artifacts._create_flow_id}' already exists.`);
+    }
+    if (options.update_flow && artifacts._update_flow_id && flows.has(artifacts._update_flow_id)) {
+      duplicates.push(`Flow '${artifacts._update_flow_id}' already exists.`);
+    }
+    if (options.delete_flow && artifacts._delete_flow_id && flows.has(artifacts._delete_flow_id)) {
+      duplicates.push(`Flow '${artifacts._delete_flow_id}' already exists.`);
+    }
+
+    return duplicates;
+  }
+
+  private _data_feature_options_from_text(value: string) {
+    const seen = new Set<string>();
+    return String(value ?? "")
+      .split(",")
+      .map((option) => option.trim())
+      .filter((option) => {
+        if (!option || seen.has(option)) return false;
+        seen.add(option);
+        return true;
+      });
+  }
+
+  private _data_feature_default_from_text(field: XStudioDataFeatureFieldDraft) {
+    const value = field._default.trim();
+    if (!value) return undefined;
+    if (field._type === "Number") {
+      const number_value = Number(value);
+      return Number.isFinite(number_value) ? number_value : value;
+    }
+    if (field._type === "Boolean") {
+      const normalized = value.toLowerCase();
+      if (["true", "yes", "1", "on"].includes(normalized)) return true;
+      if (["false", "no", "0", "off"].includes(normalized)) return false;
+    }
+    return value;
+  }
+
+  private _data_feature_field_request(field: {
+    _name: string;
+    _field_id: string;
+    _type: XStudioDataFeatureFieldType;
+    _required: boolean;
+    _default?: unknown;
+    _options?: unknown[];
+  }) {
+    return {
+      _name: field._field_id,
+      _label: field._name,
+      _field_id: field._field_id,
+      _type: field._type,
+      _required: field._required,
+      ...(field._default !== undefined ? { _default: field._default } : {}),
+      ...(Array.isArray(field._options) && field._options.length > 0 ? { _options: field._options } : {}),
+    };
+  }
+
+  private _data_feature_normalized_fields() {
+    return this._data_feature_state._fields
+      .map((field) => {
+        const options = this._data_feature_options_from_text(field._options);
+        const default_value = this._data_feature_default_from_text(field);
+        return {
+          _name: field._name.trim(),
+          _field_id: field._field_id.trim(),
+          _type: field._type,
+          _required: field._required === true,
+          ...(default_value !== undefined ? { _default: default_value } : {}),
+          ...(options.length > 0 ? { _options: options } : {}),
+        };
+      })
+      .filter((field) => field._name || field._field_id);
+  }
+
+  private _validate_data_feature(show_errors: boolean) {
+    this._sync_data_feature_state_from_controls();
+    const state = this._data_feature_state;
+    const feature_name = state._feature_name.trim();
+    const entity_id = state._entity_id.trim();
+    const fields = this._data_feature_normalized_fields();
+    const field_ids = new Set<string>();
+    let error = "";
+
+    if (!feature_name) {
+      error = "Feature name is required.";
+    } else if (!entity_id) {
+      error = "Canonical entity ID is required.";
+    } else if (!this._data_feature_valid_canonical_id(entity_id)) {
+      error = "Entity ID must start with a lowercase letter and use lowercase letters, numbers, or underscores.";
+    } else if (fields.length === 0) {
+      error = "Add at least one field.";
+    }
+
+    if (!error) {
+      for (const field of fields) {
+        if (!field._name) {
+          error = "Every field needs a field name.";
+          break;
+        }
+        if (!field._field_id) {
+          error = "Every field needs a canonical field ID.";
+          break;
+        }
+        if (!this._data_feature_valid_canonical_id(field._field_id)) {
+          error = `Field ID '${field._field_id}' is not valid.`;
+          break;
+        }
+        if (field_ids.has(field._field_id)) {
+          error = `Field ID '${field._field_id}' is duplicated.`;
+          break;
+        }
+        field_ids.add(field._field_id);
+      }
+    }
+
+    if (!error) {
+      const invalid_option = STUDIO_DATA_FEATURE_OPTION_IDS.find((option_id) =>
+        typeof state._options[option_id] !== "boolean"
+      );
+      if (invalid_option) {
+        error = "Generation options are invalid.";
+      } else if (state._options.entity !== true) {
+        error = "Entity generation option is required.";
+      }
+    }
+
+    if (!error) {
+      const duplicates = this._data_feature_duplicate_artifacts(entity_id);
+      if (duplicates.length > 0) error = duplicates.join(" ");
+    }
+
+    if (show_errors) {
+      this._data_feature_state._error = error;
+      this._set_data_feature_error_label(error);
+    }
+
+    return {
+      _ok: !error && Boolean(feature_name) && Boolean(entity_id) && fields.length > 0,
+      _error: error,
+      _feature_name: feature_name,
+      _entity_id: entity_id,
+      _fields: fields,
+    };
+  }
+
+  private _data_feature_progress_status(step_id: XStudioDataFeatureProgressStepId) {
+    return this._data_feature_state._progress[step_id] ?? "pending";
+  }
+
+  private _data_feature_controls_disabled() {
+    return this._data_feature_state._status === "running" ||
+      this._data_feature_state._suggestion_status === "loading";
+  }
+
+  private _data_feature_suggest_disabled() {
+    return this._data_feature_state._status === "running" ||
+      this._data_feature_state._suggestion_status === "loading";
+  }
+
+  private _set_data_feature_error_label(message: string) {
+    const error = XUI.getObject(STUDIO_APP_EXPLORER_DATA_FEATURE_ERROR_ID) as any;
+    if (!error) return;
+    error.setText?.(message);
+    error._text = message;
+    if (message) {
+      error.addClass?.("xstudio-add-view-error-visible");
+    } else {
+      error.removeClass?.("xstudio-add-view-error-visible");
+    }
+  }
+
+  private _data_feature_preview_children() {
+    return this._data_feature_preview().map((section) => ({
+      _type: "view",
+      class: "xstudio-data-feature-preview-section",
+      _children: [
+        {
+          _type: "label",
+          class: "xstudio-data-feature-section-title",
+          _text: section._label,
+        },
+        ...(section._items.length > 0
+          ? section._items.map((item) => ({
+            _type: "label",
+            class: "xstudio-data-feature-preview-item",
+            _text: `- ${item}`,
+          }))
+          : [{
+            _type: "label",
+            class: "xstudio-data-feature-preview-empty",
+            _text: "-",
+          }]),
+      ],
+    }));
+  }
+
+  private _update_data_feature_preview() {
+    const preview = XUI.getObject(STUDIO_APP_EXPLORER_DATA_FEATURE_PREVIEW_ID) as any;
+    preview?.update?.({ _children: this._data_feature_preview_children() });
+  }
+
+  private _update_data_feature_progress() {
+    const progress = XUI.getObject(STUDIO_APP_EXPLORER_DATA_FEATURE_PROGRESS_ID) as any;
+    progress?.update?.({
+      class: [
+        "xstudio-data-feature-progress",
+        this._data_feature_state._status !== "idle" ? "" : "xstudio-data-feature-progress-hidden",
+      ].filter(Boolean).join(" "),
+      _children: STUDIO_DATA_FEATURE_PROGRESS_STEPS.map((step) => ({
+        _type: "label",
+        class: [
+          "xstudio-data-feature-progress-step",
+          `xstudio-data-feature-progress-${this._data_feature_progress_status(step._id)}`,
+        ].join(" "),
+        _text: step._label,
+      })),
+    });
+  }
+
+  private _update_data_feature_dirty_marker() {
+    this._set_object_class_token(
+      "xstudio-data-feature-dirty",
+      "xstudio-data-feature-dirty-visible",
+      this._data_feature_has_unsaved_changes(),
+    );
+  }
+
+  private _sync_data_feature_after_draft_change() {
+    this._clear_data_feature_error_for_input();
+    this._update_data_feature_preview();
+    this._update_data_feature_dirty_marker();
+  }
+
+  private _data_feature_draft_empty() {
+    return !this._data_feature_state._feature_name.trim() &&
+      !this._data_feature_state._entity_id.trim() &&
+      this._data_feature_normalized_fields().length === 0;
+  }
+
+  private _data_feature_existing_draft_payload() {
+    return {
+      _feature_name: this._data_feature_state._feature_name.trim(),
+      _entity_id: this._data_feature_state._entity_id.trim(),
+      _fields: this._data_feature_normalized_fields().map((field) => this._data_feature_field_request(field)),
+    };
+  }
+
+  private _data_feature_suggestion_string_list(value: unknown) {
+    if (!Array.isArray(value)) return [];
+    const seen = new Set<string>();
+    return value
+      .map((item) => String(item ?? "").trim())
+      .filter((item) => {
+        if (!item || seen.has(item)) return false;
+        seen.add(item);
+        return true;
+      });
+  }
+
+  private _data_feature_suggestion_field_type(value: unknown): XStudioDataFeatureFieldType {
+    const normalized = String(value ?? "").trim();
+    return STUDIO_DATA_FEATURE_FIELD_TYPES.includes(normalized as XStudioDataFeatureFieldType)
+      ? normalized as XStudioDataFeatureFieldType
+      : "String";
+  }
+
+  private _data_feature_suggestion_default_text(value: unknown) {
+    if (value === undefined || value === null) return "";
+    if (typeof value === "string") return value;
+    if (typeof value === "number" || typeof value === "boolean") return String(value);
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return String(value);
+    }
+  }
+
+  private _data_feature_suggestion_generation_options(value: unknown) {
+    const source = is_obj(value) ? value : {};
+    const options: Partial<Record<XStudioDataFeatureOptionId, boolean>> = {};
+    for (const option_id of STUDIO_DATA_FEATURE_OPTION_IDS) {
+      const underscored = `_${option_id}`;
+      const raw = source[underscored] ?? source[option_id];
+      if (typeof raw === "boolean") options[option_id] = raw;
+    }
+    return options;
+  }
+
+  private _data_feature_debug_details(value: any) {
+    if (value === undefined || value === null) return "";
+    if (value instanceof Error) return value.message;
+    if (typeof value === "string") return value;
+    try {
+      return JSON.stringify(value, null, 2);
+    } catch {
+      return String(value);
+    }
+  }
+
+  private _data_feature_error_text(value: any): string {
+    if (value instanceof Error) return this._data_feature_error_text(value.message);
+    if (typeof value === "string") {
+      const trimmed = value.trim();
+      if ((trimmed.startsWith("{") && trimmed.endsWith("}")) || (trimmed.startsWith("[") && trimmed.endsWith("]"))) {
+        try {
+          const parsed = JSON.parse(trimmed);
+          const nested = this._data_feature_error_text(parsed);
+          if (nested) return nested;
+        } catch {
+          return trimmed;
+        }
+      }
+      return trimmed;
+    }
+    if (!is_obj(value)) return String(value ?? "");
+    const candidates = [
+      value._message,
+      value.message,
+      value._code,
+      value.code,
+      value._reason,
+      value.reason,
+      value._error,
+      value.error,
+      value._result,
+      value.result,
+    ];
+    for (const candidate of candidates) {
+      if (typeof candidate === "string" && candidate.trim()) return candidate.trim();
+      if (is_obj(candidate)) {
+        const nested = this._data_feature_error_text(candidate);
+        if (nested) return nested;
+      }
+    }
+    return "";
+  }
+
+  private _data_feature_provider_auth_error(value: any) {
+    const text = `${this._data_feature_error_text(value)} ${this._data_feature_debug_details(value)}`.toLowerCase();
+    return text.includes("e_xai_api_key_invalid") ||
+      text.includes("invalid api key") ||
+      text.includes("could not authenticate") ||
+      text.includes("authentication") ||
+      text.includes("unauthorized");
+  }
+
+  private _data_feature_suggestion_failure(value: any, fallback = "Data Feature suggestion failed.") {
+    return {
+      _message: this._data_feature_provider_auth_error(value)
+        ? STUDIO_DATA_FEATURE_PROVIDER_AUTH_MESSAGE
+        : (this._data_feature_error_text(value) || fallback),
+      _debug_details: this._data_feature_debug_details(value),
+    };
+  }
+
+  private _normalize_data_feature_suggestion_result(result: any) {
+    const root = is_obj(result?._result) ? result._result : result;
+    if (is_obj(root) && root._ok === false) {
+      const failure = this._data_feature_suggestion_failure(root, "Data Feature suggestion failed.");
+      return {
+        _ok: false,
+        _error: failure._message,
+        _debug_details: failure._debug_details,
+        _draft: null,
+      };
+    }
+
+    const draft = is_obj(root?._draft)
+      ? root._draft
+      : is_obj(root?._result?._draft)
+        ? root._result._draft
+        : null;
+    if (!draft) {
+      return {
+        _ok: false,
+        _error: "Suggest feature returned no editable draft.",
+        _debug_details: this._data_feature_debug_details(result),
+        _draft: null,
+      };
+    }
+
+    const fields = Array.isArray(draft._fields) ? draft._fields : [];
+    const normalized_fields = fields
+      .map((field: any): XStudioDataFeatureSuggestedField | null => {
+        if (!is_obj(field)) return null;
+        const field_id = this._canonical_data_feature_id(field._field_id ?? field._id ?? field._name);
+        const name = String(field._name ?? field._label ?? field_id).trim();
+        if (!field_id || !name) return null;
+        return {
+          _name: name,
+          _field_id: field_id,
+          _type: this._data_feature_suggestion_field_type(field._type),
+          _required: field._required === true,
+          ...(Object.prototype.hasOwnProperty.call(field, "_default") ? { _default: field._default } : {}),
+          ...(Array.isArray(field._options) ? { _options: field._options } : {}),
+        };
+      })
+      .filter((field: XStudioDataFeatureSuggestedField | null): field is XStudioDataFeatureSuggestedField => field !== null);
+
+    const feature_name = String(draft._feature_name ?? "").trim();
+    const entity_id = this._canonical_data_feature_id(draft._entity_id ?? feature_name);
+    if (!feature_name || !entity_id || normalized_fields.length === 0) {
+      return {
+        _ok: false,
+        _error: "Suggest feature returned an incomplete draft.",
+        _debug_details: this._data_feature_debug_details(result),
+        _draft: null,
+      };
+    }
+
+    return {
+      _ok: true,
+      _error: "",
+      _debug_details: "",
+      _draft: {
+        _feature_name: feature_name,
+        _entity_id: entity_id,
+        _fields: normalized_fields,
+        _generation_options: this._data_feature_suggestion_generation_options(draft._generation_options),
+        _assumptions: this._data_feature_suggestion_string_list(draft._assumptions),
+        _warnings: this._data_feature_suggestion_string_list(draft._warnings),
+      } as XStudioDataFeatureSuggestedDraft,
+    };
+  }
+
+  private _data_feature_draft_field_from_suggestion(
+    field: XStudioDataFeatureSuggestedField,
+    key: string,
+  ): XStudioDataFeatureFieldDraft {
+    return {
+      ...create_data_feature_field(key),
+      _name: field._name,
+      _field_id: field._field_id,
+      _type: field._type,
+      _required: field._required === true,
+      _default: this._data_feature_suggestion_default_text(field._default),
+      _options: Array.isArray(field._options)
+        ? field._options.map((option) => String(option ?? "").trim()).filter(Boolean).join(", ")
+        : "",
+      _field_id_touched: true,
+    };
+  }
+
+  private _apply_data_feature_suggestion_draft(
+    draft: XStudioDataFeatureSuggestedDraft,
+    mode: "replace" | "merge",
+  ) {
+    if (mode === "merge") {
+      this._sync_data_feature_state_from_controls();
+    }
+    const warnings = [...draft._warnings];
+    if (mode === "replace") {
+      this._data_feature_field_seq = 0;
+      this._data_feature_state._feature_name = draft._feature_name;
+      this._data_feature_state._entity_id = draft._entity_id;
+      this._data_feature_state._entity_id_touched = true;
+      this._data_feature_state._fields = draft._fields.map((field) => {
+        this._data_feature_field_seq += 1;
+        return this._data_feature_draft_field_from_suggestion(field, `field-${this._data_feature_field_seq}`);
+      });
+      this._data_feature_state._options = {
+        ...this._data_feature_state._options,
+        ...draft._generation_options,
+      };
+    } else {
+      this._data_feature_state._fields = this._data_feature_state._fields
+        .filter((field) => field._name.trim() || field._field_id.trim());
+      if (!this._data_feature_state._feature_name.trim()) {
+        this._data_feature_state._feature_name = draft._feature_name;
+      } else if (this._data_feature_state._feature_name.trim() !== draft._feature_name) {
+        warnings.push(`Existing feature name '${this._data_feature_state._feature_name.trim()}' was preserved.`);
+      }
+      if (!this._data_feature_state._entity_id.trim()) {
+        this._data_feature_state._entity_id = draft._entity_id;
+        this._data_feature_state._entity_id_touched = true;
+      } else if (this._data_feature_state._entity_id.trim() !== draft._entity_id) {
+        warnings.push(`Existing entity ID '${this._data_feature_state._entity_id.trim()}' was preserved.`);
+      }
+
+      const existing_ids = new Set(
+        this._data_feature_state._fields
+          .map((field) => field._field_id.trim())
+          .filter(Boolean),
+      );
+      for (const field of draft._fields) {
+        if (existing_ids.has(field._field_id)) {
+          warnings.push(`Existing field ${field._field_id} was preserved.`);
+          continue;
+        }
+        this._data_feature_field_seq += 1;
+        this._data_feature_state._fields.push(
+          this._data_feature_draft_field_from_suggestion(field, `field-${this._data_feature_field_seq}`),
+        );
+        existing_ids.add(field._field_id);
+      }
+      warnings.push("Existing generation options were preserved.");
+    }
+
+    if (this._data_feature_state._fields.length === 0) {
+      this._data_feature_state._fields.push(this._data_feature_new_field());
+    }
+    this._data_feature_state._suggestion_status = "idle";
+    this._data_feature_state._suggestion_error = "";
+    this._data_feature_state._suggestion_debug_details = "";
+    this._data_feature_state._suggestion_pending_draft = null;
+    this._data_feature_state._suggestion_assumptions = [...draft._assumptions];
+    this._data_feature_state._suggestion_warnings = warnings;
+    this._data_feature_state._error = "";
+    this._render_data_feature_drawer();
+  }
+
+  private _cancel_data_feature_suggestion_review() {
+    this._sync_data_feature_state_from_controls();
+    this._data_feature_state._suggestion_status = "idle";
+    this._data_feature_state._suggestion_error = "";
+    this._data_feature_state._suggestion_debug_details = "";
+    this._data_feature_state._suggestion_pending_draft = null;
+    this._render_data_feature_drawer();
+  }
+
+  private async _retry_data_feature_suggestion() {
+    if (this._data_feature_state._status === "running") return;
+    this._sync_data_feature_state_from_controls();
+    await this._suggest_data_feature_from_prompt();
+  }
+
+  private async _suggest_data_feature_from_prompt() {
+    if (this._data_feature_controls_disabled()) return;
+    this._sync_data_feature_state_from_controls();
+    const prompt = this._data_feature_state._suggestion_prompt.trim();
+    if (!prompt) {
+      this._data_feature_state._suggestion_status = "failed";
+      this._data_feature_state._suggestion_error = "Describe the Data Feature first.";
+      this._render_data_feature_drawer();
+      return;
+    }
+    const app_id = this._client().getActiveAppId();
+    const env = this._client().getActiveEnv();
+    if (!app_id) {
+      this._data_feature_state._suggestion_status = "failed";
+      this._data_feature_state._suggestion_error = "No active app selected.";
+      this._render_data_feature_drawer();
+      return;
+    }
+    if (!env) {
+      this._data_feature_state._suggestion_status = "failed";
+      this._data_feature_state._suggestion_error = "No active environment selected.";
+      this._render_data_feature_drawer();
+      return;
+    }
+
+    const captured_draft_empty = this._data_feature_draft_empty();
+    const captured_existing_draft = this._data_feature_existing_draft_payload();
+    this._data_feature_state._suggestion_status = "loading";
+    this._data_feature_state._suggestion_error = "";
+    this._data_feature_state._suggestion_debug_details = "";
+    this._data_feature_state._suggestion_pending_draft = null;
+    this._render_data_feature_drawer();
+
+    try {
+      const result = await this._send_xvibe_command("suggest-data-feature", {
+        _app_id: app_id,
+        _env: env,
+        _prompt: prompt,
+        _existing_draft: captured_existing_draft,
+      });
+      const normalized = this._normalize_data_feature_suggestion_result(result);
+      if (!normalized._ok || !normalized._draft) {
+        this._data_feature_state._suggestion_status = "failed";
+        this._data_feature_state._suggestion_error = normalized._error;
+        this._data_feature_state._suggestion_debug_details = normalized._debug_details;
+        this._render_data_feature_drawer();
+        return;
+      }
+
+      if (captured_draft_empty) {
+        this._apply_data_feature_suggestion_draft(normalized._draft, "replace");
+        return;
+      }
+
+      this._data_feature_state._suggestion_status = "review";
+      this._data_feature_state._suggestion_error = "";
+      this._data_feature_state._suggestion_debug_details = "";
+      this._data_feature_state._suggestion_pending_draft = normalized._draft;
+      this._data_feature_state._suggestion_assumptions = [...normalized._draft._assumptions];
+      this._data_feature_state._suggestion_warnings = [...normalized._draft._warnings];
+      this._render_data_feature_drawer();
+    } catch (err) {
+      const failure = this._data_feature_suggestion_failure(err, "Suggest feature failed.");
+      this._data_feature_state._suggestion_status = "failed";
+      this._data_feature_state._suggestion_error = failure._message;
+      this._data_feature_state._suggestion_debug_details = failure._debug_details;
+      this._render_data_feature_drawer();
+    }
+  }
+
+  private _data_feature_field_row(field: XStudioDataFeatureFieldDraft, index: number) {
+    const disabled = this._data_feature_controls_disabled();
+    return {
+      _type: "view",
+      _id: `${STUDIO_APP_EXPLORER_DATA_FEATURE_FIELD_PREFIX}-${field._key}`,
+      class: "xstudio-data-feature-field-row",
+      _children: [
+        {
+          _type: "text",
+          _id: this._data_feature_field_control_id(field, "name"),
+          class: "xstudio-data-feature-input",
+          placeholder: "Field name",
+          value: field._name,
+          _value: field._name,
+          autocomplete: "off",
+          spellcheck: "false",
+          ...(disabled ? { disabled: true } : {}),
+          _on: {
+            input: (event?: any) => {
+              field._name = String(event?.target?.value ?? "").trimStart();
+              if (!field._field_id_touched) {
+                field._field_id = this._canonical_data_feature_id(field._name);
+                this._set_data_feature_control_value(
+                  this._data_feature_field_control_id(field, "id"),
+                  field._field_id,
+                );
+              }
+              this._sync_data_feature_after_draft_change();
+            },
+          },
+        },
+        {
+          _type: "text",
+          _id: this._data_feature_field_control_id(field, "id"),
+          class: "xstudio-data-feature-input",
+          placeholder: "field_id",
+          value: field._field_id,
+          _value: field._field_id,
+          autocomplete: "off",
+          spellcheck: "false",
+          ...(disabled ? { disabled: true } : {}),
+          _on: {
+            input: (event?: any) => {
+              field._field_id = String(event?.target?.value ?? "").trimStart();
+              field._field_id_touched = true;
+              this._sync_data_feature_after_draft_change();
+            },
+          },
+        },
+        {
+          _type: "select",
+          _id: this._data_feature_field_control_id(field, "type"),
+          class: "xstudio-data-feature-input xstudio-data-feature-type",
+          value: field._type,
+          _value: field._type,
+          ...(disabled ? { disabled: true } : {}),
+          _options: STUDIO_DATA_FEATURE_FIELD_TYPES.map((type) => ({
+            value: type,
+            label: type,
+            ...(type === field._type ? { selected: true } : {}),
+          })),
+          _on: {
+            change: (event?: any) => {
+              const next = String(event?.target?.value ?? "");
+              field._type = STUDIO_DATA_FEATURE_FIELD_TYPES.includes(next as XStudioDataFeatureFieldType)
+                ? next as XStudioDataFeatureFieldType
+                : "String";
+              this._sync_data_feature_after_draft_change();
+            },
+          },
+        },
+        {
+          _type: "label",
+          class: "xstudio-data-feature-required-cell",
+          _children: [
+            {
+              _type: "input",
+              _id: this._data_feature_field_control_id(field, "required"),
+              type: "checkbox",
+              class: "xstudio-selected-object-editor-input-checkbox",
+              checked: field._required,
+              ...(disabled ? { disabled: true } : {}),
+              _on: {
+                change: (event?: any) => {
+                  field._required = event?.target?.checked === true;
+                  this._sync_data_feature_after_draft_change();
+                },
+              },
+            },
+            {
+              _type: "span",
+              class: "xstudio-data-feature-required-label",
+              _text: "Required",
+            },
+          ],
+        },
+        {
+          _type: "text",
+          _id: this._data_feature_field_control_id(field, "default"),
+          class: "xstudio-data-feature-input",
+          placeholder: "Default",
+          value: field._default,
+          _value: field._default,
+          autocomplete: "off",
+          spellcheck: "false",
+          ...(disabled ? { disabled: true } : {}),
+          _on: {
+            input: (event?: any) => {
+              field._default = String(event?.target?.value ?? "").trimStart();
+              this._sync_data_feature_after_draft_change();
+            },
+          },
+        },
+        {
+          _type: "text",
+          _id: this._data_feature_field_control_id(field, "options"),
+          class: "xstudio-data-feature-input",
+          placeholder: "low, medium, high",
+          value: field._options,
+          _value: field._options,
+          autocomplete: "off",
+          spellcheck: "false",
+          ...(disabled ? { disabled: true } : {}),
+          _on: {
+            input: (event?: any) => {
+              field._options = String(event?.target?.value ?? "").trimStart();
+              this._sync_data_feature_after_draft_change();
+            },
+          },
+        },
+        {
+          _type: "view",
+          class: "xstudio-data-feature-field-actions",
+          _children: [
+            {
+              _type: "button",
+              type: "button",
+              class: "xstudio-data-feature-icon-button",
+              title: "Move field up",
+              "aria-label": "Move field up",
+              _text: "↑",
+              ...(disabled || index === 0 ? { disabled: true } : {}),
+              _on: {
+                click: (event?: Event) => {
+                  event?.preventDefault?.();
+                  event?.stopPropagation?.();
+                  this._move_data_feature_field(field._key, -1);
+                },
+              },
+            },
+            {
+              _type: "button",
+              type: "button",
+              class: "xstudio-data-feature-icon-button",
+              title: "Move field down",
+              "aria-label": "Move field down",
+              _text: "↓",
+              ...(disabled || index >= this._data_feature_state._fields.length - 1 ? { disabled: true } : {}),
+              _on: {
+                click: (event?: Event) => {
+                  event?.preventDefault?.();
+                  event?.stopPropagation?.();
+                  this._move_data_feature_field(field._key, 1);
+                },
+              },
+            },
+            {
+              _type: "button",
+              type: "button",
+              class: "xstudio-data-feature-icon-button xstudio-data-feature-remove",
+              title: "Remove field",
+              "aria-label": "Remove field",
+              _text: "×",
+              ...(disabled ? { disabled: true } : {}),
+              _on: {
+                click: (event?: Event) => {
+                  event?.preventDefault?.();
+                  event?.stopPropagation?.();
+                  this._remove_data_feature_field(field._key);
+                },
+              },
+            },
+          ],
+        },
+      ],
+    };
+  }
+
+  private _data_feature_preview() {
+    const artifacts = this._data_feature_artifact_ids();
+    const options = this._data_feature_state._options;
+    return [
+      {
+        _label: "Entity:",
+        _items: options.entity && artifacts._entity_id ? [artifacts._entity_id] : [],
+      },
+      {
+        _label: "Views:",
+        _items: [
+          options.list_view ? artifacts._list_view_id : "",
+          options.create_form ? artifacts._create_form_view_id : "",
+        ].filter(Boolean),
+      },
+      {
+        _label: "Flows:",
+        _items: [
+          options.create_flow ? artifacts._create_flow_id : "",
+          options.update_flow ? artifacts._update_flow_id : "",
+          options.delete_flow ? artifacts._delete_flow_id : "",
+        ].filter(Boolean),
+      },
+    ];
+  }
+
+  private _data_feature_preview_view() {
+    return {
+      _type: "view",
+      _id: STUDIO_APP_EXPLORER_DATA_FEATURE_PREVIEW_ID,
+      class: "xstudio-data-feature-preview",
+      _children: this._data_feature_preview_children(),
+    };
+  }
+
+  private _data_feature_progress_view() {
+    const visible = this._data_feature_state._status !== "idle";
+    return {
+      _type: "view",
+      _id: STUDIO_APP_EXPLORER_DATA_FEATURE_PROGRESS_ID,
+      class: [
+        "xstudio-data-feature-progress",
+        visible ? "" : "xstudio-data-feature-progress-hidden",
+      ].filter(Boolean).join(" "),
+      _children: STUDIO_DATA_FEATURE_PROGRESS_STEPS.map((step) => ({
+        _type: "label",
+        class: [
+          "xstudio-data-feature-progress-step",
+          `xstudio-data-feature-progress-${this._data_feature_progress_status(step._id)}`,
+        ].join(" "),
+        _text: step._label,
+      })),
+    };
+  }
+
+  private _data_feature_options_view() {
+    const disabled = this._data_feature_state._status === "running" ||
+      this._data_feature_state._suggestion_status === "loading";
+    return {
+      _type: "view",
+      class: "xstudio-data-feature-options",
+      _children: STUDIO_DATA_FEATURE_OPTION_IDS.map((option_id) => ({
+        _type: "label",
+        class: "xstudio-data-feature-option",
+        _children: [
+          {
+            _type: "input",
+            _id: this._data_feature_option_control_id(option_id),
+            type: "checkbox",
+            class: "xstudio-selected-object-editor-input-checkbox",
+            checked: this._data_feature_state._options[option_id] === true,
+            ...(disabled ? { disabled: true } : {}),
+            _on: {
+              change: (event?: any) => {
+                this._data_feature_state._options[option_id] = event?.target?.checked === true;
+                this._sync_data_feature_after_draft_change();
+              },
+            },
+          },
+          {
+            _type: "span",
+            class: "xstudio-data-feature-option-label",
+            _text: STUDIO_DATA_FEATURE_OPTION_LABELS[option_id],
+          },
+        ],
+      })),
+    };
+  }
+
+  private _render_data_feature_drawer() {
+    const panel = XUI.getObject(STUDIO_APP_EXPLORER_DATA_FEATURE_DRAWER_ID) as any;
+    const body = XUI.getObject(STUDIO_APP_EXPLORER_DATA_FEATURE_BODY_ID) as any;
+    if (!panel || !body) return;
+
+    const state = this._data_feature_state;
+    const running = state._status === "running";
+    const disabled = this._data_feature_controls_disabled();
+    const suggestion_loading = state._suggestion_status === "loading";
+    const suggestion_review = state._suggestion_status === "review" && state._suggestion_pending_draft !== null;
+    const suggest_disabled = this._data_feature_suggest_disabled();
+    const create_disabled = running || suggestion_loading || suggestion_review;
+    const suggestion_status_text =
+      state._suggestion_error ||
+      (suggestion_loading ? "Requesting structured draft..." : "");
+    const suggestion_debug_details =
+      state._suggestion_debug_details;
+    const ask_messages = [
+      ...state._suggestion_assumptions.map((message) => ({ _kind: "assumption", _text: message })),
+      ...state._suggestion_warnings.map((message) => ({ _kind: "warning", _text: message })),
+    ];
+    panel._visible = state._open;
+    this._set_portlet_visible(STUDIO_APP_EXPLORER_DATA_FEATURE_DRAWER_ID, state._open);
+
+    body.update?.({
+      _children: [
+        {
+          _type: "view",
+          class: "xstudio-data-feature-workspace-header",
+          _children: [
+            {
+              _type: "view",
+              class: "xstudio-data-feature-title-block",
+              _children: [
+                {
+                  _type: "label",
+                  _id: "xstudio-data-feature-title",
+                  class: "xstudio-data-feature-title",
+                  _text: "Data Feature",
+                },
+                {
+                  _type: "label",
+                  _id: "xstudio-data-feature-dirty",
+                  class: [
+                    "xstudio-data-feature-dirty",
+                    this._data_feature_has_unsaved_changes() ? "xstudio-data-feature-dirty-visible" : "",
+                  ].filter(Boolean).join(" "),
+                  _text: "Unsaved changes",
+                },
+              ],
+            },
+            {
+              _id: STUDIO_APP_EXPLORER_DATA_FEATURE_CANCEL_ID,
+              _type: "button",
+              type: "button",
+              class: "xstudio-object-palette-close xstudio-data-feature-close",
+              title: "Close",
+              "aria-label": "Close Data Feature",
+              _text: "×",
+              ...(running ? { disabled: true } : {}),
+              _on: {
+                click: (event?: Event) => {
+                  event?.preventDefault?.();
+                  event?.stopPropagation?.();
+                  this._close_data_feature_drawer();
+                },
+              },
+            },
+          ],
+        },
+        {
+          _type: "view",
+          class: "xstudio-data-feature-scroll",
+          _children: [
+            {
+              _type: "view",
+              class: "xstudio-data-feature-top-grid",
+              _children: [
+                {
+                  _type: "label",
+                  class: "xstudio-data-feature-field",
+                  _children: [
+                    {
+                      _type: "span",
+                      class: "xstudio-add-view-label",
+                      _text: "Feature name",
+                    },
+                    {
+                      _id: STUDIO_APP_EXPLORER_DATA_FEATURE_NAME_ID,
+                      _type: "text",
+                      class: "xstudio-add-view-input xstudio-data-feature-large-input",
+                      value: state._feature_name,
+                      _value: state._feature_name,
+                      autocomplete: "off",
+                      spellcheck: "false",
+                      placeholder: "Shopping Item",
+                      ...(disabled ? { disabled: true } : {}),
+                      _on: {
+                        input: (event?: any) => {
+                          state._feature_name = String(event?.target?.value ?? "").trimStart();
+                          if (!state._entity_id_touched) {
+                            state._entity_id = this._canonical_data_feature_id(state._feature_name);
+                            this._set_data_feature_control_value(
+                              STUDIO_APP_EXPLORER_DATA_FEATURE_ENTITY_ID,
+                              state._entity_id,
+                            );
+                          }
+                          this._sync_data_feature_after_draft_change();
+                        },
+                      },
+                    },
+                  ],
+                },
+                {
+                  _type: "label",
+                  class: "xstudio-data-feature-field",
+                  _children: [
+                    {
+                      _type: "span",
+                      class: "xstudio-add-view-label",
+                      _text: "Canonical entity ID",
+                    },
+                    {
+                      _id: STUDIO_APP_EXPLORER_DATA_FEATURE_ENTITY_ID,
+                      _type: "text",
+                      class: "xstudio-add-view-input xstudio-data-feature-large-input",
+                      value: state._entity_id,
+                      _value: state._entity_id,
+                      autocomplete: "off",
+                      spellcheck: "false",
+                      placeholder: "shopping_item",
+                      ...(disabled ? { disabled: true } : {}),
+                      _on: {
+                        input: (event?: any) => {
+                          state._entity_id = String(event?.target?.value ?? "").trimStart();
+                          state._entity_id_touched = true;
+                          this._sync_data_feature_after_draft_change();
+                        },
+                      },
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              _type: "view",
+              class: "xstudio-data-feature-card xstudio-data-feature-ask",
+              _children: [
+                {
+                  _type: "label",
+                  class: "xstudio-data-feature-section-title",
+                  _text: "Ask Xpell",
+                },
+                {
+                  _type: "textarea",
+                  _id: STUDIO_APP_EXPLORER_DATA_FEATURE_ASK_INPUT_ID,
+                  class: "xstudio-data-feature-ask-input",
+                  placeholder: "Describe the data feature, for example: Shopping items with name, quantity, priority and purchased status.",
+                  value: state._suggestion_prompt,
+                  _value: state._suggestion_prompt,
+                  autocomplete: "off",
+                  spellcheck: "true",
+                  ...(running ? { disabled: true } : {}),
+                  _on: {
+                    input: (event?: any) => {
+                      state._suggestion_prompt = String(event?.target?.value ?? "");
+                      if (state._suggestion_error) {
+                        state._suggestion_error = "";
+                        state._suggestion_debug_details = "";
+                      }
+                      this._update_data_feature_dirty_marker();
+                    },
+                  },
+                },
+                {
+                  _id: STUDIO_APP_EXPLORER_DATA_FEATURE_ASK_BUTTON_ID,
+                  _type: "button",
+                  type: "button",
+                  class: "xstudio-selected-object-editor-button xstudio-data-feature-ask-button",
+                  _text: suggestion_loading ? "Suggesting..." : "Suggest feature",
+                  ...(suggest_disabled ? { disabled: true } : {}),
+                  _on: {
+                    click: (event?: Event) => {
+                      event?.preventDefault?.();
+                      event?.stopPropagation?.();
+                      void this._suggest_data_feature_from_prompt();
+                    },
+                  },
+                },
+                {
+                  _id: STUDIO_APP_EXPLORER_DATA_FEATURE_ASK_STATUS_ID,
+                  _type: "label",
+                  class: [
+                    "xstudio-data-feature-ask-status",
+                    state._suggestion_status === "failed" ? "xstudio-data-feature-ask-status-error" : "",
+                    suggestion_loading ? "xstudio-data-feature-ask-status-loading" : "",
+                  ].filter(Boolean).join(" "),
+                  "aria-live": "polite",
+                  _text: suggestion_status_text,
+                },
+                {
+                  _id: "xstudio-data-feature-ask-retry",
+                  _type: "button",
+                  type: "button",
+                  class: [
+                    "xstudio-selected-object-editor-button",
+                    "xstudio-data-feature-retry-button",
+                    state._suggestion_status === "failed" ? "" : "xstudio-data-feature-retry-hidden",
+                  ].filter(Boolean).join(" "),
+                  _text: "Retry suggestion",
+                  ...(running || suggestion_loading ? { disabled: true } : {}),
+                  _on: {
+                    click: (event?: Event) => {
+                      event?.preventDefault?.();
+                      event?.stopPropagation?.();
+                      void this._retry_data_feature_suggestion();
+                    },
+                  },
+                },
+                {
+                  _id: "xstudio-data-feature-ask-debug",
+                  _type: "xhtml",
+                  _html_tag: "details",
+                  class: [
+                    "xstudio-data-feature-ask-debug",
+                    suggestion_debug_details ? "" : "xstudio-data-feature-ask-debug-hidden",
+                  ].filter(Boolean).join(" "),
+                  _children: [
+                    {
+                      _type: "xhtml",
+                      _html_tag: "summary",
+                      class: "xstudio-data-feature-ask-debug-summary",
+                      _text: "Debug",
+                    },
+                    {
+                      _type: "label",
+                      class: "xstudio-data-feature-ask-debug-payload debug-payload",
+                      _text: suggestion_debug_details,
+                    },
+                  ],
+                },
+                {
+                  _id: STUDIO_APP_EXPLORER_DATA_FEATURE_ASK_MESSAGES_ID,
+                  _type: "view",
+                  class: [
+                    "xstudio-data-feature-ask-messages",
+                    ask_messages.length > 0 ? "" : "xstudio-data-feature-ask-messages-empty",
+                  ].filter(Boolean).join(" "),
+                  _children: ask_messages.map((message) => ({
+                    _type: "label",
+                    class: [
+                      "xstudio-data-feature-ask-message",
+                      `xstudio-data-feature-ask-message-${message._kind}`,
+                    ].join(" "),
+                    _text: message._text,
+                  })),
+                },
+                {
+                  _id: STUDIO_APP_EXPLORER_DATA_FEATURE_REVIEW_ID,
+                  _type: "view",
+                  class: [
+                    "xstudio-data-feature-review",
+                    suggestion_review ? "" : "xstudio-data-feature-review-hidden",
+                  ].filter(Boolean).join(" "),
+                  _children: [
+                    {
+                      _type: "label",
+                      class: "xstudio-data-feature-review-title",
+                      _text: "Review suggested draft",
+                    },
+                    {
+                      _type: "view",
+                      class: "xstudio-data-feature-review-actions",
+                      _children: [
+                        {
+                          _id: STUDIO_APP_EXPLORER_DATA_FEATURE_REPLACE_ID,
+                          _type: "button",
+                          type: "button",
+                          class: "xstudio-selected-object-editor-button",
+                          _text: "Replace draft",
+                          _on: {
+                            click: (event?: Event) => {
+                              event?.preventDefault?.();
+                              event?.stopPropagation?.();
+                              if (state._suggestion_pending_draft) {
+                                this._apply_data_feature_suggestion_draft(state._suggestion_pending_draft, "replace");
+                              }
+                            },
+                          },
+                        },
+                        {
+                          _id: STUDIO_APP_EXPLORER_DATA_FEATURE_MERGE_ID,
+                          _type: "button",
+                          type: "button",
+                          class: "xstudio-selected-object-editor-button",
+                          _text: "Merge suggested fields",
+                          _on: {
+                            click: (event?: Event) => {
+                              event?.preventDefault?.();
+                              event?.stopPropagation?.();
+                              if (state._suggestion_pending_draft) {
+                                this._apply_data_feature_suggestion_draft(state._suggestion_pending_draft, "merge");
+                              }
+                            },
+                          },
+                        },
+                        {
+                          _id: STUDIO_APP_EXPLORER_DATA_FEATURE_CANCEL_SUGGESTION_ID,
+                          _type: "button",
+                          type: "button",
+                          class: "xstudio-selected-object-editor-button",
+                          _text: "Cancel",
+                          _on: {
+                            click: (event?: Event) => {
+                              event?.preventDefault?.();
+                              event?.stopPropagation?.();
+                              this._cancel_data_feature_suggestion_review();
+                            },
+                          },
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              _type: "view",
+              class: "xstudio-data-feature-card",
+              _children: [
+                {
+                  _type: "label",
+                  class: "xstudio-data-feature-section-title",
+                  _text: "Fields",
+                },
+                {
+                  _type: "view",
+                  class: "xstudio-data-feature-field-list",
+                  _children: [
+                    {
+                      _type: "view",
+                  class: "xstudio-data-feature-field-head",
+                      _children: ["Field name", "Canonical field ID", "Type", "Required", "Default", "Options", ""].map((text) => ({
+                        _type: "label",
+                        _text: text,
+                      })),
+                    },
+                    ...state._fields.map((field, index) => this._data_feature_field_row(field, index)),
+                  ],
+                },
+                {
+                  _type: "button",
+                  type: "button",
+                  class: "xstudio-selected-object-editor-button xstudio-data-feature-add-field",
+                  _text: "+ Add field",
+                  ...(running ? { disabled: true } : {}),
+                  _on: {
+                    click: (event?: Event) => {
+                      event?.preventDefault?.();
+                      event?.stopPropagation?.();
+                      this._add_data_feature_field();
+                    },
+                  },
+                },
+              ],
+            },
+            {
+              _type: "view",
+              class: "xstudio-data-feature-card",
+              _children: [
+                {
+                  _type: "label",
+                  class: "xstudio-data-feature-section-title",
+                  _text: "Generation options",
+                },
+                this._data_feature_options_view(),
+              ],
+            },
+            {
+              _type: "view",
+              class: "xstudio-data-feature-card",
+              _children: [
+                {
+                  _type: "label",
+                  class: "xstudio-data-feature-section-title",
+                  _text: "Preview",
+                },
+                this._data_feature_preview_view(),
+              ],
+            },
+            this._data_feature_progress_view(),
+            {
+              _id: STUDIO_APP_EXPLORER_DATA_FEATURE_ERROR_ID,
+              _type: "label",
+              class: [
+                "xstudio-add-view-error",
+                state._error ? "xstudio-add-view-error-visible" : "",
+              ].filter(Boolean).join(" "),
+              "aria-live": "polite",
+              _text: state._error,
+            },
+          ],
+        },
+        {
+          _type: "view",
+          class: "xstudio-data-feature-footer",
+          _children: [
+            {
+              _type: "button",
+              type: "button",
+              class: "xstudio-selected-object-editor-button xstudio-data-feature-cancel-button",
+              _text: "Cancel",
+              ...(running ? { disabled: true } : {}),
+              _on: {
+                click: (event?: Event) => {
+                  event?.preventDefault?.();
+                  event?.stopPropagation?.();
+                  this._close_data_feature_drawer();
+                },
+              },
+            },
+            {
+              _type: "button",
+              _id: STUDIO_APP_EXPLORER_DATA_FEATURE_CREATE_ID,
+              type: "button",
+              class: "xstudio-selected-object-editor-button xstudio-add-view-create xstudio-data-feature-create",
+              _text: running ? "Creating..." : "Create feature",
+              ...(create_disabled ? { disabled: true } : {}),
+              _on: {
+                click: (event?: Event) => {
+                  event?.preventDefault?.();
+                  event?.stopPropagation?.();
+                  void this._create_data_feature_from_drawer();
+                },
+              },
+            },
+          ],
+        },
+      ],
+    });
+  }
+
+  private _open_add_menu() {
+    this._data_feature_state._add_menu_open = true;
+    this._render_cached_app_explorer();
+  }
+
+  private _close_add_menu() {
+    if (!this._data_feature_state._add_menu_open) return;
+    this._data_feature_state._add_menu_open = false;
+    this._render_cached_app_explorer();
+  }
+
+  private _toggle_add_menu() {
+    this._data_feature_state._add_menu_open = !this._data_feature_state._add_menu_open;
+    this._render_cached_app_explorer();
+  }
+
+  private _data_feature_workspace_portlet_ids() {
+    return (STUDIO_PORTLET_IDS as XStudioPortletId[]).filter((portlet_id) => portlet_id !== "selected");
+  }
+
+  private _open_data_feature_drawer() {
+    if (!this._data_feature_state._open) {
+      this._data_feature_previous_portlet_visibility = { ...this._portlet_visibility };
+    }
+    const scope_key = this._data_feature_current_scope_key();
+    const needs_new_draft = this._data_feature_scope_key !== scope_key || !this._data_feature_has_editable_draft();
+    if (needs_new_draft) {
+      this._data_feature_field_seq = 1;
+      this._data_feature_state = {
+        ...empty_data_feature_state(),
+        _open: true,
+        _add_menu_open: false,
+      };
+      this._data_feature_scope_key = scope_key;
+      this._data_feature_initial_snapshot = this._data_feature_draft_snapshot();
+    } else {
+      this._data_feature_state._open = true;
+      this._data_feature_state._add_menu_open = false;
+      this._data_feature_scope_key = scope_key;
+    }
+    for (const portlet_id of this._data_feature_workspace_portlet_ids()) {
+      this._portlet_visibility[portlet_id] = portlet_id === "data_feature";
+    }
+    this._right_dock_collapsed = false;
+    this._apply_dock_state();
+    this._render_cached_app_explorer();
+    this._render_data_feature_drawer();
+  }
+
+  private _close_data_feature_drawer(options: { _force?: boolean } = {}) {
+    if (this._data_feature_state._status === "running") return;
+    this._sync_data_feature_state_from_controls();
+    if (!options._force && !this._confirm_data_feature_close_if_dirty()) return;
+    this._data_feature_state._open = false;
+    this._data_feature_state._error = "";
+    if (this._data_feature_previous_portlet_visibility) {
+      this._portlet_visibility = {
+        ...this._data_feature_previous_portlet_visibility,
+        data_feature: false,
+      };
+    } else {
+      this._portlet_visibility.data_feature = false;
+    }
+    this._data_feature_previous_portlet_visibility = null;
+    this._apply_dock_state();
+    this._render_cached_app_explorer();
+    this._render_data_feature_drawer();
+  }
+
+  private _add_data_feature_field() {
+    if (this._data_feature_state._status === "running") return;
+    this._sync_data_feature_state_from_controls();
+    const active_id = typeof document !== "undefined"
+      ? (document.activeElement as HTMLElement | null)?.id ?? ""
+      : "";
+    this._data_feature_state._fields.push(this._data_feature_new_field());
+    this._data_feature_state._error = "";
+    this._render_data_feature_drawer();
+    if (active_id) {
+      queueMicrotask(() => {
+        const control = XUI.getObject(active_id) as any;
+        control?.dom?.focus?.();
+      });
+    }
+  }
+
+  private _remove_data_feature_field(key: string) {
+    if (this._data_feature_state._status === "running") return;
+    this._sync_data_feature_state_from_controls();
+    this._data_feature_state._fields = this._data_feature_state._fields.filter((field) => field._key !== key);
+    if (this._data_feature_state._fields.length === 0) {
+      this._data_feature_state._fields.push(this._data_feature_new_field());
+    }
+    this._data_feature_state._error = "";
+    this._render_data_feature_drawer();
+  }
+
+  private _move_data_feature_field(key: string, delta: -1 | 1) {
+    if (this._data_feature_state._status === "running") return;
+    this._sync_data_feature_state_from_controls();
+    const fields = this._data_feature_state._fields;
+    const index = fields.findIndex((field) => field._key === key);
+    const next_index = index + delta;
+    if (index < 0 || next_index < 0 || next_index >= fields.length) return;
+    const [field] = fields.splice(index, 1);
+    fields.splice(next_index, 0, field);
+    this._render_data_feature_drawer();
+  }
+
+  private _data_feature_execution_params(prepared: {
+    _feature_name: string;
+    _entity_id: string;
+    _fields: {
+      _name: string;
+      _field_id: string;
+      _type: XStudioDataFeatureFieldType;
+      _required: boolean;
+      _default?: unknown;
+      _options?: unknown[];
+    }[];
+  }) {
+    const fields = prepared._fields.map((field) => this._data_feature_field_request(field));
+    return {
+      _app_id: this._client().getActiveAppId(),
+      _env: this._client().getActiveEnv(),
+      _graph_type: "crud",
+      _entity_name: prepared._entity_id,
+      _feature_name: prepared._feature_name,
+      _fields: fields,
+      _canonical_request: {
+        _type: "data-feature",
+        _feature_name: prepared._feature_name,
+        _entity_id: prepared._entity_id,
+        _fields: fields,
+        _generation_options: { ...this._data_feature_state._options },
+      },
+      _generation_options: { ...this._data_feature_state._options },
+    };
+  }
+
+  private _mark_data_feature_progress_running() {
+    this._data_feature_state._status = "running";
+    this._data_feature_state._error = "";
+    this._data_feature_state._progress = {
+      entity: "running",
+      actions: "pending",
+      form: "pending",
+      list: "pending",
+    };
+    this._render_data_feature_drawer();
+  }
+
+  private _flatten_execution_graph_node_results(value: any, out: Record<string, any>[] = []) {
+    if (!is_obj(value)) return out;
+    if (Array.isArray(value._nodes)) {
+      value._nodes.forEach((node: any) => this._flatten_execution_graph_node_results(node, out));
+      return out;
+    }
+    out.push(value);
+    if (Array.isArray(value._children)) {
+      value._children.forEach((node: any) => this._flatten_execution_graph_node_results(node, out));
+    }
+    return out;
+  }
+
+  private _apply_data_feature_progress_from_result(result: any) {
+    const root = is_obj(result?._result) ? result._result : result;
+    const nodes = this._flatten_execution_graph_node_results(root);
+    const has_failed = nodes.some((node) => node._status === "failed");
+    const created_or_existing = (artifact_type: string) => nodes.some((node) =>
+      node._artifact_type === artifact_type &&
+      (node._status === "created" || node._status === "existing" || node._status === "skipped")
+    );
+
+    this._data_feature_state._progress = {
+      entity: has_failed ? "failed" : created_or_existing("entity") ? "done" : "done",
+      actions: has_failed ? "failed" : "done",
+      form: has_failed ? "failed" : created_or_existing("form") || created_or_existing("view") ? "done" : "done",
+      list: has_failed ? "failed" : created_or_existing("table") || created_or_existing("view") ? "done" : "done",
+    };
+  }
+
+  private _format_data_feature_execution_failure(result: any): string {
+    if (is_obj(result?._failed_node)) {
+      const node = result._failed_node;
+      const artifact = [node._artifact_type, node._artifact_id].filter(Boolean).join(" ");
+      const message = to_err(node._error ?? node._reason ?? result._error ?? "Execution graph failed.");
+      return artifact ? `${artifact}: ${message}` : message;
+    }
+    if (is_obj(result?._result?._failed_node)) {
+      return this._format_data_feature_execution_failure(result._result);
+    }
+    return to_err(result) || "Data feature creation failed.";
+  }
+
+  private _data_feature_result_ok(result: any) {
+    const root = is_obj(result?._result) ? result._result : result;
+    if (is_obj(result) && result._ok === false) return false;
+    if (is_obj(root) && root._ok === false) return false;
+    if (is_obj(root) && root._failed_node) return false;
+    const nodes = this._flatten_execution_graph_node_results(root);
+    return !nodes.some((node) => node._status === "failed");
+  }
+
+  private _mark_recent_data_feature_artifacts(entity_id: string) {
+    const artifacts = this._data_feature_artifact_ids(entity_id);
+    const options = this._data_feature_state._options;
+    const keys = [
+      options.entity ? this._app_explorer_artifact_key("entity", artifacts._entity_id) : "",
+      options.list_view ? this._app_explorer_artifact_key("view", artifacts._list_view_id) : "",
+      options.create_form ? this._app_explorer_artifact_key("view", artifacts._create_form_view_id) : "",
+      options.create_flow ? this._app_explorer_artifact_key("flow", artifacts._create_flow_id) : "",
+      options.update_flow ? this._app_explorer_artifact_key("flow", artifacts._update_flow_id) : "",
+      options.delete_flow ? this._app_explorer_artifact_key("flow", artifacts._delete_flow_id) : "",
+    ].filter(Boolean);
+    this._app_explorer_recent_artifact_keys = new Set(keys);
+  }
+
+  private async _select_generated_data_feature_list_view(entity_id: string) {
+    const list_view_id = this._data_feature_artifact_ids(entity_id)._list_view_id;
+    if (!list_view_id) return;
+    const artifact =
+      this._normalize_app_explorer_artifact({ _id: list_view_id }, "view") ??
+      {
+        _id: list_view_id,
+        _title: list_view_id,
+        _type: "view" as const,
+        _raw: { _id: list_view_id },
+      };
+    this._app_explorer_selected_key = this._app_explorer_artifact_key("view", list_view_id);
+    await this._open_app_explorer_view(artifact);
+  }
+
+  private async _create_data_feature_from_drawer() {
+    if (this._data_feature_state._status === "running") return;
+    this._sync_data_feature_state_from_controls();
+    if (this._data_feature_state._suggestion_status === "loading" || this._data_feature_state._suggestion_status === "review") {
+      this._data_feature_state._error = "Review or cancel the suggested draft before creating.";
+      this._set_data_feature_error_label(this._data_feature_state._error);
+      return;
+    }
+
+    const prepared = this._validate_data_feature(true);
+    if (!prepared._ok) return;
+
+    const app_id = this._client().getActiveAppId();
+    const env = this._client().getActiveEnv();
+    if (!app_id) {
+      this._data_feature_state._error = "No active app selected.";
+      this._set_data_feature_error_label(this._data_feature_state._error);
+      return;
+    }
+    if (!env) {
+      this._data_feature_state._error = "No active environment selected.";
+      this._set_data_feature_error_label(this._data_feature_state._error);
+      return;
+    }
+
+    const params = this._data_feature_execution_params(prepared);
+    this._mark_data_feature_progress_running();
+    this._write_studio_status(`Creating ${prepared._feature_name} data feature...`);
+    this._log("data feature create requested", {
+      _app_id: app_id,
+      _env: env,
+      _entity_name: prepared._entity_id,
+      _fields: params._fields,
+    });
+
+    try {
+      const result = await this._send_xvibe_command("execute-execution-graph", params);
+      this._apply_data_feature_progress_from_result(result);
+      if (!this._data_feature_result_ok(result)) {
+        const message = this._format_data_feature_execution_failure(result);
+        this._data_feature_state._status = "failed";
+        this._data_feature_state._error = message;
+        this._render_data_feature_drawer();
+        this._write_studio_status(message);
+        this._error("data feature create failed", {
+          _app_id: app_id,
+          _env: env,
+          _entity_name: prepared._entity_id,
+          _result: result,
+        });
+        return;
+      }
+
+      this._data_feature_state._status = "completed";
+      this._data_feature_state._error = "";
+      this._app_explorer_section_open.app = true;
+      this._app_explorer_section_open.views = true;
+      this._app_explorer_section_open.flows = true;
+      this._app_explorer_section_open.entities = true;
+      this._mark_recent_data_feature_artifacts(prepared._entity_id);
+      await this._refresh_app_explorer();
+      await this._select_generated_data_feature_list_view(prepared._entity_id);
+      this._write_studio_status(`${prepared._feature_name} data feature created`);
+      this._close_data_feature_drawer({ _force: true });
+      this._log("data feature create completed", {
+        _app_id: app_id,
+        _env: env,
+        _entity_name: prepared._entity_id,
+      });
+    } catch (err) {
+      const message = `Data feature creation failed: ${to_err(err)}`;
+      this._data_feature_state._status = "failed";
+      this._data_feature_state._progress = {
+        entity: this._data_feature_state._progress.entity === "running" ? "failed" : this._data_feature_state._progress.entity,
+        actions: "failed",
+        form: "failed",
+        list: "failed",
+      };
+      this._data_feature_state._error = message;
+      this._render_data_feature_drawer();
+      this._write_studio_status(message);
+      this._error("data feature create failed", {
+        _app_id: app_id,
+        _env: env,
+        _entity_name: prepared._entity_id,
+        _error: to_err(err),
+      });
+    }
   }
 
   private _normalize_create_view_template(value: any): XStudioCreateViewTemplate {
@@ -4095,6 +15991,10 @@ export class XStudioModule extends XModule {
       });
       this._apply_dock_state();
       this._refresh_object_tree_for_current_view();
+      void this._load_project_memory_for_current_app("studio-open", {
+        _force: true,
+      });
+      void this._load_guide_recommendation("studio-open");
       this._log("studio opened");
     } catch (err) {
       this._error("studio toggle failed", err);
@@ -4677,6 +16577,58 @@ export class XStudioModule extends XModule {
     return children;
   }
 
+  private _app_explorer_add_menu_view() {
+    const open = this._data_feature_state._add_menu_open;
+    const item = (
+      id: string,
+      label: string,
+      title: string,
+      handler?: (event?: Event) => void,
+    ) => ({
+      _type: "button",
+      _id: `xstudio-app-explorer-add-menu-${id}`,
+      type: "button",
+      class: "xstudio-app-explorer-add-menu-item",
+      title,
+      _text: label,
+      ...(handler ? {} : { disabled: true }),
+      ...(handler
+        ? {
+          _on: {
+            click: (event?: Event) => {
+              event?.preventDefault?.();
+              event?.stopPropagation?.();
+              handler(event);
+            },
+          },
+        }
+        : {}),
+    });
+
+    return {
+      _type: "view",
+      _id: STUDIO_APP_EXPLORER_ADD_MENU_ID,
+      class: [
+        "xstudio-app-explorer-add-menu",
+        open ? "xstudio-app-explorer-add-menu-open" : "",
+      ].filter(Boolean).join(" "),
+      "aria-hidden": String(!open),
+      _visible: open,
+      _children: [
+        item("data-feature", "Data feature", "Add Data feature", () => {
+          this._open_data_feature_drawer();
+        }),
+        item("view", "View", "Add View", () => {
+          this._close_add_menu();
+          this._open_add_view_dialog();
+        }),
+        item("flow", "Flow", "Add Flow"),
+        item("entity", "Entity", "Add Entity"),
+        item("module", "Module", "Add Module"),
+      ],
+    };
+  }
+
   private _app_explorer_toggle_row(
     row_id: string,
     section_id: XStudioAppExplorerSectionId,
@@ -4719,6 +16671,33 @@ export class XStudioModule extends XModule {
       },
     ];
 
+    if (section_id === "app") {
+      children.push({
+        _type: "view",
+        class: "xstudio-app-explorer-add-menu-wrap",
+        _children: [
+          {
+            _type: "button",
+            _id: STUDIO_APP_EXPLORER_ADD_BUTTON_ID,
+            type: "button",
+            class: "xstudio-explorer-section-action xstudio-app-explorer-add-button",
+            title: "Add",
+            "aria-haspopup": "menu",
+            "aria-expanded": String(this._data_feature_state._add_menu_open),
+            _text: "+ Add",
+            _on: {
+              click: (event?: Event) => {
+                event?.preventDefault?.();
+                event?.stopPropagation?.();
+                this._toggle_add_menu();
+              },
+            },
+          },
+          this._app_explorer_add_menu_view(),
+        ],
+      });
+    }
+
     if (section_id === "views") {
       children.push({
         _type: "button",
@@ -4758,6 +16737,7 @@ export class XStudioModule extends XModule {
     const key = this._app_explorer_artifact_key(artifact._type, artifact._id);
     const selected = key === this._app_explorer_selected_key;
     const current = artifact._type === "view" && artifact._id === this._app_explorer_current_view_id();
+    const recent = this._app_explorer_recent_artifact_keys.has(key);
     const secondary = artifact._title && artifact._title !== artifact._id ? artifact._title : "";
 
     return {
@@ -4768,6 +16748,7 @@ export class XStudioModule extends XModule {
         "xstudio-app-explorer-row",
         selected ? "xstudio-app-explorer-row-selected" : "",
         current ? "xstudio-app-explorer-row-current" : "",
+        recent ? "xstudio-app-explorer-row-new" : "",
       ].filter(Boolean).join(" "),
       title: artifact._title || artifact._id,
       "data-xstudio-artifact-key": key,
@@ -4992,6 +16973,7 @@ export class XStudioModule extends XModule {
       {
         _type: "span",
         class: "xstudio-object-tree-label-primary",
+        title: node._label,
         _text: node._label_primary || node._label,
       },
     ];
@@ -5000,6 +16982,7 @@ export class XStudioModule extends XModule {
       children.push({
         _type: "span",
         class: "xstudio-object-tree-label-secondary",
+        title: node._label,
         _text: node._label_secondary,
       });
     }
@@ -5008,11 +16991,39 @@ export class XStudioModule extends XModule {
       children.push({
         _type: "span",
         class: "xstudio-object-tree-type-tag",
+        title: node._label,
         _text: `[${node._label_type}]`,
       });
     }
 
+    if (!this._object_tree_node_is_visible(node)) {
+      children.push({
+        _type: "span",
+        class: "xstudio-object-tree-hidden-tag",
+        title: `${node._label} is hidden`,
+        _text: "Hidden",
+      });
+    }
+
     return children;
+  }
+
+  private _object_tree_content_width(nodes: XStudioObjectTreeNode[]) {
+    const flat_nodes = this._flatten_object_tree_nodes(nodes);
+    let width = 0;
+
+    for (const node of flat_nodes) {
+      const label = [
+        node._label_primary || node._label,
+        node._label_secondary,
+        node._label_type ? `[${node._label_type}]` : "",
+      ].filter(Boolean).join(" ");
+      const label_width = Math.min(720, Math.max(160, label.length * 7));
+      const indent_width = node._depth * 14;
+      width = Math.max(width, indent_width + 24 + label_width + 16);
+    }
+
+    return Math.ceil(width);
   }
 
   private _object_tree_visibility_icon(hidden: boolean) {
@@ -5146,6 +17157,62 @@ export class XStudioModule extends XModule {
       : null;
   }
 
+  private _object_tree_node_can_drag(node: XStudioObjectTreeNode) {
+    const meta = node._meta;
+    if (!meta) return false;
+    if (!meta._json_id.trim()) return false;
+    if (!meta._source_view_id.trim()) return false;
+    if (meta._is_xvm_ref_child) return false;
+    if (this._selected_object_is_root_view(meta)) return false;
+
+    let active_view_id = "";
+    try {
+      active_view_id = this._resolve_object_tree_view_id().trim();
+    } catch {
+      active_view_id = "";
+    }
+    return Boolean(active_view_id && meta._source_view_id.trim() === active_view_id);
+  }
+
+  private _object_tree_node_display_name(node: XStudioObjectTreeNode) {
+    return node._label_primary.trim() || node._label.trim() || node._meta?._json_id.trim() || "object";
+  }
+
+  private _object_tree_drag_handle(node: XStudioObjectTreeNode, row_id: string, draggable: boolean) {
+    const label = draggable
+      ? `Move ${this._object_tree_node_display_name(node)}`
+      : "Object cannot be moved";
+
+    return {
+      _type: "button",
+      _id: `${row_id}-drag-handle`,
+      type: "button",
+      class: [
+        "xstudio-object-tree-drag-handle",
+        draggable ? "" : "xstudio-object-tree-drag-handle-disabled",
+      ].filter(Boolean).join(" "),
+      title: label,
+      "aria-label": label,
+      ...(draggable ? {} : { disabled: true, "aria-disabled": "true" }),
+      _text: "⋮⋮",
+      ...(draggable
+        ? {
+          _on: {
+            pointerdown: (event?: PointerEvent) => {
+              event?.preventDefault?.();
+              event?.stopPropagation?.();
+              this._start_object_tree_drag(node, row_id, event ?? null, "handle");
+            },
+            click: (event?: Event) => {
+              event?.preventDefault?.();
+              event?.stopPropagation?.();
+            },
+          },
+        }
+        : {}),
+    };
+  }
+
   private _object_tree_node_can_move(node: XStudioObjectTreeNode, direction: "up" | "down") {
     const meta = node._meta;
     if (!meta) return false;
@@ -5166,6 +17233,459 @@ export class XStudioModule extends XModule {
     if (!meta._json_id.trim()) return false;
     if (!meta._source_view_id.trim()) return false;
     return !this._selected_object_is_root_view(meta);
+  }
+
+  private _normalize_design_type_list(value: unknown) {
+    if (!Array.isArray(value)) return [];
+    return value
+      .map(item => typeof item === "string" ? item.trim().toLowerCase() : "")
+      .filter(Boolean);
+  }
+
+  private _normalize_design_insert_modes(
+    skill: XpellSkill | null,
+    fallback_modes: XStudioAddObjectInsertMode[] = [],
+  ) {
+    const raw_modes = skill?._design?._children?._insert_modes;
+    const modes = this._normalize_design_type_list(raw_modes)
+      .filter((mode): mode is XStudioAddObjectInsertMode =>
+        mode === "inside" || mode === "before" || mode === "after",
+      );
+    return modes.length > 0 ? modes : fallback_modes;
+  }
+
+  private _normalize_palette_child_type(child: Record<string, any>, skill: XpellSkill) {
+    const child_type = typeof child._type === "string" && child._type.trim()
+      ? child._type.trim()
+      : typeof skill._id === "string" && skill._id.trim()
+        ? skill._id.trim()
+        : "";
+    return child_type.toLowerCase();
+  }
+
+  private _skill_children_accepts_type(skill: XpellSkill | null, child_type: string) {
+    const accepted_types = this._normalize_design_type_list(skill?._design?._children?._accepted_types);
+    if (accepted_types.length === 0) return true;
+
+    const normalized_child_type = child_type.trim().toLowerCase();
+    if (!normalized_child_type) return false;
+
+    return accepted_types.includes("*") ||
+      accepted_types.includes("xuiobject") ||
+      accepted_types.includes(normalized_child_type);
+  }
+
+  private _object_tree_node_can_insert_inside(
+    node: XStudioObjectTreeNode,
+    child_type: string,
+  ) {
+    const capability = this._object_tree_child_capability(node);
+    if (capability._design_children_disallowed) return false;
+    if (!capability._allowed) return false;
+    if (!this._skill_children_accepts_type(capability._skill, child_type)) return false;
+
+    const fallback_modes: XStudioAddObjectInsertMode[] = capability._allowed ? ["inside"] : [];
+    const modes = this._normalize_design_insert_modes(capability._skill, fallback_modes);
+    return modes.includes("inside");
+  }
+
+  private _object_tree_node_can_insert_relative(
+    node: XStudioObjectTreeNode,
+    mode: "before" | "after",
+  ) {
+    if (!node._meta?._json_id.trim()) return false;
+    if (this._selected_object_is_root_view(node._meta)) return false;
+
+    const skill = node._meta._type.trim()
+      ? this._resolve_selected_object_skill(node._meta._type)
+      : null;
+    const modes = this._normalize_design_insert_modes(skill, ["before", "after"]);
+    return modes.includes(mode);
+  }
+
+  private _find_object_tree_node_by_path(source_view_id: string, path: string) {
+    const normalized_source_view_id = source_view_id.trim();
+    const normalized_path = path.trim() || "$";
+    if (!normalized_source_view_id) return null;
+
+    const flat_nodes = this._flatten_object_tree_nodes(this._object_tree_nodes);
+    return flat_nodes.find((node) =>
+      node._meta?._source_view_id.trim() === normalized_source_view_id &&
+      node._meta?._path.trim() === normalized_path
+    ) ?? null;
+  }
+
+  private _find_object_tree_node_by_selected_object(selected: XStudioSelectedObject) {
+    const by_path = this._find_object_tree_node_by_path(
+      selected._source_view_id,
+      selected._path,
+    );
+    if (by_path) return by_path;
+
+    const selected_id = selected._json_id.trim() || selected._id.trim();
+    if (!selected_id) return null;
+
+    const flat_nodes = this._flatten_object_tree_nodes(this._object_tree_nodes);
+    return flat_nodes.find((node) =>
+      node._meta?._source_view_id.trim() === selected._source_view_id.trim() &&
+      (node._meta?._json_id.trim() || node._meta?._id.trim()) === selected_id &&
+      node._meta?._type.trim() === selected._type.trim()
+    ) ?? null;
+  }
+
+  private _active_view_root_insert_target(view_id: string) {
+    const view = this._get_cached_view(view_id);
+    if (!is_obj(view)) return null;
+
+    const root_id = typeof view._id === "string" && view._id.trim()
+      ? view._id.trim()
+      : view_id.trim();
+    if (!root_id) return null;
+
+    const existing_root = this._find_object_tree_node_by_path(view_id, "$");
+    if (existing_root) return existing_root;
+
+    return {
+      _key: "",
+      _node_key: this._object_tree_node_key(view_id, "$", "$", "view", root_id),
+      _parent_node_key: "",
+      _label: root_id,
+      _label_primary: root_id,
+      _label_secondary: "",
+      _label_type: typeof view._type === "string" && view._type.trim() ? view._type.trim() : "view",
+      _search_text: "",
+      _meta: {
+        _id: root_id,
+        _json_id: root_id,
+        _type: typeof view._type === "string" && view._type.trim() ? view._type.trim() : "view",
+        _text: typeof view._text === "string" ? view._text : "",
+        _source_view_id: view_id,
+        _path: "$",
+        _parent_path: "$",
+        _previous_sibling_id: "",
+        _next_sibling_id: "",
+        _is_xvm_ref_child: false,
+        _json_metadata: this._safe_selected_json_metadata(view),
+      },
+      _object: view,
+      _depth: 0,
+      _children: [],
+    } as XStudioObjectTreeNode;
+  }
+
+  private _resolve_add_object_root_append_params(
+    child: Record<string, any>,
+    child_type: string,
+    app_id: string,
+    env: string,
+  ): XStudioAddObjectInsertionResolution {
+    const view_id = this._app_explorer_current_view_id().trim();
+    const root_node = this._active_view_root_insert_target(view_id);
+    const root_meta = root_node?._meta;
+    const target_id = root_meta?._json_id.trim() || root_meta?._id.trim() || "";
+
+    if (!view_id || !root_node || !root_meta || !target_id) {
+      return {
+        _ok: false,
+        _reason: "missing_root_target",
+        _message: "No target view selected",
+      };
+    }
+
+    if (!this._object_tree_node_can_insert_inside(root_node, child_type)) {
+      return {
+        _ok: false,
+        _reason: "root_rejects_child_type",
+        _message: "Active view cannot accept this object",
+      };
+    }
+
+    return {
+      _ok: true,
+      _mode: "inside",
+      _selected_id: "",
+      _target_id: target_id,
+      _params: {
+        _app_id: app_id,
+        _env: env,
+        _view_id: view_id,
+        _edit_action: "add-child",
+        _target_id: target_id,
+        _target_type: root_meta._type.trim() || "view",
+        _child: child,
+      },
+    };
+  }
+
+  private _resolve_add_object_relative_params(
+    selected: XStudioSelectedObject,
+    child: Record<string, any>,
+    child_type: string,
+    app_id: string,
+    env: string,
+  ): XStudioAddObjectInsertionResolution {
+    const selected_node = this._find_object_tree_node_by_selected_object(selected);
+    const selected_meta = selected_node?._meta;
+    const selected_id = selected_meta?._json_id.trim() || selected_meta?._id.trim() || "";
+    const source_view_id = selected_meta?._source_view_id.trim() || selected._source_view_id.trim();
+
+    if (!selected_node || !selected_meta || !selected_id || !source_view_id) {
+      return {
+        _ok: false,
+        _reason: "missing_selected_target",
+        _message: "Selected object cannot be used as an insertion target",
+      };
+    }
+
+    if (this._object_tree_node_can_insert_inside(selected_node, child_type)) {
+      return {
+        _ok: true,
+        _mode: "inside",
+        _selected_id: selected_id,
+        _target_id: selected_id,
+        _params: {
+          _app_id: app_id,
+          _env: env,
+          _view_id: source_view_id,
+          _edit_action: "add-child",
+          _target_id: selected_id,
+          _target_type: selected_meta._type.trim() || "object",
+          _child: child,
+        },
+      };
+    }
+
+    const parent_node = this._find_object_tree_node_by_path(
+      source_view_id,
+      selected_meta._parent_path.trim() || "$",
+    );
+    const parent_meta = parent_node?._meta;
+    const parent_id = parent_meta?._json_id.trim() || parent_meta?._id.trim() || "";
+
+    if (!parent_node || !parent_meta || !parent_id) {
+      return {
+        _ok: false,
+        _reason: "missing_parent_target",
+        _message: "Selected object parent cannot be used as an insertion target",
+      };
+    }
+
+    if (!this._object_tree_node_can_insert_inside(parent_node, child_type)) {
+      return {
+        _ok: false,
+        _reason: "parent_rejects_child_type",
+        _message: "Selected object parent cannot accept this object",
+      };
+    }
+
+    for (const mode of ["after", "before"] as const) {
+      if (!this._object_tree_node_can_insert_relative(selected_node, mode)) continue;
+
+      return {
+        _ok: true,
+        _mode: mode,
+        _selected_id: selected_id,
+        _target_id: parent_id,
+        _params: {
+          _app_id: app_id,
+          _env: env,
+          _view_id: source_view_id,
+          _edit_action: "add-child",
+          _target_id: parent_id,
+          _target_type: parent_meta._type.trim() || "object",
+          _child: child,
+          ...(mode === "after"
+            ? { _after_id: selected_id }
+            : { _before_id: selected_id }),
+        },
+      };
+    }
+
+    return {
+      _ok: false,
+      _reason: "relative_insert_mode_rejected",
+      _message: "Selected object does not allow this insertion position",
+    };
+  }
+
+  private _resolve_add_object_insertion_params(
+    selected_skill: XpellSkill,
+    child: Record<string, any>,
+    app_id: string,
+    env: string,
+    selected: XStudioSelectedObject | null = this._selected_object,
+  ): XStudioAddObjectInsertionResolution {
+    const child_type = this._normalize_palette_child_type(child, selected_skill);
+
+    if (!selected) {
+      return this._resolve_add_object_root_append_params(child, child_type, app_id, env);
+    }
+
+    return this._resolve_add_object_relative_params(
+      selected,
+      child,
+      child_type,
+      app_id,
+      env,
+    );
+  }
+
+  private _reveal_add_object_insertion_selection(
+    resolution: XStudioAddObjectInsertionResolution,
+  ) {
+    if (!resolution._ok) return;
+
+    const selected = this._selected_object;
+    if (!selected) return;
+
+    const selected_node = this._find_object_tree_node_by_selected_object(selected);
+    if (selected_node?._node_key) {
+      this._object_tree_expanded_node_keys.add(selected_node._node_key);
+    }
+
+    const parent_node = this._find_object_tree_node_by_path(
+      selected._source_view_id,
+      selected._parent_path.trim() || "$",
+    );
+    if (parent_node?._node_key) {
+      this._object_tree_expanded_node_keys.add(parent_node._node_key);
+    }
+  }
+
+  private _default_object_from_palette_skill(selected_skill: XpellSkill) {
+    const default_object = selected_skill._design?._palette?._default_object;
+    if (!is_obj(default_object)) {
+      return {
+        _ok: false,
+        _child: null,
+        _reason: "missing_default_object",
+        _message: "Selected object has no default palette object",
+      };
+    }
+
+    const child = _xu.clone_json(default_object) as Record<string, any>;
+    if (!is_obj(child)) {
+      return {
+        _ok: false,
+        _child: null,
+        _reason: "invalid_default_object",
+        _message: "Selected object default is invalid",
+      };
+    }
+
+    return {
+      _ok: true,
+      _child: child,
+      _reason: "",
+      _message: "",
+    };
+  }
+
+  private async _open_add_object_palette() {
+    this._log("add object palette opened", {
+      _selected: this._selected_object_persisted_metadata(this._selected_object),
+    });
+
+    const selected_skill = await showObjectPalette();
+    if (!selected_skill) {
+      this._log("add object palette cancelled", {
+        _selected: this._selected_object_persisted_metadata(this._selected_object),
+      });
+      return false;
+    }
+
+    return this._apply_add_object_from_palette_skill(selected_skill);
+  }
+
+  private async _apply_add_object_from_palette_skill(selected_skill: XpellSkill) {
+    const app_id = this._client().getActiveAppId();
+    const env = this._client().getActiveEnv();
+
+    if (!app_id) {
+      this._write_studio_status("No active app selected");
+      return false;
+    }
+
+    if (!env) {
+      this._write_studio_status("No active environment selected");
+      return false;
+    }
+
+    this._refresh_object_tree_for_current_view();
+
+    const default_result = this._default_object_from_palette_skill(selected_skill);
+    if (!default_result._ok || !default_result._child) {
+      this._write_studio_status(default_result._message);
+      this._error("add object failed", {
+        _reason: default_result._reason,
+        _skill_id: selected_skill._id,
+      });
+      return false;
+    }
+
+    const child = default_result._child;
+    const resolution = this._resolve_add_object_insertion_params(
+      selected_skill,
+      child,
+      app_id,
+      env,
+    );
+
+    if (!resolution._ok) {
+      this._write_studio_status(resolution._message);
+      this._error("add object failed", {
+        _reason: resolution._reason,
+        _skill_id: selected_skill._id,
+        _child_type: child._type,
+        _selected: this._selected_object_persisted_metadata(this._selected_object),
+      });
+      return false;
+    }
+
+    const params = resolution._params;
+    this._write_studio_status("Adding object...");
+    this._log("add object requested", {
+      _source_view_id: params._view_id,
+      _target_id: params._target_id,
+      _target_type: params._target_type,
+      _insert_mode: resolution._mode,
+      _before_id: params._before_id,
+      _after_id: params._after_id,
+      _skill_id: selected_skill._id,
+      _skill_type: selected_skill._type,
+      _child_type: child._type,
+      _child_id: typeof child._id === "string" ? child._id : "",
+      _selected: this._selected_object_persisted_metadata(this._selected_object),
+    });
+
+    try {
+      const result = await this._send_xvibe_command("apply-view-edit", params);
+      if (!is_obj(result) || result._ok !== true) {
+        this._write_studio_status(this._format_apply_view_edit_failure(result));
+        this._error("add object failed", {
+          _structured_error: result,
+        });
+        return false;
+      }
+
+      await this._request_object_tree_structured_edit_refresh(params, result);
+      this._reveal_add_object_insertion_selection(resolution);
+      this._refresh_object_tree_for_current_view();
+      this._write_studio_status("Added object");
+      this._log("add object completed", {
+        _insert_mode: resolution._mode,
+        _new_target_id: this._extract_new_target_id(result),
+        _result: result,
+      });
+      return true;
+    } catch (err) {
+      const message = `Add object failed: ${to_err(err)}`;
+      this._write_studio_status(message);
+      this._error("add object failed", {
+        _error: to_err(err),
+      });
+      return false;
+    }
   }
 
   private _object_tree_child_capability(node: XStudioObjectTreeNode, log = false) {
@@ -5443,21 +17963,36 @@ export class XStudioModule extends XModule {
       return false;
     }
 
-    const params: XStudioSelectedObjectApplyViewEditParams = {
-      _app_id: app_id,
-      _env: env,
-      _view_id: source_view_id,
-      _edit_action: "add-child",
-      _target_id: target_id,
-      _target_type: target_type,
-      _child: child,
-    };
+    const resolution = this._resolve_add_object_insertion_params(
+      selected_skill,
+      child,
+      app_id,
+      env,
+      meta,
+    );
+    if (!resolution._ok) {
+      this._write_studio_status(resolution._message);
+      this._error("object tree add child failed", {
+        _reason: resolution._reason,
+        _source_view_id: source_view_id,
+        _target_id: target_id,
+        _target_type: target_type,
+        _skill_id: selected_skill._id,
+        _child_type: child._type,
+      });
+      return false;
+    }
+
+    const params = resolution._params;
 
     this._write_studio_status("Adding child object...");
     this._log("object tree add child requested", {
       _source_view_id: params._view_id,
       _target_id: params._target_id,
       _target_type: params._target_type,
+      _insert_mode: resolution._mode,
+      _before_id: params._before_id,
+      _after_id: params._after_id,
       _skill_id: selected_skill._id,
       _skill_type: selected_skill._type,
       _child_type: child._type,
@@ -5526,6 +18061,16 @@ export class XStudioModule extends XModule {
           _ok: false,
           _error: to_err(err),
         },
+      });
+    }
+  }
+
+  private _reveal_moved_object_after_refresh(target_id: string) {
+    const node = this._find_object_tree_node_by_object_id(target_id);
+    if (node?._meta) {
+      this._reveal_object_tree_node(node, {
+        _rerender: false,
+        _highlight: true,
       });
     }
   }
@@ -5614,7 +18159,9 @@ export class XStudioModule extends XModule {
       }
 
       await this._request_object_tree_structured_edit_refresh(params, result);
+      this._selected_object_pending_select_id = target_id;
       this._refresh_object_tree_for_current_view();
+      this._reveal_moved_object_after_refresh(target_id);
       this._write_studio_status(
         direction === "up"
           ? "Moved object up"
@@ -5950,6 +18497,7 @@ export class XStudioModule extends XModule {
     const search = this._normalized_object_tree_search_query();
     const results = (tree_results?.dom ?? renderTarget.dom ?? null) as HTMLElement | null;
     const filtered_count = this._flatten_object_tree_nodes(nodes).length;
+    const content_width = this._object_tree_content_width(nodes);
 
     this._debug_log("object tree render", {
       _filtered_nodes: filtered_count,
@@ -5959,6 +18507,9 @@ export class XStudioModule extends XModule {
 
     if (nodes.length === 0) {
       renderTarget.update?.({
+        _style: {
+          "--xstudio-object-tree-content-width": "100%",
+        },
         _children: [
           {
             _type: "label",
@@ -5985,6 +18536,8 @@ export class XStudioModule extends XModule {
       const selected = this._selected_object_matches(this._selected_object, node._meta);
       if (selected) selected_row_id = row_id;
       const expanded = this._object_tree_node_is_expanded(node, search_active);
+      const can_add_child = node._meta ? this._object_tree_node_can_add_child(node) : false;
+      const can_drag = node._meta ? this._object_tree_node_can_drag(node) : false;
 
       if (!node._meta) {
         return {
@@ -6015,16 +18568,21 @@ export class XStudioModule extends XModule {
         _id: row_id,
         class: [
           "xstudio-object-tree-row",
+          can_drag ? "xstudio-object-tree-row-draggable" : "xstudio-object-tree-row-not-draggable",
           node._meta._is_xvm_ref_child ? "xstudio-object-tree-row-ref" : "",
           this._object_tree_node_is_visible(node) ? "" : "xstudio-object-tree-row-hidden",
+          can_add_child ? "xstudio-object-tree-row-actions-wide" : "",
           selected ? STUDIO_SELECTED_OBJECT_ROW_CLASS : "",
         ].filter(Boolean).join(" "),
         title: node._label,
+        "data-xstudio-object-tree-row": "true",
+        "data-xstudio-object-tree-row-id": row_id,
         _style: {
           "--xstudio-tree-indent": `${node._depth * 14}px`,
         },
         _children: [
           this._object_tree_chevron_button(node, row_id, expanded, search_active),
+          this._object_tree_drag_handle(node, row_id, can_drag),
           {
             _type: "button",
             _id: `${row_id}-label`,
@@ -6033,9 +18591,17 @@ export class XStudioModule extends XModule {
             title: node._label,
             _children: this._object_tree_label_children(node),
             _on: {
+              pointerdown: (event?: PointerEvent) => {
+                if (!event || !can_drag) return;
+                this._start_object_tree_drag(node, row_id, event, "row");
+              },
               click: (event?: Event) => {
                 event?.preventDefault?.();
                 event?.stopPropagation?.();
+                if (this._object_tree_drag_suppress_click) {
+                  this._clear_object_tree_click_suppression_handler();
+                  return;
+                }
                 this._select_object_tree_node(node, row_id);
               },
             },
@@ -6065,7 +18631,12 @@ export class XStudioModule extends XModule {
     const children = nodes.map((node) => render_node(node));
 
     this._selected_tree_row_id = selected_row_id;
-    renderTarget.update?.({ _children: children });
+    renderTarget.update?.({
+      _style: {
+        "--xstudio-object-tree-content-width": `${content_width}px`,
+      },
+      _children: children,
+    });
     this._debug_log("object tree rendered", {
       _children_rendered: renderTarget.dom?.children?.length ?? 0,
       "results.clientHeight": results?.clientHeight ?? null,
@@ -7258,6 +19829,28 @@ export class XStudioModule extends XModule {
     };
   }
 
+  private _selected_object_sibling_context_from_metadata(
+    selected: XStudioSelectedObject,
+  ): XStudioSelectedObjectSiblingContext | null {
+    const path = selected._path.trim();
+    if (path === "$") {
+      return {
+        _is_root: true,
+        _previous_sibling_id: "",
+        _next_sibling_id: "",
+      };
+    }
+
+    const indices = this._parse_children_path_indices(path);
+    if (!indices || indices.length === 0) return null;
+
+    return {
+      _is_root: false,
+      _previous_sibling_id: String(selected._previous_sibling_id ?? "").trim(),
+      _next_sibling_id: String(selected._next_sibling_id ?? "").trim(),
+    };
+  }
+
   private _find_selected_object_sibling_context_by_path(
     view: Record<string, any>,
     selected: XStudioSelectedObject,
@@ -7299,9 +19892,12 @@ export class XStudioModule extends XModule {
     if (!source_view_id) return null;
 
     const view = this._get_cached_view(source_view_id);
-    if (!is_obj(view)) return null;
+    if (!is_obj(view)) {
+      return this._selected_object_sibling_context_from_metadata(selected);
+    }
 
-    return this._find_selected_object_sibling_context_by_path(view, selected);
+    return this._find_selected_object_sibling_context_by_path(view, selected) ??
+      this._selected_object_sibling_context_from_metadata(selected);
   }
 
   private _set_selected_object_move_controls(
@@ -7507,7 +20103,70 @@ export class XStudioModule extends XModule {
     });
   }
 
-  private _format_apply_view_edit_failure(result: any) {
+  private _apply_view_edit_failure_reason(value: any): string {
+    if (value instanceof Error) {
+      const parsed = this._parse_error_object_string(value.message);
+      return parsed ? this._apply_view_edit_failure_reason(parsed) : "";
+    }
+    if (typeof value === "string") {
+      const parsed = this._parse_error_object_string(value);
+      return parsed ? this._apply_view_edit_failure_reason(parsed) : "";
+    }
+    if (!is_obj(value)) return "";
+
+    const direct_reason =
+      typeof value._reason === "string" && value._reason.trim()
+        ? value._reason.trim()
+        : typeof value.reason === "string" && value.reason.trim()
+          ? value.reason.trim()
+          : "";
+    if (direct_reason) return direct_reason;
+
+    const nested_candidates = [
+      value._details,
+      value.details,
+      value._error,
+      value.error,
+      value._result,
+      value.result,
+      value._payload,
+      value.payload,
+    ].filter((candidate) => candidate !== value);
+    for (const candidate of nested_candidates) {
+      const reason = this._apply_view_edit_failure_reason(candidate);
+      if (reason) return reason;
+    }
+
+    return "";
+  }
+
+  private _apply_view_edit_move_resolution_context(command?: Record<string, any>) {
+    const params = is_obj(command?._params) ? command._params : command;
+    if (!is_obj(params)) return "";
+    if (params._edit_action !== "move-object" && params.edit_action !== "move-object") return "";
+
+    const source = this._intent_action_target_display_title(params);
+    const destination =
+      this._intent_action_move_destination_title(params) ||
+      this._intent_action_move_anchor_title(params);
+    if (source && destination) return `source ${source}, destination ${destination}`;
+    if (source) return `source ${source}`;
+    if (destination) return `destination ${destination}`;
+    return "";
+  }
+
+  private _format_apply_view_edit_failure(result: any, command?: Record<string, any>) {
+    const server_message = this._format_server_failure(result, "");
+    const resolution_reason =
+      this._apply_view_edit_failure_reason(result) ||
+      this._apply_view_edit_move_resolution_context(command);
+    if (server_message) {
+      if (resolution_reason && !server_message.includes(resolution_reason)) {
+        return `Apply failed: ${server_message} (${resolution_reason})`;
+      }
+      return `Apply failed: ${server_message}`;
+    }
+
     const error_value = result?._error;
     const error = is_obj(error_value) ? error_value : {};
     const details = is_obj(error._details) ? error._details : {};
@@ -8350,6 +21009,10 @@ export class XStudioModule extends XModule {
         return;
       }
 
+      await this._request_object_tree_structured_edit_refresh(params, result);
+      this._selected_object_pending_select_id = target_id;
+      this._refresh_object_tree_for_current_view();
+      this._reveal_moved_object_after_refresh(target_id);
       this._write_studio_status(
         direction === "up"
           ? "Moved selected object up"
@@ -8660,6 +21323,11 @@ export class XStudioModule extends XModule {
     _xd.set(_XD_KEYS.STUDIO_SELECTED_OBJECT, selected, { source: "xstudio-object-tree" });
     this._log_selected_object_persisted_metadata(selected);
     this._mark_selected_tree_row(row_id);
+    this._reveal_object_tree_node(node, {
+      _rerender: false,
+      _highlight: true,
+      _row_id: row_id,
+    });
     this._update_selected_object_inspector();
   }
 
@@ -8767,14 +21435,23 @@ export class XStudioModule extends XModule {
     _xlog.log(VIBE_LOG, ...args);
   }
 
-  private async _send_command(_module: string, _op: string, _params: Record<string, any>) {
+  private async _send_command(
+    _module: string,
+    _op: string,
+    _params: Record<string, any>,
+    options: XStudioSendCommandOptions = {},
+  ) {
     const req_id = ++this._cmd_seq;
-    this._debug_log(`-> ${_module}.${_op}`, { _req_id: req_id, _params });
-    if ((_module === "server-xvm" || _module === "xvibe") && !this._server_ready()) {
+    this._debug_log(`-> ${_module}.${_op}`, {
+      _req_id: req_id,
+      _params,
+      ...(typeof options._timeout_ms === "number" ? { _timeout_ms: options._timeout_ms } : {}),
+    });
+    if ((_module === "server-xvm" || _module === "xvibe" || _module === "planning") && !this._server_ready()) {
       throw { _code: "E_XSTUDIO_SERVER_NOT_READY", _module, _op };
     }
     try {
-      const raw = await this._client().sendXcmd({ _module, _op, _params });
+      const raw = await this._client().sendXcmd({ _module, _op, _params }, options._timeout_ms);
       this._debug_log(`<- ${_module}.${_op} raw`, { _req_id: req_id, _raw: raw });
       const result = to_result(raw);
       this._debug_log(`<- ${_module}.${_op} result`, { _req_id: req_id, _result: result });
@@ -8793,8 +21470,16 @@ export class XStudioModule extends XModule {
     return this._send_command("studio", _op, _params);
   }
 
-  private _send_xvibe_command(_op: string, _params: Record<string, any>) {
-    return this._send_command("xvibe", _op, _params);
+  private _send_planning_command(_op: string, _params: Record<string, any>) {
+    return this._send_command("planning", _op, _params);
+  }
+
+  private _send_xvibe_command(
+    _op: string,
+    _params: Record<string, any>,
+    options: XStudioSendCommandOptions = {},
+  ) {
+    return this._send_command("xvibe", _op, _params, options);
   }
 
   private _send_module_creator_command(_op: string, _params: Record<string, any>) {
@@ -8898,6 +21583,10 @@ export class XStudioModule extends XModule {
       this._set_generation_state("failed", to_err(err), err);
       this._write_studio_status(`Apply failed: ${to_err(err)}`);
       this._error("studio generate-artifact failed", { _source: source, _error: to_err(err) });
+      this._retain_active_guide_recommendation_after_failure(
+        "generation-request-failed",
+        err,
+      );
       return false;
     }
   }
@@ -9089,6 +21778,7 @@ export class XStudioModule extends XModule {
     this._remember_generation_id(upd._generation_id || this._active_generation_id);
     this.clear_active_generation();
     this._set_generation_state("completed", "Generation complete");
+    void this._complete_active_guide_recommendation("generation-update-completed");
   }
 
   private _fail_generation_from_event(evt: VibeGenerationFailureEvt, source_evt: string, error_payload: any = evt) {
@@ -9123,6 +21813,10 @@ export class XStudioModule extends XModule {
     this._remember_generation_id(this._get_event_generation_id(evt as any) || this._active_generation_id);
     this.clear_active_generation();
     this._set_generation_state("failed", message, error_payload);
+    this._retain_active_guide_recommendation_after_failure(
+      "generation-failed",
+      error_payload,
+    );
   }
 
   private _handle_generation_stage(payload: any) {
@@ -9169,12 +21863,17 @@ export class XStudioModule extends XModule {
     if (next_state === "completed") {
       this.clear_active_generation();
       this._set_generation_state("completed", status);
+      void this._complete_active_guide_recommendation("generation-stage-completed");
       return;
     }
 
     if (next_state === "failed") {
       this.clear_active_generation();
       this._set_generation_state("failed", status, evt_payload);
+      this._retain_active_guide_recommendation_after_failure(
+        "generation-stage-failed",
+        evt_payload,
+      );
       return;
     }
 
@@ -9198,6 +21897,7 @@ export class XStudioModule extends XModule {
     this._remember_generation_id(this._get_event_generation_id(evt_payload) || this._active_generation_id);
     this.clear_active_generation();
     this._set_generation_state("completed", evt_payload._message ?? "Generation complete");
+    void this._complete_active_guide_recommendation("generation-completed");
   }
 
   private _register_generation_listeners() {
@@ -9245,6 +21945,8 @@ export class XStudioModule extends XModule {
   private async _close_studio() {
     try {
       await (XVM as any).close?.({ region: STUDIO_REGION_ID });
+      this._cancel_object_picker();
+      this._cancel_arrange_mode();
       this._clear_selected_canvas_highlight();
       this._log("studio closed");
     } catch (err) {
@@ -9353,14 +22055,23 @@ export class XStudioModule extends XModule {
     };
   }
 
-  private async _send_conversation_message(raw_value?: any) {
+  private async _send_conversation_message(
+    raw_value?: any,
+    options: XStudioAppendConversationMessageOptions = {},
+  ) {
     const text = this._local_conversation_text(
       raw_value === undefined ? this._read_conversation_input_value() : raw_value,
     );
     this._set_conversation_send_enabled(text.length > 0);
-    if (!text) return;
+    if (!text || this._conversation_analyzing) return;
 
-    await this._append_conversation_message(text);
+    this._set_conversation_input_value("");
+    this._set_conversation_analyzing(true);
+    try {
+      return await this._append_conversation_message(text, options);
+    } finally {
+      this._set_conversation_analyzing(false);
+    }
   }
 
   _set_studio_label(object_id: string, text: string) {

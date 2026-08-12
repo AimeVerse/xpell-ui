@@ -1,6 +1,6 @@
 {
   "name": "@xpell/ui",
-  "version": "2.0.4",
+  "version": "2.0.7",
   "description": "Xpell UI JS Framework",
   "publishConfig": {
     "access": "public"
@@ -29,10 +29,99 @@
     "dev": "vite",
     "build": "vite build && pnpm run build:types",
     "build:types": "tsc --project tsconfig.types.json",
-    "test": "pnpm build && node tests/xuiobject-dom-projection.test.mjs",
+    "test": "pnpm build && node tests/xuiobject-dom-projection.test.mjs && node tests/xselect-theme-startup.test.mjs",
     "docs": "typedoc --options ./typedoc.json --tsconfig ./",
     "publish-alpha-next": "pnpm version prerelease --preid=alpha  && pnpm publish --tag alpha",
     "check:xdata-legacy": "sh -c 'rg -n \"_xd\\._o\\[\" src && { echo \"Legacy XData write detected\" >&2; exit 1; } || true'"
+  },
+  "xpell": {
+    "_tests": [
+      {
+        "_id": "xpell-ui.script.test",
+        "_title": "@xpell/ui test script",
+        "_owner": "@xpell/ui",
+        "_suite": "xpell-ui.package",
+        "_scope": "package",
+        "_runtime": "node",
+        "_description": "Runs the existing @xpell/ui package test script.",
+        "_profiles": [
+          "xpell-ui.package"
+        ],
+        "_tags": [
+          "package",
+          "script"
+        ],
+        "_entry": {
+          "_type": "script",
+          "_script": "test"
+        }
+      },
+      {
+        "_id": "xpell-ui.regression.dom-projection",
+        "_title": "XUIObject DOM projection regression",
+        "_owner": "@xpell/ui",
+        "_suite": "xpell-ui.dom",
+        "_scope": "runtime",
+        "_runtime": "node",
+        "_description": "Existing DOM projection coverage in tests/xuiobject-dom-projection.test.mjs using a fake DOM.",
+        "_profiles": [
+          "xpell-ui.package",
+          "xpell-ui.dom"
+        ],
+        "_tags": [
+          "ui",
+          "dom",
+          "regression"
+        ],
+        "_entry": {
+          "_type": "file",
+          "_file": "tests/xuiobject-dom-projection.test.mjs"
+        }
+      },
+      {
+        "_id": "xpell-ui.package.check",
+        "_title": "@xpell/ui package metadata check",
+        "_owner": "@xpell/ui",
+        "_suite": "xpell-ui.package",
+        "_scope": "package",
+        "_runtime": "node",
+        "_description": "Verifies package metadata and declared local entries without publishing or network checks.",
+        "_profiles": [
+          "xpell-ui.package"
+        ],
+        "_tags": [
+          "package-check"
+        ],
+        "_entry": {
+          "_type": "package-check",
+          "_check": "package"
+        }
+      }
+    ],
+    "_test_profiles": [
+      {
+        "_id": "xpell-ui.package",
+        "_title": "@xpell/ui package verification",
+        "_includes": [
+          "xpell-ui.*"
+        ],
+        "_tags": [
+          "package"
+        ]
+      },
+      {
+        "_id": "xpell-ui.dom",
+        "_title": "@xpell/ui DOM projection regression",
+        "_includes": [
+          "xpell-ui.regression.dom-projection"
+        ],
+        "_tags": [
+          "ui",
+          "dom",
+          "regression"
+        ]
+      }
+    ]
   },
   "sideEffects": [
     "**/*.css"
@@ -44,15 +133,16 @@
     "url": "git+https://github.com/xpell-ai/xpell-ui.git"
   },
   "peerDependencies": {
-    "@xpell/core": "workspace:*",
+    "@xpell/core": "^2.0.7",
     "animate.css": "^4.1.1"
   },
   "devDependencies": {
-    "typedoc": "^0.25.13",
-    "typedoc-plugin-markdown": "^3.17.1",
-    "typescript": "^5.9.3",
-    "vite": "^5.4.21",
-    "vite-plugin-dts": "^3.9.1",
-    "animate.css": "^4.1.1"
+    "@typescript/typescript6": "^6.0.2",
+    "animate.css": "^4.1.1",
+    "typedoc": "^0.28.20",
+    "typedoc-plugin-markdown": "^4.12.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.1",
+    "vite-plugin-dts": "^5.0.3"
   }
 }

@@ -191,7 +191,7 @@ export class XInput extends XUIObject {
 
         dom.addEventListener(
             event_name,
-            () => {
+            async () => {
 
                 const value = this.getValue();
 
@@ -207,6 +207,18 @@ export class XInput extends XUIObject {
                     value,
                     {
                         source: `${this._type}#${this._id}.${event_name}`
+                    }
+                );
+
+                await (this as any).onChange(
+                    {
+                        value,
+                        target: {
+                            value
+                        }
+                    },
+                    {
+                        _skip_authored: true
                     }
                 );
             }
@@ -781,5 +793,20 @@ export class XSelect extends XInput {
         }
 
         select.value = String(value ?? "");
+    }
+
+    override async onData(data: any) {
+        if (
+            !(this as any)._mounted &&
+            (
+                data === undefined ||
+                data === null ||
+                data === ""
+            )
+        ) {
+            return;
+        }
+
+        await super.onData(data);
     }
 }

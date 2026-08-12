@@ -3,6 +3,10 @@ import { XObjectPack, _xlog, _xu, type XpellSkill } from "@xpell/core";
 
 export type XVMViewResolver = (view_id: string) => Record<string, any> | null;
 
+export type XVMViewSupportOptions = {
+  resolver?: XVMViewResolver | null;
+};
+
 export interface XVMViewData extends XUIObjectData {
   _type: "xvm-view";
   _view_id: string;
@@ -469,6 +473,58 @@ export class XVMViewPack extends XObjectPack {
     return {
       [XVMView._xtype]: XVMView,
     };
+  }
+}
+
+const XVM_VIEW_SUPPORT_OWNER = { _id: "xvm-view-support" };
+let xvm_view_pack_registered = false;
+let xvm_view_resolver_listener_bound = false;
+let xvm_view_support_promise: Promise<void> | null = null;
+
+async function ensureXVMViewSupportRegistered() {
+  if (!xvm_view_support_promise) {
+    xvm_view_support_promise = (async () => {
+      const [{ XUI }, { _xem }] = await Promise.all([
+        import("../XUI/XUI"),
+        import("../XEM/XEventManager")
+      ]);
+
+      if (!xvm_view_pack_registered) {
+        if (!XUI.hasObject(XVMView._xtype)) {
+          XUI.importObjectPack(XVMViewPack);
+        }
+        xvm_view_pack_registered = true;
+      }
+
+      if (!xvm_view_resolver_listener_bound) {
+        _xem.on("xvm:view-resolver-ready", (payload: any) => {
+          const resolver = payload?.resolver ?? null;
+          if (typeof resolver === "function" || resolver === null) {
+            XVMView.setViewResolver(resolver);
+          }
+        }, { _owner: XVM_VIEW_SUPPORT_OWNER });
+
+        xvm_view_resolver_listener_bound = true;
+      }
+    })();
+  }
+
+  try {
+    await xvm_view_support_promise;
+  } catch (error) {
+    xvm_view_support_promise = null;
+    throw error;
+  }
+}
+
+export async function registerXVMViewSupport(opts: XVMViewSupportOptions = {}) {
+  await ensureXVMViewSupportRegistered();
+
+  if (Object.prototype.hasOwnProperty.call(opts, "resolver")) {
+    const resolver = opts.resolver ?? null;
+    if (typeof resolver === "function" || resolver === null) {
+      XVMView.setViewResolver(resolver);
+    }
   }
 }
 

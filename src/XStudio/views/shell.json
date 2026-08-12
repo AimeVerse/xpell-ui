@@ -1,8 +1,8 @@
 {
   "_id": "xstudio-shell",
   "_type": "view",
-  "_theme": "terminal",
-  "class": "xstudio-shell xstudio-theme-terminal",
+  "_theme": "dark",
+  "class": "xstudio-shell xstudio-theme-dark",
   "data-xstudio-theme": "dark",
   "_children": [
     {
@@ -110,7 +110,107 @@
                     },
                     {
                       "_type": "view",
-                      "class": "xstudio-explorer-section-actions"
+                      "class": "xstudio-explorer-section-actions",
+                      "_children": [
+                        {
+                          "_id": "xstudio-object-tree-picker-toggle",
+                          "_type": "button",
+                          "type": "button",
+                          "class": "xstudio-object-picker-toggle xstudio-object-tree-picker-toggle xstudio-explorer-section-action xstudio-icon-button",
+                          "title": "Select object from canvas (⌘⇧C)",
+                          "aria-label": "Select object from canvas (⌘⇧C)",
+                          "aria-pressed": "false",
+                          "_children": [
+                            {
+                              "_type": "svg",
+                              "class": "xstudio-object-picker-icon",
+                              "viewBox": "0 0 24 24",
+                              "fill": "none",
+                              "xmlns": "http://www.w3.org/2000/svg",
+                              "aria-hidden": "true",
+                              "focusable": "false",
+                              "_children": [
+                                {
+                                  "_type": "rect",
+                                  "x": "4",
+                                  "y": "4",
+                                  "width": "16",
+                                  "height": "16",
+                                  "rx": "2",
+                                  "fill": "none",
+                                  "stroke": "currentColor",
+                                  "stroke-width": "1.8"
+                                },
+                                {
+                                  "_type": "path",
+                                  "d": "M8 8l8 4-4 1.5L10.5 17 8 8z",
+                                  "fill": "none",
+                                  "stroke": "currentColor",
+                                  "stroke-width": "1.8",
+                                  "stroke-linejoin": "round"
+                                }
+                              ]
+                            }
+                          ],
+                          "_on": {
+                            "click": {
+                              "_module": "xem",
+                              "_op": "fire",
+                              "_params": {
+                                "event": "studio:object-picker-toggle"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "_id": "xstudio-object-tree-arrange-toggle",
+                          "_type": "button",
+                          "type": "button",
+                          "class": "xstudio-arrange-toggle xstudio-object-tree-arrange-toggle xstudio-explorer-section-action xstudio-icon-button",
+                          "title": "Arrange objects",
+                          "aria-label": "Arrange objects",
+                          "aria-pressed": "false",
+                          "_children": [
+                            {
+                              "_type": "svg",
+                              "class": "xstudio-arrange-icon",
+                              "viewBox": "0 0 24 24",
+                              "fill": "none",
+                              "xmlns": "http://www.w3.org/2000/svg",
+                              "aria-hidden": "true",
+                              "focusable": "false",
+                              "_children": [
+                                {
+                                  "_type": "path",
+                                  "d": "M12 3v18M3 12h18",
+                                  "fill": "none",
+                                  "stroke": "currentColor",
+                                  "stroke-width": "1.8",
+                                  "stroke-linecap": "round"
+                                },
+                                {
+                                  "_type": "path",
+                                  "d": "M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3",
+                                  "fill": "none",
+                                  "stroke": "currentColor",
+                                  "stroke-width": "1.8",
+                                  "stroke-linecap": "round",
+                                  "stroke-linejoin": "round"
+                                }
+                              ]
+                            }
+                          ],
+                          "_on": {
+                            "click": {
+                              "_module": "xem",
+                              "_op": "fire",
+                              "_params": {
+                                "event": "studio:arrange-toggle"
+                              }
+                            }
+                          }
+                        }
+                      ]
                     }
                   ]
                 },
@@ -136,6 +236,19 @@
               "class": "xstudio-portlet xstudio-selected-object-panel"
             }
           ]
+        },
+        {
+          "_id": "xstudio-left-resize-divider",
+          "_type": "view",
+          "class": "xstudio-resize-divider xstudio-left-resize-divider",
+          "role": "separator",
+          "tabindex": "0",
+          "aria-label": "Resize left workspace panel",
+          "aria-orientation": "vertical",
+          "aria-valuemin": "240",
+          "aria-valuenow": "300",
+          "aria-valuemax": "720",
+          "title": "Drag to resize left panel. Double-click to reset."
         },
         {
           "_id": "xstudio-canvas",
@@ -266,6 +379,24 @@
                           "_text": "Modules: -"
                         }
                       ]
+                    }
+                  ]
+                },
+                {
+                  "_id": "xstudio-data-feature-panel",
+                  "_type": "view",
+                  "_visible": false,
+                  "aria-hidden": "true",
+                  "style": "display: none;",
+                  "class": "xstudio-portlet xstudio-section xstudio-data-feature-panel xstudio-portlet-hidden",
+                  "role": "region",
+                  "aria-labelledby": "xstudio-data-feature-title",
+                  "_children": [
+                    {
+                      "_id": "xstudio-data-feature-body",
+                      "_type": "view",
+                      "class": "xstudio-data-feature-body",
+                      "_children": []
                     }
                   ]
                 }

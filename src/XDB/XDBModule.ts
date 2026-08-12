@@ -59,13 +59,21 @@ export class XDBClientModule extends XModule {
             _name: "has",
             _scope: "module",
             _description: "Check whether a key exists.",
-            _params: { key: "Storage key." }
+            _params: {
+                key: "Storage key.",
+                _key: "Storage key alias."
+            }
         },
         "get-string": {
             _name: "get-string",
             _scope: "module",
             _description: "Get a stored string value.",
-            _params: { key: "Storage key." }
+            _params: {
+                key: "Storage key.",
+                _key: "Storage key alias.",
+                default: "Optional fallback when stored value is null.",
+                _default: "Optional fallback alias."
+            }
         },
         "save-string": {
             _name: "save-string",
@@ -73,7 +81,9 @@ export class XDBClientModule extends XModule {
             _description: "Save a string value.",
             _params: {
                 key: "Storage key.",
+                _key: "Storage key alias.",
                 value: "String value.",
+                _value: "String value alias.",
                 _debug: "Optional debug flag."
             }
         },
@@ -81,7 +91,10 @@ export class XDBClientModule extends XModule {
             _name: "get-object",
             _scope: "module",
             _description: "Get a stored JSON object.",
-            _params: { key: "Storage key." }
+            _params: {
+                key: "Storage key.",
+                _key: "Storage key alias."
+            }
         },
         "save-object": {
             _name: "save-object",
@@ -89,14 +102,19 @@ export class XDBClientModule extends XModule {
             _description: "Save a JSON object.",
             _params: {
                 key: "Storage key.",
-                value: "Object value."
+                _key: "Storage key alias.",
+                value: "Object value.",
+                _value: "Object value alias."
             }
         },
         remove: {
             _name: "remove",
             _scope: "module",
             _description: "Remove a stored key.",
-            _params: { key: "Storage key." }
+            _params: {
+                key: "Storage key.",
+                _key: "Storage key alias."
+            }
         },
         clear: {
             _name: "clear",
@@ -116,6 +134,40 @@ export class XDBClientModule extends XModule {
             _name:
                 XDBClientModule._name
         });
+    }
+
+    /*
+    PARAMS
+    */
+
+    private _read_key(
+        xcmd: XCommand
+    ) {
+
+        const params: any =
+            xcmd?._params ?? {};
+
+        return params.key ?? params._key;
+    }
+
+    private _read_value(
+        xcmd: XCommand
+    ) {
+
+        const params: any =
+            xcmd?._params ?? {};
+
+        return params.value ?? params._value;
+    }
+
+    private _read_default(
+        xcmd: XCommand
+    ) {
+
+        const params: any =
+            xcmd?._params ?? {};
+
+        return params._default ?? params.default;
     }
 
     /*
@@ -148,7 +200,7 @@ export class XDBClientModule extends XModule {
         try {
 
             const key: any =
-                xcmd?._params?.key;
+                this._read_key(xcmd);
 
             return new XResponseOK({
                 exists:
@@ -173,11 +225,16 @@ export class XDBClientModule extends XModule {
         try {
 
             const key: any =
-                xcmd?._params?.key;
+                this._read_key(xcmd);
+
+            const value =
+                XDB.getString(key);
 
             return new XResponseOK({
                 value:
-                    XDB.getString(key)
+                    value === null
+                        ? this._read_default(xcmd) ?? null
+                        : value
             }).toXData();
 
         } catch (err) {
@@ -198,10 +255,10 @@ export class XDBClientModule extends XModule {
         try {
 
             const key: any =
-                xcmd?._params?.key || xcmd?._params?._key;
+                this._read_key(xcmd);
 
             const value: any =
-                xcmd?._params?.value || xcmd?._params?._value;
+                this._read_value(xcmd);
 
             const _debug = !!xcmd?._params?._debug;
             if (_debug) {
@@ -235,7 +292,7 @@ export class XDBClientModule extends XModule {
         try {
 
             const key: any =
-                xcmd?._params?.key;
+                this._read_key(xcmd);
 
             return new XResponseOK({
                 value:
@@ -260,10 +317,10 @@ export class XDBClientModule extends XModule {
         try {
 
             const key: any =
-                xcmd?._params?.key;
+                this._read_key(xcmd);
 
             const value: any =
-                xcmd?._params?.value;
+                this._read_value(xcmd);
 
             XDB.saveObject(
                 key,
@@ -292,7 +349,7 @@ export class XDBClientModule extends XModule {
         try {
 
             const key: any =
-                xcmd?._params?.key;
+                this._read_key(xcmd);
 
             XDB.remove(key);
 

@@ -15,6 +15,24 @@
           "_text": "Conversation"
         },
         {
+          "_id": "xstudio-conversation-active-task-header",
+          "_type": "view",
+          "class": "xstudio-conversation-active-task-header xstudio-conversation-active-task-hidden",
+          "_children": [
+            {
+              "_type": "label",
+              "class": "xstudio-conversation-active-task-header-label",
+              "_text": "Working on:"
+            },
+            {
+              "_id": "xstudio-conversation-active-task-header-title",
+              "_type": "label",
+              "class": "xstudio-conversation-active-task-header-title",
+              "_text": ""
+            }
+          ]
+        },
+        {
           "_type": "view",
           "class": "xstudio-portlet-actions",
           "_children": [
@@ -89,6 +107,63 @@
           "class": "xstudio-conversation-composer",
           "_children": [
             {
+              "_id": "xstudio-conversation-active-task",
+              "_type": "view",
+              "class": "xstudio-conversation-active-task xstudio-conversation-active-task-hidden",
+              "_children": [
+                {
+                  "_type": "view",
+                  "class": "xstudio-conversation-active-task-content",
+                  "_children": [
+                    {
+                      "_id": "xstudio-conversation-active-task-label",
+                      "_type": "label",
+                      "class": "xstudio-conversation-active-task-label",
+                      "_text": "Current Task"
+                    },
+                    {
+                      "_id": "xstudio-conversation-active-task-title",
+                      "_type": "label",
+                      "class": "xstudio-conversation-active-task-title",
+                      "_text": ""
+                    }
+                  ]
+                },
+                {
+                  "_id": "xstudio-conversation-active-task-retry",
+                  "_type": "button",
+                  "type": "button",
+                  "class": "xstudio-conversation-active-task-retry xstudio-conversation-active-task-hidden",
+                  "_text": "Retry",
+                  "_on": {
+                    "click": {
+                      "_module": "xem",
+                      "_op": "fire",
+                      "_params": {
+                        "event": "studio:guide-active-recommendation-retry"
+                      }
+                    }
+                  }
+                },
+                {
+                  "_id": "xstudio-conversation-active-task-cancel",
+                  "_type": "button",
+                  "type": "button",
+                  "class": "xstudio-conversation-active-task-cancel",
+                  "_text": "Cancel",
+                  "_on": {
+                    "click": {
+                      "_module": "xem",
+                      "_op": "fire",
+                      "_params": {
+                        "event": "studio:guide-active-recommendation-cancel"
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            {
               "_id": "xstudio-conversation-input",
               "_type": "textarea",
               "class": "xstudio-conversation-input",
@@ -127,6 +202,23 @@
               "_type": "view",
               "class": "xstudio-conversation-actions",
               "_children": [
+                {
+                  "_type": "button",
+                  "_id": "xstudio-conversation-capability-guidance-button",
+                  "_text": "What can I do?",
+                  "type": "button",
+                  "class": "xstudio-conversation-capability-guidance-button",
+                  "title": "Show Visual Xpell capabilities",
+                  "_on": {
+                    "click": {
+                      "_module": "xem",
+                      "_op": "fire",
+                      "_params": {
+                        "event": "studio:conversation-capability-guidance"
+                      }
+                    }
+                  }
+                },
                 {
                   "_type": "button",
                   "_id": "xstudio-conversation-attach-button",

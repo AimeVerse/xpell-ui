@@ -41,18 +41,18 @@ const domProjectionFields = [
     ...semanticProjectionFields
 ] as const;
 const RESERVED_DOM_EVENT_ALIASES: Record<string, string> = {
-            "_click": "click",
-            "_change": "change",
-            "_input": "input",
-            "_submit": "submit",
-            "_focus": "focus",
-            "_blur": "blur",
-            "_keydown": "keydown",
-            "_keyup": "keyup",
-            "_mouseenter": "mouseenter",
-            "_mouseleave": "mouseleave",
-        };
-        
+    "_click": "click",
+    "_change": "change",
+    "_input": "input",
+    "_submit": "submit",
+    "_focus": "focus",
+    "_blur": "blur",
+    "_keydown": "keydown",
+    "_keyup": "keyup",
+    "_mouseenter": "mouseenter",
+    "_mouseleave": "mouseleave",
+};
+
 export type XUIHandler = Function | string | any | any[];
 
 export type XUIFlowDef = string | { _id: string; _payload?: Record<string, any>; };
@@ -913,7 +913,7 @@ export class XUIObject extends XObject {
 
         const el = this._dom_object;
 
-        
+
 
         if (el instanceof HTMLElement) {
             const onMap = (this as any)._on || {};
@@ -1081,7 +1081,7 @@ export class XUIObject extends XObject {
         (this as any)._mounted = true;
     }
 
-  
+
     private resolveFlowPayload(template: any, ev: any) {
 
         const eventCtx = {
@@ -1167,6 +1167,35 @@ export class XUIObject extends XObject {
         this._children.forEach((child: any) => {
             if (child.onHide && typeof child.onHide === "function") child.onHide();
         });
+    }
+
+
+    setDOMAttribute(
+        key: string,
+        value: any
+    ) {
+        (this as any)[key] = value;
+
+        const el =
+            this._dom_object;
+
+        if (!(el instanceof HTMLElement)) {
+            return;
+        }
+
+        if (
+            value === undefined ||
+            value === null ||
+            value === false
+        ) {
+            el.removeAttribute(key);
+            return;
+        }
+
+        el.setAttribute(
+            key,
+            String(value)
+        );
     }
 
     /**

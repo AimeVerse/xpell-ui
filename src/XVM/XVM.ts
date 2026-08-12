@@ -352,8 +352,6 @@ class _XVM extends XModule {
 
   private _regions: Record<RegionName, RegionConfig> = {};
   private _defaultRegion: RegionName = "main";
-  private _xvm_view_pack_loaded = false;
-  private _xvm_view_resolver_bound = false;
   private _restoring_browser_history = false;
 
   constructor() {
@@ -496,29 +494,9 @@ class _XVM extends XModule {
     }
   }
 
-  private async registerXVMViewSupport() {
-    if (this._xvm_view_pack_loaded) return;
-
-    const { XVMView, XVMViewPack } = await import("./XVMView");
-
-    XUI.importObjectPack(XVMViewPack);
-
-    if (!this._xvm_view_resolver_bound) {
-      _xem.on("xvm:view-resolver-ready", (payload: any) => {
-        const resolver = payload?.resolver ?? null;
-        if (typeof resolver === "function" || resolver === null) {
-          XVMView.setViewResolver(resolver);
-        }
-      }, { _owner: this });
-
-      this._xvm_view_resolver_bound = true;
-    }
-
-    this._xvm_view_pack_loaded = true;
-  }
-
   async onLoad(): Promise<void> {
-    await this.registerXVMViewSupport();
+    const { registerXVMViewSupport } = await import("./XVMView");
+    await registerXVMViewSupport();
 
     // Listen to hash changes for router (only if region policy allows it)    // register once when module is loaded (safe point)
     _xem.on("xvm:update", (payload: any) => {
@@ -913,6 +891,8 @@ class _XVM extends XModule {
 
     const target = this.add(view, { containerId });
     this._current_view_object = target; // 🔥 ADD THIS LINE
+    const view_theme = (target as any)?._theme;
+    if (view_theme) XUI.applyDefaultTheme(view_theme);
     target.show();
     try {
       const el = this.requireContainer(containerId).dom as any;
@@ -1167,7 +1147,7 @@ class _XVM extends XModule {
     }
 
     if (app._theme) {
-      XUI.applyTheme(app._theme);
+      XUI.applyDefaultTheme(app._theme);
     }
 
     // 1.5) shell (static layout)
@@ -1409,7 +1389,20 @@ class _XVM extends XModule {
     const params = cmd?._params ?? {};
     const _debug = params._debug === true;
 
-    const server_cmd = params._cmd;
+    const server_cmd = {
+      ...(params._cmd ?? {}),
+      _params: {
+        ...(params._cmd?._params ?? {}),
+      },
+    };
+
+    if (
+      typeof server_cmd?._params?._records === "string" &&
+      server_cmd._params._records.startsWith("$xdata:")
+    ) {
+      server_cmd._params._records =
+        _xd.get(server_cmd._params._records.slice("$xdata:".length));
+    }
 
     if (_debug) {
       _xlog.log("XVM call-server", { cmd, params, server_cmd });
@@ -1423,13 +1416,60 @@ class _XVM extends XModule {
       throw new Error("xvm call-server: missing _params._cmd._op");
     }
 
-    return await Wormholes.sendXcmd({
+    const result = await Wormholes.sendXcmd({
       ...server_cmd,
       _op:
         typeof server_cmd._op === "string" && server_cmd._op.startsWith("_")
           ? server_cmd._op.slice(1)
           : server_cmd._op
     });
+
+    const raw_output = cmd?._output;
+    const fallback_output =
+        server_cmd?._op === "aggregate" &&
+        typeof server_cmd?._params?._result_xdata_key === "string"
+          ? {
+            _target: "xdata",
+            _key: server_cmd._params._result_xdata_key,
+            _path: "_value",
+          }
+          : undefined;
+    const output =
+      raw_output?._target === "xdata" &&
+      typeof raw_output?._key === "string" &&
+      typeof raw_output?._path === "string"
+        ? raw_output
+        : fallback_output;
+
+    if (
+      output?._target === "xdata" &&
+      typeof output?._key === "string" &&
+      typeof output?._path === "string"
+    ) {
+      const value =
+        output._path === "_value"
+          ? result?._result?._value ?? result?._value
+          : output._path
+          .split(".")
+          .filter(Boolean)
+          .reduce((current: any, key: string) => current?.[key], result);
+      _xd.set(output._key, value, {
+        source: "xvm:call-server",
+      });
+    }
+
+    if (
+      server_cmd?._op === "aggregate" &&
+      typeof server_cmd?._params?._result_xdata_key === "string"
+    ) {
+      _xd.set(
+        server_cmd._params._result_xdata_key,
+        result?._result?._value ?? result?._value ?? 0,
+        { source: "xvm:call-server:aggregate-output" },
+      );
+    }
+
+    return result;
   }
 
   help(op?: string) {

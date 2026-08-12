@@ -560,6 +560,7 @@ export class XLink extends XUIObject {
 
         _fields: {
             href: "Link URL.",
+            _href: "Link URL (alias for href).",
             target: "Browser target such as _blank.",
             rel: "Relationship attribute.",
             download: "Enable browser download behavior.",
@@ -637,6 +638,8 @@ export class XLink extends XUIObject {
             }
         }
     };
+    
+    private __href = "#";
 
     constructor(data: XObjectData) {
         const tag = "link"
@@ -648,6 +651,22 @@ export class XLink extends XUIObject {
         super(data, defaults, true);
         this.parse(data);
     }
+
+
+    get _href(): string {
+        return this.__href;
+    }
+
+    set _href(value: string) {
+        this.__href = value ?? "#";
+
+        this.setDOMAttribute(
+            "href",
+            this.__href
+        );
+    }
+
+   
 }
 
 export class XLabel extends XUIObject {

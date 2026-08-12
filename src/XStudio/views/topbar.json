@@ -12,17 +12,17 @@
       "_id": "xstudio-theme-selector",
       "_type": "select",
       "class": "toolbar-theme-select",
-      "_value": "terminal",
-      "value": "terminal",
+      "_value": "dark",
+      "value": "dark",
       "_options": [
         {
           "value": "terminal",
-          "label": "Terminal",
-          "selected": true
+          "label": "Terminal"
         },
         {
           "value": "dark",
-          "label": "Dark"
+          "label": "Dark",
+          "selected": true
         },
         {
           "value": "light",
@@ -94,6 +94,24 @@
           "_op": "toggle-portlet",
           "_params": {
             "_portlet": "conversation"
+          }
+        }
+      }
+    },
+    {
+      "_id": "xstudio-portlet-toggle-guide",
+      "_type": "button",
+      "class": "xstudio-portlet-toggle",
+      "_text": "Guide",
+      "_variant": "ghost",
+      "title": "Show Guide",
+      "aria-pressed": "false",
+      "_on": {
+        "click": {
+          "_module": "xstudio",
+          "_op": "toggle-portlet",
+          "_params": {
+            "_portlet": "guide"
           }
         }
       }
@@ -173,10 +191,11 @@
     {
       "_id": "xstudio-toggle-left-dock",
       "_type": "button",
-      "class": "xstudio-dock-toggle",
+      "class": "xstudio-dock-toggle xstudio-icon-button",
       "_text": "◀",
       "_variant": "ghost",
       "title": "Collapse left dock",
+      "aria-label": "Collapse left dock",
       "_on": {
         "click": {
           "_module": "xem",
@@ -188,12 +207,111 @@
       }
     },
     {
+      "_id": "xstudio-object-picker-toggle",
+      "_type": "button",
+      "class": "xstudio-object-picker-toggle xstudio-icon-button",
+      "_variant": "ghost",
+      "title": "Select object from canvas (⌘⇧C)",
+      "aria-label": "Select object from canvas (⌘⇧C)",
+      "aria-pressed": "false",
+      "_children": [
+        {
+          "_type": "svg",
+          "class": "xstudio-object-picker-icon",
+          "viewBox": "0 0 24 24",
+          "fill": "none",
+          "xmlns": "http://www.w3.org/2000/svg",
+          "aria-hidden": "true",
+          "focusable": "false",
+          "_children": [
+            {
+              "_type": "rect",
+              "x": "4",
+              "y": "4",
+              "width": "16",
+              "height": "16",
+              "rx": "2",
+              "fill": "none",
+              "stroke": "currentColor",
+              "stroke-width": "1.8"
+            },
+            {
+              "_type": "path",
+              "d": "M8 8l8 4-4 1.5L10.5 17 8 8z",
+              "fill": "none",
+              "stroke": "currentColor",
+              "stroke-width": "1.8",
+              "stroke-linejoin": "round"
+            }
+          ]
+        }
+      ],
+      "_on": {
+        "click": {
+          "_module": "xem",
+          "_op": "fire",
+          "_params": {
+            "event": "studio:object-picker-toggle"
+          }
+        }
+      }
+    },
+    {
+      "_id": "xstudio-arrange-toggle",
+      "_type": "button",
+      "class": "xstudio-arrange-toggle xstudio-icon-button",
+      "_variant": "ghost",
+      "title": "Arrange objects",
+      "aria-label": "Arrange objects",
+      "aria-pressed": "false",
+      "_children": [
+        {
+          "_type": "svg",
+          "class": "xstudio-arrange-icon",
+          "viewBox": "0 0 24 24",
+          "fill": "none",
+          "xmlns": "http://www.w3.org/2000/svg",
+          "aria-hidden": "true",
+          "focusable": "false",
+          "_children": [
+            {
+              "_type": "path",
+              "d": "M12 3v18M3 12h18",
+              "fill": "none",
+              "stroke": "currentColor",
+              "stroke-width": "1.8",
+              "stroke-linecap": "round"
+            },
+            {
+              "_type": "path",
+              "d": "M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3",
+              "fill": "none",
+              "stroke": "currentColor",
+              "stroke-width": "1.8",
+              "stroke-linecap": "round",
+              "stroke-linejoin": "round"
+            }
+          ]
+        }
+      ],
+      "_on": {
+        "click": {
+          "_module": "xem",
+          "_op": "fire",
+          "_params": {
+            "event": "studio:arrange-toggle"
+          }
+        }
+      }
+    },
+    {
       "_id": "xstudio-toggle-right-dock",
       "_type": "button",
-      "class": "xstudio-dock-toggle",
+      "class": "xstudio-dock-toggle xstudio-icon-button",
       "_text": "▶",
       "_variant": "ghost",
       "title": "Collapse right dock",
+      "aria-label": "Collapse right dock",
       "_on": {
         "click": {
           "_module": "xem",

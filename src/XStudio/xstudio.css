@@ -1,0 +1,6147 @@
+/** =========================================================================
+ * XStudio Style
+ * =========================================================================
+ * XStudio owns product-specific shell, portlet, editor, conversation,
+ * inspector, guide, and dock styling. Generic XUI tokens live in xui.css.
+ * ========================================================================= */
+
+/* =========================================================================
+ * XStudio Docked Shell
+ * ========================================================================= */
+
+.xstudio-shell {
+    --vx-bg: var(--x-bg);
+    --vx-bg-subtle: color-mix(in srgb, var(--vx-bg) 88%, white 12%);
+    --vx-surface: var(--x-panel, var(--x-surface));
+    --vx-surface-raised: var(--x-card, var(--x-surface-2));
+    --vx-surface-sunken: color-mix(in srgb, var(--vx-bg) 76%, black 24%);
+    --vx-toolbar: var(--x-toolbar, var(--vx-surface));
+    --vx-input: var(--x-input, var(--vx-surface-raised));
+    --vx-border-subtle: var(--x-border-subtle, var(--x-border));
+    --vx-border: var(--x-border);
+    --vx-border-strong: var(--x-border-strong, var(--x-border));
+    --vx-text-primary: var(--x-text);
+    --vx-text-secondary: color-mix(in srgb, var(--x-text) 82%, var(--x-text-muted));
+    --vx-text-muted: var(--x-text-muted);
+    --vx-accent: var(--x-accent);
+    --vx-accent-soft: color-mix(in srgb, var(--vx-accent) 12%, transparent);
+    --vx-success: var(--x-success);
+    --vx-success-soft: var(--x-success-soft, color-mix(in srgb, var(--x-success) 12%, transparent));
+    --vx-warning: var(--x-warning);
+    --vx-warning-soft: var(--x-warning-soft, color-mix(in srgb, var(--x-warning) 12%, transparent));
+    --vx-danger: var(--x-danger);
+    --vx-danger-soft: var(--x-danger-soft, color-mix(in srgb, var(--x-danger) 12%, transparent));
+    --vx-focus: var(--x-focus, var(--vx-accent));
+    --vx-font-sans: var(--x-font-sans, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+    --vx-font-mono: var(--x-font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace);
+    --vx-font-size-xs: 12px;
+    --vx-font-size-sm: 13px;
+    --vx-font-size-md: 14px;
+    --vx-font-size-lg: 16px;
+    --vx-font-size-xl: 20px;
+    --vx-line-height: 1.45;
+    --vx-space-1: 4px;
+    --vx-space-2: 8px;
+    --vx-space-3: 12px;
+    --vx-space-4: 16px;
+    --vx-space-5: 20px;
+    --vx-control-h-sm: 28px;
+    --vx-control-h-md: 32px;
+    --vx-row-h-tree: 24px;
+    --vx-radius-sm: 4px;
+    --vx-radius-md: 6px;
+    --vx-radius-lg: 8px;
+    --vx-shadow-sm: 0 1px 2px rgba(0, 0, 0, .16);
+    --vx-shadow-md: 0 12px 32px rgba(0, 0, 0, .22);
+    --vx-shadow-lg: 0 24px 64px rgba(0, 0, 0, .32);
+    --xstudio-bg: var(--vx-bg);
+    --xstudio-surface: var(--vx-surface);
+    --xstudio-surface-2: var(--vx-surface-raised);
+    --xstudio-text: var(--vx-text-primary);
+    --xstudio-text-muted: var(--vx-text-muted);
+    --xstudio-accent: var(--vx-accent);
+    --xstudio-border: var(--vx-border-subtle);
+    --xstudio-scrollbar-thumb: color-mix(in srgb, var(--xstudio-accent) 24%, transparent);
+    --xstudio-scrollbar-thumb-hover: color-mix(in srgb, var(--xstudio-accent) 42%, transparent);
+    --xstudio-scrollbar-track: transparent;
+    --xstudio-radius-sm: var(--vx-radius-sm);
+    --xstudio-radius-md: var(--vx-radius-md);
+    --xstudio-color-scheme: dark;
+    --xstudio-left-width: 300px;
+    --xstudio-right-width: clamp(460px, 30vw, 520px);
+    --xstudio-font-xs: var(--vx-font-size-xs);
+    --xstudio-font-sm: var(--vx-font-size-sm);
+    --xstudio-font-md: var(--vx-font-size-md);
+    --xstudio-font-lg: var(--vx-font-size-lg);
+    --xstudio-font-xl: var(--vx-font-size-xl);
+    --xstudio-panel-padding: var(--vx-space-3);
+    --xstudio-panel-gap: var(--vx-space-3);
+    --xstudio-section-gap: var(--vx-space-2);
+    --xstudio-line-height: var(--vx-line-height);
+    box-sizing: border-box;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    max-height: 100vh;
+    max-height: 100dvh;
+    min-height: 0;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow: hidden;
+    background: var(--xstudio-bg);
+    color: var(--xstudio-text);
+    font-family: var(--vx-font-sans);
+    font-size: var(--xstudio-font-md);
+    line-height: var(--xstudio-line-height);
+}
+
+.xstudio-guide-card {
+    box-sizing: border-box;
+    position: relative;
+    width: 100%;
+    max-width: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.xstudio-guide-card.xstudio-guide-collapsed {
+    width: 100%;
+}
+
+.xstudio-guide-header {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.xstudio-guide-title-wrap {
+    min-width: 0;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.xstudio-guide-title {
+    color: var(--xstudio-accent);
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 700;
+}
+
+.xstudio-guide-counts {
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    line-height: 14px;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-guide-toggle {
+    flex: 0 0 28px;
+    width: 28px;
+    min-width: 28px;
+    min-height: 26px;
+    padding: 3px 0;
+    text-align: center;
+}
+
+.xstudio-guide-body {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.xstudio-guide-collapsed .xstudio-guide-body {
+    display: flex;
+}
+
+.xstudio-guide-line {
+    color: var(--xstudio-text-muted);
+    font-size: 12px;
+    line-height: 16px;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-guide-message {
+    box-sizing: border-box;
+    max-width: 100%;
+    color: var(--xstudio-text);
+    font-size: 12px;
+    line-height: 16px;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-guide-unavailable {
+    box-sizing: border-box;
+    max-width: 100%;
+    color: var(--xstudio-text);
+    font-size: 12px;
+    line-height: 16px;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-guide-unavailable-detail {
+    box-sizing: border-box;
+    max-width: 100%;
+    color: var(--xstudio-text-muted);
+    font-size: 12px;
+    line-height: 16px;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-guide-empty-action {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    max-width: 100%;
+    min-width: 0;
+    padding-top: 7px;
+    border-top: 1px solid color-mix(in srgb, var(--xstudio-border) 72%, transparent);
+}
+
+.xstudio-guide-empty-action-hidden {
+    display: none;
+}
+
+.xstudio-guide-empty-action-text {
+    color: var(--xstudio-text-muted);
+    font-size: 12px;
+    line-height: 16px;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-guide-empty-action-button {
+    max-width: 100%;
+    min-height: 28px;
+    padding: 4px 8px;
+    white-space: normal;
+}
+
+.xstudio-guide-focus-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6px;
+    align-items: center;
+}
+
+.xstudio-guide-focus-input {
+    height: 30px;
+}
+
+.xstudio-guide-set-focus {
+    min-height: 30px;
+    white-space: nowrap;
+}
+
+.xstudio-guide-milestone {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    padding-top: 7px;
+    border-top: 1px solid color-mix(in srgb, var(--xstudio-border) 72%, transparent);
+}
+
+.xstudio-guide-milestone-hidden {
+    display: none;
+}
+
+.xstudio-guide-milestone-label {
+    color: var(--xstudio-text-muted);
+    font-size: 10px;
+    line-height: 14px;
+    font-weight: 700;
+    letter-spacing: 0;
+}
+
+.xstudio-guide-milestone-title {
+    color: var(--xstudio-text);
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 700;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-guide-milestone-progress {
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    line-height: 15px;
+    letter-spacing: 0;
+}
+
+.xstudio-guide-milestone-items {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.xstudio-guide-milestone-item {
+    box-sizing: border-box;
+    display: block;
+    min-width: 0;
+    max-width: 100%;
+    padding: 1px 4px;
+    border-radius: 4px;
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    line-height: 15px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+.xstudio-guide-milestone-item-complete {
+    color: color-mix(in srgb, var(--x-success) 78%, var(--xstudio-text));
+}
+
+.xstudio-guide-milestone-item-next {
+    background: color-mix(in srgb, var(--xstudio-accent) 12%, transparent);
+    color: var(--xstudio-text);
+    font-weight: 700;
+}
+
+.xstudio-guide-achievements {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    padding-top: 7px;
+    border-top: 1px solid color-mix(in srgb, var(--xstudio-border) 72%, transparent);
+}
+
+.xstudio-guide-achievements-hidden {
+    display: none;
+}
+
+.xstudio-guide-achievements-label {
+    color: var(--xstudio-text-muted);
+    font-size: 10px;
+    line-height: 14px;
+    font-weight: 700;
+    letter-spacing: 0;
+}
+
+.xstudio-guide-achievements-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.xstudio-guide-achievement {
+    display: block;
+    min-width: 0;
+    max-width: 100%;
+    color: color-mix(in srgb, var(--x-success) 82%, var(--xstudio-text));
+    font-size: 11px;
+    line-height: 15px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+.xstudio-guide-recommendation {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+    padding-top: 7px;
+    border-top: 1px solid color-mix(in srgb, var(--xstudio-border) 72%, transparent);
+}
+
+.xstudio-guide-recommendation-hidden {
+    display: none;
+}
+
+.xstudio-guide-recommendation-label {
+    display: block;
+    color: var(--xstudio-text-muted);
+    font-size: 10px;
+    line-height: 14px;
+    font-weight: 700;
+    letter-spacing: 0;
+}
+
+.xstudio-guide-recommendation-status-block,
+.xstudio-guide-recommendation-task-block,
+.xstudio-guide-recommendation-focus-block,
+.xstudio-guide-recommendation-description-block,
+.xstudio-guide-recommendation-progress-block {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.xstudio-guide-recommendation-status-block-empty,
+.xstudio-guide-recommendation-description-block-empty,
+.xstudio-guide-recommendation-progress-block-empty {
+    display: none;
+}
+
+.xstudio-guide-materialization-progress {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.xstudio-guide-materialization-stages {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.xstudio-guide-materialization-stage {
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+    min-width: 0;
+    max-width: 100%;
+    padding: 4px 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--xstudio-border) 52%, transparent);
+}
+
+.xstudio-guide-materialization-stage-title,
+.xstudio-guide-materialization-stage-status {
+    display: block;
+    min-width: 0;
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    line-height: 15px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+.xstudio-guide-materialization-stage-status {
+    font-weight: 700;
+    text-transform: capitalize;
+    white-space: nowrap;
+}
+
+.xstudio-guide-materialization-stage-running .xstudio-guide-materialization-stage-title,
+.xstudio-guide-materialization-stage-running .xstudio-guide-materialization-stage-status {
+    color: var(--xstudio-accent);
+}
+
+.xstudio-guide-materialization-stage-completed .xstudio-guide-materialization-stage-title,
+.xstudio-guide-materialization-stage-completed .xstudio-guide-materialization-stage-status {
+    color: var(--xstudio-success);
+}
+
+.xstudio-guide-materialization-stage-failed .xstudio-guide-materialization-stage-title,
+.xstudio-guide-materialization-stage-failed .xstudio-guide-materialization-stage-status,
+.xstudio-guide-materialization-error {
+    color: var(--xstudio-danger);
+}
+
+.xstudio-guide-materialization-stage-skipped .xstudio-guide-materialization-stage-title,
+.xstudio-guide-materialization-stage-skipped .xstudio-guide-materialization-stage-status {
+    color: var(--xstudio-text-subtle);
+}
+
+.xstudio-guide-materialization-error {
+    display: block;
+    min-width: 0;
+    font-size: 11px;
+    line-height: 15px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+.xstudio-guide-recommendation-status {
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    padding: 2px 6px;
+    border: 1px solid color-mix(in srgb, var(--xstudio-border) 70%, transparent);
+    border-radius: var(--xstudio-radius-xs);
+    color: var(--xstudio-text-muted);
+    background: color-mix(in srgb, var(--xstudio-surface-alt) 70%, transparent);
+    font-size: 10px;
+    line-height: 14px;
+    font-weight: 700;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+.xstudio-guide-recommendation-title {
+    display: block;
+    min-width: 0;
+    max-width: 100%;
+    color: var(--xstudio-text);
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 700;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+.xstudio-guide-recommendation-focus,
+.xstudio-guide-recommendation-progress,
+.xstudio-guide-recommendation-reason {
+    display: block;
+    min-width: 0;
+    max-width: 100%;
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    line-height: 15px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+.xstudio-guide-recommendation-actions {
+    box-sizing: border-box;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.xstudio-guide-recommendation-do-it,
+.xstudio-guide-recommendation-cancel {
+    align-self: flex-start;
+    min-height: 28px;
+    padding: 4px 8px;
+    white-space: nowrap;
+}
+
+.xstudio-guide-recommendation-cancel {
+    color: var(--xstudio-text-muted);
+}
+
+.xstudio-guide-recommendation-starter-adaptation {
+    gap: 7px;
+}
+
+.xstudio-guide-starter-adaptation-card {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.xstudio-guide-starter-adaptation-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-width: 0;
+}
+
+.xstudio-guide-starter-adaptation-status {
+    flex: 0 1 auto;
+    max-width: 50%;
+    color: var(--xstudio-text-muted);
+    font-size: 10px;
+    line-height: 14px;
+    font-weight: 700;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+    text-align: right;
+}
+
+.xstudio-guide-starter-adaptation-card-failed .xstudio-guide-starter-adaptation-status {
+    color: color-mix(in srgb, var(--x-danger) 84%, var(--xstudio-text));
+}
+
+.xstudio-guide-starter-adaptation-card-completed .xstudio-guide-starter-adaptation-status {
+    color: color-mix(in srgb, var(--x-success) 82%, var(--xstudio-text));
+}
+
+.xstudio-guide-starter-adaptation-summary {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 6px;
+    min-width: 0;
+}
+
+.xstudio-guide-starter-adaptation-summary-section {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.xstudio-guide-starter-adaptation-summary-section-empty {
+    display: none;
+}
+
+.xstudio-guide-starter-adaptation-summary-title {
+    color: var(--xstudio-text);
+    font-size: 11px;
+    line-height: 15px;
+    font-weight: 700;
+    letter-spacing: 0;
+}
+
+.xstudio-guide-starter-adaptation-summary-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.xstudio-guide-starter-adaptation-summary-item {
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    line-height: 15px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-guide-starter-adaptation-summary-item::before {
+    content: "- ";
+}
+
+.xstudio-guide-starter-adaptation-do-it {
+    white-space: normal;
+}
+
+.xstudio-guide-starter-adaptation-debug {
+    min-width: 0;
+    color: var(--xstudio-text-muted);
+    font-size: 10px;
+    line-height: 14px;
+}
+
+.xstudio-guide-starter-adaptation-debug-summary {
+    cursor: pointer;
+}
+
+.xstudio-guide-starter-adaptation-debug-payload {
+    display: block;
+    max-width: 100%;
+    overflow: auto;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-guide-card.xstudio-guide-active-task {
+    flex: 0 0 auto;
+}
+
+.xstudio-guide-card.xstudio-guide-active-task .xstudio-guide-body {
+    gap: 6px;
+}
+
+.xstudio-guide-card.xstudio-guide-active-task .xstudio-guide-line,
+.xstudio-guide-card.xstudio-guide-active-task .xstudio-guide-focus-row,
+.xstudio-guide-card.xstudio-guide-active-task .xstudio-guide-empty-action,
+.xstudio-guide-card.xstudio-guide-active-task .xstudio-guide-milestone,
+.xstudio-guide-card.xstudio-guide-active-task .xstudio-guide-achievements {
+    display: none;
+}
+
+.xstudio-guide-card.xstudio-guide-active-task .xstudio-guide-recommendation {
+    padding-top: 0;
+    border-top: 0;
+}
+
+.xstudio-guide-card.xstudio-guide-active-task-failed .xstudio-guide-recommendation {
+    border-left: 2px solid color-mix(in srgb, var(--x-danger) 68%, var(--xstudio-border));
+    padding-left: 8px;
+}
+
+.xstudio-topbar {
+    box-sizing: border-box;
+    flex: 0 0 auto;
+    position: relative;
+    z-index: 1;
+    min-width: 0;
+    height: 44px;
+    min-height: 44px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    gap: 8px;
+    padding: 6px 12px;
+    overflow: hidden;
+    overflow-y: hidden;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--xstudio-border);
+    background: var(--xstudio-surface);
+}
+
+.xstudio-topbar-spacer {
+    flex: 1 1 auto;
+    min-width: 16px;
+    min-height: 1px;
+}
+
+.xstudio-topbar-title {
+    flex: 0 0 auto;
+    color: var(--xstudio-text);
+    font-weight: 700;
+    font-size: 13px;
+    line-height: 20px;
+    letter-spacing: 0;
+    white-space: nowrap;
+}
+
+.xstudio-dock-toggle,
+.xstudio-object-picker-toggle,
+.xstudio-arrange-toggle,
+.xstudio-portlet-toggle {
+    min-width: 30px;
+    padding-inline: 7px;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.xstudio-portlet-toggle {
+    color: var(--xstudio-text-muted);
+}
+
+.xstudio-portlet-toggle-active {
+    background: color-mix(in srgb, var(--xstudio-accent) 16%, transparent) !important;
+    color: var(--xstudio-accent) !important;
+    border-color: color-mix(in srgb, var(--xstudio-accent) 62%, transparent) !important;
+}
+
+.xstudio-apps-button,
+.xstudio-dock-toggle,
+.xstudio-object-picker-toggle,
+.xstudio-arrange-toggle,
+.xstudio-portlet-toggle {
+    white-space: nowrap;
+}
+
+.xstudio-shell .xbutton,
+.xstudio-apps-button,
+.xstudio-dock-toggle,
+.xstudio-object-picker-toggle,
+.xstudio-arrange-toggle,
+.xstudio-portlet-toggle {
+    min-height: 30px;
+    border: 1px solid var(--xstudio-border);
+    border-radius: var(--xstudio-radius-md);
+    background: transparent;
+    color: var(--xstudio-text);
+    font: inherit;
+    font-size: 12px;
+    letter-spacing: 0;
+    padding: 5px 9px;
+}
+
+.xstudio-topbar .xbutton,
+.xstudio-topbar button {
+    flex: 0 0 auto;
+    min-height: 28px;
+    line-height: 16px;
+    padding: 4px 8px;
+    white-space: nowrap;
+}
+
+.xstudio-shell .xbutton:hover,
+.xstudio-apps-button:hover,
+.xstudio-dock-toggle:hover,
+.xstudio-object-picker-toggle:hover,
+.xstudio-arrange-toggle:hover,
+.xstudio-portlet-toggle:hover {
+    background: color-mix(in srgb, var(--xstudio-accent) 12%, transparent);
+    color: var(--xstudio-accent);
+}
+
+.xstudio-shell .xbutton:disabled,
+.xstudio-shell .xbutton[disabled],
+.xstudio-apps-button:disabled,
+.xstudio-apps-button[disabled],
+.xstudio-dock-toggle:disabled,
+.xstudio-dock-toggle[disabled],
+.xstudio-object-picker-toggle:disabled,
+.xstudio-object-picker-toggle[disabled],
+.xstudio-arrange-toggle:disabled,
+.xstudio-arrange-toggle[disabled],
+.xstudio-portlet-toggle:disabled,
+.xstudio-portlet-toggle[disabled] {
+    cursor: default;
+    opacity: .62;
+}
+
+.xstudio-object-picker-toggle-active,
+.xstudio-object-picker-toggle-active:hover:not(:disabled),
+.xstudio-arrange-toggle-active,
+.xstudio-arrange-toggle-active:hover:not(:disabled) {
+    border-color: color-mix(in srgb, var(--vx-accent) 58%, var(--vx-border-subtle)) !important;
+    background: var(--vx-accent-soft) !important;
+    color: var(--vx-text-primary) !important;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--vx-accent) 28%, transparent);
+}
+
+.xstudio-shell.xstudio-object-picker-active .xstudio-canvas {
+    cursor: crosshair;
+}
+
+.xstudio-shell.xstudio-arrange-active .xstudio-canvas {
+    cursor: grab;
+    touch-action: none;
+}
+
+.xstudio-shell.xstudio-arrange-active .xstudio-canvas:active {
+    cursor: grabbing;
+}
+
+.xstudio-object-picker-icon,
+.xstudio-arrange-icon {
+    width: 15px;
+    height: 15px;
+    display: block;
+}
+
+.xstudio-topbar .toolbar-theme-select {
+    box-sizing: border-box;
+    flex: 0 0 180px;
+    width: 180px;
+    min-width: 180px;
+    max-width: 180px;
+    height: 28px;
+    padding: 0 24px 0 8px;
+    border: 1px solid var(--xstudio-border);
+    border-radius: var(--xstudio-radius-md);
+    background: var(--xstudio-surface);
+    color: var(--xstudio-text);
+    font: inherit;
+    font-size: 12px;
+    line-height: 28px;
+    letter-spacing: 0;
+}
+
+.xstudio-edit-mode {
+    flex: 0 0 auto;
+    margin-left: 0;
+    padding: 4px 8px;
+    border: 1px solid color-mix(in srgb, var(--xstudio-accent) 55%, transparent);
+    border-radius: var(--xstudio-radius-md);
+    background: color-mix(in srgb, var(--xstudio-accent) 10%, transparent);
+    color: var(--xstudio-accent);
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 700;
+    letter-spacing: 0;
+    white-space: nowrap;
+}
+
+.xstudio-body {
+    box-sizing: border-box;
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: var(--xstudio-left-width) 8px minmax(0, 1fr) var(--xstudio-right-width);
+    align-items: stretch;
+    overflow: hidden;
+}
+
+.xstudio-shell.xstudio-left-collapsed .xstudio-body {
+    grid-template-columns: 0 0 minmax(0, 1fr) var(--xstudio-right-width);
+}
+
+.xstudio-shell.xstudio-right-collapsed .xstudio-body {
+    grid-template-columns: var(--xstudio-left-width) 8px minmax(0, 1fr) 0;
+}
+
+.xstudio-shell.xstudio-left-collapsed.xstudio-right-collapsed .xstudio-body {
+    grid-template-columns: 0 0 minmax(0, 1fr) 0;
+}
+
+.xstudio-left-dock,
+.xstudio-right-dock {
+    box-sizing: border-box;
+    min-width: 0;
+    min-height: 0;
+    padding: 12px;
+    overflow: auto;
+    background: var(--xstudio-bg);
+}
+
+.xstudio-left-dock {
+    border-right: 1px solid var(--xstudio-border);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    height: 100%;
+    max-height: 100%;
+    overflow: hidden;
+}
+
+.xstudio-shell.xstudio-left-collapsed .xstudio-left-dock {
+    padding: 0;
+    border-right: 0;
+    visibility: hidden;
+}
+
+.xstudio-resize-divider {
+    box-sizing: border-box;
+    min-width: 0;
+    min-height: 0;
+    position: relative;
+    z-index: 2;
+    cursor: col-resize;
+    touch-action: none;
+    user-select: none;
+    background: var(--xstudio-bg);
+}
+
+.xstudio-resize-divider::before {
+    content: "";
+    position: absolute;
+    inset: 0 3px;
+    border-left: 1px solid color-mix(in srgb, var(--xstudio-border) 78%, transparent);
+}
+
+.xstudio-resize-divider:hover::before,
+.xstudio-resize-divider:focus-visible::before,
+.xstudio-left-resizing .xstudio-resize-divider::before {
+    border-left-color: color-mix(in srgb, var(--xstudio-accent) 76%, var(--xstudio-border));
+}
+
+.xstudio-resize-divider:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--xstudio-accent) 72%, transparent);
+    outline-offset: -2px;
+}
+
+.xstudio-shell.xstudio-left-collapsed .xstudio-left-resize-divider {
+    width: 0;
+    min-width: 0;
+    overflow: hidden;
+    visibility: hidden;
+}
+
+.xstudio-left-resizing,
+.xstudio-left-resizing * {
+    cursor: col-resize !important;
+    user-select: none !important;
+}
+
+.xstudio-left-resizing .xstudio-canvas {
+    pointer-events: none;
+}
+
+.xstudio-right-dock {
+    border-left: 1px solid var(--xstudio-border);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    height: 100%;
+    max-height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    scrollbar-gutter: stable;
+}
+
+.xstudio-shell.xstudio-right-collapsed .xstudio-right-dock {
+    padding: 0;
+    gap: 0;
+    border-left: 0;
+    visibility: hidden;
+}
+
+.xstudio-canvas {
+    box-sizing: border-box;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    padding: 24px;
+    overflow: auto;
+    background: var(--x-bg);
+}
+
+.xstudio-portlet-stack {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    min-width: 0;
+    min-height: 0;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow: hidden;
+}
+
+#region-studio.xstudio-portlet-stack {
+    height: 100%;
+    max-height: 100%;
+    min-height: 0;
+    flex: 1 1 0;
+    overflow: hidden;
+}
+
+.xstudio-portlet {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
+    border: 1px solid var(--xstudio-border);
+    border-radius: var(--xstudio-radius-md);
+    background: var(--xstudio-surface);
+    color: var(--xstudio-text);
+}
+
+.xstudio-portlet-hidden {
+    display: none !important;
+}
+
+.xstudio-portlet-header {
+    box-sizing: border-box;
+    min-width: 0;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid color-mix(in srgb, var(--xstudio-border) 68%, transparent);
+}
+
+.xstudio-portlet-actions {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.xstudio-portlet-body {
+    box-sizing: border-box;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.xstudio-left-dock .xstudio-explorer-section {
+    gap: 0;
+    padding: 0;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.xstudio-left-dock .xstudio-explorer-section-collapsed {
+    flex: 0 0 auto;
+}
+
+.xstudio-left-dock .xstudio-explorer-section-header {
+    min-height: 24px;
+    align-items: stretch;
+    gap: 0;
+    padding: 0;
+    border-bottom: 0;
+}
+
+.xstudio-left-dock .xstudio-explorer-section:not(.xstudio-explorer-section-collapsed)>.xstudio-explorer-section-header {
+    border-bottom: 1px solid color-mix(in srgb, var(--xstudio-border) 58%, transparent);
+}
+
+.xstudio-left-dock .xstudio-explorer-section-toggle {
+    appearance: none;
+    box-sizing: border-box;
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 3px 8px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--xstudio-text);
+    font: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 16px;
+    letter-spacing: 0;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.xstudio-left-dock .xstudio-explorer-section-header:hover,
+.xstudio-left-dock .xstudio-explorer-section-toggle:hover {
+    background: color-mix(in srgb, var(--xstudio-accent) 10%, transparent);
+    color: var(--xstudio-accent);
+}
+
+.xstudio-left-dock .xstudio-explorer-section-actions {
+    box-sizing: border-box;
+    flex: 0 0 auto;
+    min-width: 24px;
+    min-height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+    padding-right: 4px;
+}
+
+.xstudio-left-dock .xstudio-explorer-section-action {
+    min-height: 20px;
+    padding: 1px 5px;
+    border: 0;
+    border-radius: var(--xstudio-radius-sm);
+    background: transparent;
+    color: var(--xstudio-text-muted);
+    font-size: 10px;
+    line-height: 14px;
+}
+
+.xstudio-left-dock .xstudio-explorer-section-action:hover {
+    background: color-mix(in srgb, var(--xstudio-accent) 12%, transparent);
+    color: var(--xstudio-accent);
+}
+
+.xstudio-left-dock .xstudio-object-tree-picker-toggle,
+.xstudio-left-dock .xstudio-object-tree-arrange-toggle {
+    flex: 0 0 22px;
+    width: 22px;
+    min-width: 22px;
+    min-height: 20px;
+    padding: 1px 0;
+}
+
+.xstudio-left-dock .xstudio-object-tree-picker-toggle.xstudio-object-picker-toggle-active,
+.xstudio-left-dock .xstudio-object-tree-arrange-toggle.xstudio-arrange-toggle-active {
+    border: 1px solid color-mix(in srgb, var(--vx-accent) 58%, var(--vx-border-subtle));
+}
+
+.xstudio-left-dock .xstudio-explorer-section-collapsed>.xstudio-portlet-body,
+.xstudio-left-dock .xstudio-explorer-section-collapsed>.xstudio-selected-object-raw-body {
+    display: none !important;
+}
+
+.xstudio-portlet .xbutton {
+    color: var(--xstudio-accent);
+}
+
+.xstudio-main-container,
+.xstudio-editor-container {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    overflow: auto;
+}
+
+.xstudio-main-container {
+    flex: 1 1 auto;
+    max-width: 1440px;
+    margin: 0 auto;
+}
+
+.xstudio-editor-container {
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow: auto;
+}
+
+.xstudio-dock-title {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--xstudio-text);
+    font-weight: 700;
+}
+
+.xstudio-dock-placeholder {
+    display: block;
+    color: var(--xstudio-text-muted);
+}
+
+.xstudio-app-explorer-results,
+.xstudio-object-tree {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    overflow-y: scroll;
+}
+
+.xstudio-app-explorer-portlet {
+    flex: 0 1 34%;
+    min-height: 96px;
+    max-height: 100%;
+    overflow: hidden;
+}
+
+.xstudio-app-explorer-portlet.xstudio-explorer-section-collapsed {
+    flex: 0 0 auto;
+    min-height: 0;
+}
+
+.xstudio-app-explorer-body {
+    flex: 1 1 0;
+    min-height: 0;
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 4px 6px;
+}
+
+.xstudio-app-explorer-results {
+    flex: 1 1 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 0 2px 18px 0;
+    scroll-padding-bottom: 18px;
+    scrollbar-gutter: stable;
+    overscroll-behavior: contain;
+}
+
+.xstudio-object-tree-portlet {
+    flex: 1 1 0;
+    min-height: 96px;
+    max-height: 100%;
+    overflow: hidden;
+}
+
+.xstudio-object-tree-portlet.xstudio-explorer-section-collapsed {
+    flex: 0 0 auto;
+    min-height: 0;
+}
+
+.xstudio-object-tree-body {
+    flex: 1 1 0;
+    min-height: 0;
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 4px 6px;
+}
+
+.xstudio-object-tree-search {
+    box-sizing: border-box;
+    flex: 0 0 auto;
+    width: 100%;
+    min-width: 0;
+    min-height: 24px;
+    padding: 3px 7px;
+    border: 1px solid color-mix(in srgb, var(--xstudio-border) 70%, transparent);
+    border-radius: var(--xstudio-radius-sm);
+    background: color-mix(in srgb, var(--xstudio-surface-2) 70%, transparent);
+    color: var(--xstudio-text);
+    font: inherit;
+    font-size: 11px;
+    line-height: 16px;
+    letter-spacing: 0;
+    outline: none;
+}
+
+.xstudio-object-tree-search::placeholder {
+    color: var(--xstudio-text-muted);
+}
+
+.xstudio-object-tree-search:focus {
+    border-color: color-mix(in srgb, var(--xstudio-accent) 74%, var(--xstudio-border));
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--xstudio-accent) 42%, transparent);
+}
+
+.xstudio-object-tree-results {
+    --xstudio-object-tree-action-gutter: calc(var(--vx-row-h-tree, 24px) * 4);
+    box-sizing: border-box;
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 0;
+    overflow-x: auto;
+    overflow-y: auto;
+    padding-right: 2px;
+    scrollbar-gutter: stable;
+    overscroll-behavior: contain;
+}
+
+.xstudio-object-tree-item,
+.xstudio-object-tree-children {
+    box-sizing: border-box;
+    width: max(100%, var(--xstudio-object-tree-content-width, 100%));
+    min-width: 100%;
+}
+
+.xstudio-object-tree-row,
+.xstudio-object-tree-placeholder-row {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 100%;
+    min-height: 20px;
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--vx-row-h-tree, 24px) 16px minmax(0, 1fr) var(--xstudio-object-tree-action-gutter);
+    align-items: center;
+    gap: 0;
+    padding: 0 2px 0 calc(2px + var(--xstudio-tree-indent, 0px));
+    border: 0;
+    border-radius: var(--xstudio-radius-sm);
+    background: transparent;
+    color: var(--xstudio-text);
+    font: inherit;
+    font-size: 11px;
+    line-height: 16px;
+    letter-spacing: 0;
+    text-align: left;
+    white-space: nowrap;
+    overflow: visible;
+}
+
+.xstudio-app-explorer-row {
+    grid-template-columns: var(--vx-row-h-tree, 24px) minmax(0, 1fr) auto;
+    cursor: pointer;
+}
+
+.xstudio-object-tree-row-actions-wide {
+    --xstudio-object-tree-action-gutter: calc(var(--vx-row-h-tree, 24px) * 5);
+}
+
+.xstudio-app-explorer-row .xstudio-app-explorer-label {
+    pointer-events: auto;
+}
+
+.xstudio-object-tree-chevron,
+.xstudio-object-tree-drag-handle,
+.xstudio-object-tree-visibility-action,
+.xstudio-object-tree-quick-action {
+    appearance: none;
+    box-sizing: border-box;
+    flex: 0 0 16px;
+    width: 16px;
+    height: 20px;
+    min-width: 16px;
+    min-height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: 11px;
+    line-height: 1;
+}
+
+.xstudio-object-tree-chevron {
+    cursor: pointer;
+    color: var(--xstudio-text-muted);
+}
+
+.xstudio-object-tree-drag-handle {
+    cursor: grab;
+    color: var(--xstudio-text-muted);
+    opacity: .48;
+    font-size: 10px;
+    line-height: 1;
+}
+
+.xstudio-object-tree-drag-handle:active {
+    cursor: grabbing;
+}
+
+.xstudio-object-tree-drag-handle-disabled {
+    cursor: default;
+    opacity: .18;
+}
+
+.xstudio-object-tree-chevron-spacer,
+.xstudio-object-tree-chevron-disabled {
+    cursor: default;
+}
+
+.xstudio-object-tree-label {
+    appearance: none;
+    box-sizing: border-box;
+    min-width: 0;
+    width: 100%;
+    height: 20px;
+    min-height: 20px;
+    display: flex;
+    align-items: center;
+    padding: 0 3px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: 11px;
+    line-height: 16px;
+    letter-spacing: 0;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+}
+
+.xstudio-object-tree-label-primary,
+.xstudio-object-tree-label-secondary,
+.xstudio-object-tree-type-tag {
+    display: inline-block;
+    min-width: 0;
+    letter-spacing: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.xstudio-object-tree-label-primary {
+    flex: 1 1 auto;
+    color: var(--xstudio-accent);
+}
+
+.xstudio-object-tree-label-secondary {
+    flex: 0 1 34%;
+    max-width: 34%;
+    margin-left: 8px;
+    color: var(--xstudio-text-muted);
+}
+
+.xstudio-object-tree-type-tag {
+    flex: 0 0 auto;
+    margin-left: 8px;
+    color: var(--xstudio-text-muted);
+    font-size: 10px;
+}
+
+.xstudio-object-tree-placeholder-label {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.xstudio-object-tree-actions {
+    box-sizing: border-box;
+    width: var(--xstudio-object-tree-action-gutter);
+    min-width: var(--xstudio-object-tree-action-gutter);
+    height: var(--vx-row-h-tree, 24px);
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0;
+    position: sticky;
+    right: 0;
+    z-index: 3;
+    padding-left: 10px;
+    background:
+        linear-gradient(
+            90deg,
+            color-mix(in srgb, var(--xstudio-surface) 0%, transparent) 0%,
+            var(--xstudio-surface) 18px
+        );
+    pointer-events: none;
+}
+
+.xstudio-object-tree-actions-has-add-child {
+    --xstudio-object-tree-action-gutter: calc(var(--vx-row-h-tree, 24px) * 5);
+    width: var(--xstudio-object-tree-action-gutter);
+    min-width: var(--xstudio-object-tree-action-gutter);
+}
+
+.xstudio-object-tree-quick-action {
+    color: var(--xstudio-text-muted);
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+    top: 0;
+    transition: opacity 0.12s ease, color 0.12s ease, background-color 0.12s ease;
+}
+
+.xstudio-object-tree-add-child-action {
+    right: calc(var(--vx-row-h-tree, 24px) * 4);
+}
+
+.xstudio-object-tree-move-up-action {
+    right: calc(var(--vx-row-h-tree, 24px) * 3);
+}
+
+.xstudio-object-tree-move-down-action {
+    right: calc(var(--vx-row-h-tree, 24px) * 2);
+}
+
+.xstudio-object-tree-duplicate-action {
+    right: var(--vx-row-h-tree, 24px);
+}
+
+.xstudio-object-tree-add-child-action {
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.xstudio-object-tree-visibility-action {
+    color: var(--xstudio-text-muted);
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.12s ease, color 0.12s ease, background-color 0.12s ease;
+}
+
+.xstudio-shell .xstudio-object-tree-row .xstudio-object-tree-chevron,
+.xstudio-shell .xstudio-object-tree-row .xstudio-object-tree-drag-handle,
+.xstudio-shell .xstudio-object-tree-row .xstudio-object-tree-label,
+.xstudio-shell .xstudio-object-tree-row .xstudio-object-tree-quick-action,
+.xstudio-shell .xstudio-object-tree-row .xstudio-object-tree-visibility-action,
+.xstudio-portlet .xstudio-object-tree-row .xstudio-object-tree-chevron,
+.xstudio-portlet .xstudio-object-tree-row .xstudio-object-tree-drag-handle,
+.xstudio-portlet .xstudio-object-tree-row .xstudio-object-tree-label,
+.xstudio-portlet .xstudio-object-tree-row .xstudio-object-tree-quick-action,
+.xstudio-portlet .xstudio-object-tree-row .xstudio-object-tree-visibility-action {
+    min-height: 20px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    padding-top: 0;
+    padding-bottom: 0;
+    color: inherit;
+    box-shadow: none;
+}
+
+.xstudio-shell .xstudio-object-tree-row .xstudio-object-tree-chevron,
+.xstudio-shell .xstudio-object-tree-row .xstudio-object-tree-drag-handle,
+.xstudio-shell .xstudio-object-tree-row .xstudio-object-tree-quick-action,
+.xstudio-shell .xstudio-object-tree-row .xstudio-object-tree-visibility-action,
+.xstudio-portlet .xstudio-object-tree-row .xstudio-object-tree-chevron,
+.xstudio-portlet .xstudio-object-tree-row .xstudio-object-tree-drag-handle,
+.xstudio-portlet .xstudio-object-tree-row .xstudio-object-tree-quick-action,
+.xstudio-portlet .xstudio-object-tree-row .xstudio-object-tree-visibility-action {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.xstudio-shell .xstudio-object-tree-row .xstudio-object-tree-label,
+.xstudio-portlet .xstudio-object-tree-row .xstudio-object-tree-label {
+    padding-left: 3px;
+    padding-right: 3px;
+}
+
+.xstudio-object-tree-visibility-icon {
+    width: 13px;
+    height: 13px;
+    display: block;
+}
+
+.xstudio-object-tree-row:hover .xstudio-object-tree-visibility-action,
+.xstudio-object-tree-row:hover .xstudio-object-tree-quick-action,
+.xstudio-object-tree-row:hover .xstudio-object-tree-drag-handle,
+.xstudio-object-tree-row:focus-within .xstudio-object-tree-visibility-action,
+.xstudio-object-tree-row:focus-within .xstudio-object-tree-quick-action,
+.xstudio-object-tree-row:focus-within .xstudio-object-tree-drag-handle,
+.xstudio-object-tree-row-selected .xstudio-object-tree-visibility-action,
+.xstudio-object-tree-row-selected .xstudio-object-tree-quick-action,
+.xstudio-object-tree-row-selected .xstudio-object-tree-drag-handle {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.xstudio-object-tree-row-selected .xstudio-object-tree-visibility-action,
+.xstudio-object-tree-row-selected .xstudio-object-tree-quick-action {
+    opacity: 1;
+}
+
+@media (hover: none) {
+    .xstudio-object-tree-visibility-action,
+    .xstudio-object-tree-quick-action,
+    .xstudio-object-tree-drag-handle {
+        opacity: 1;
+        pointer-events: auto;
+    }
+}
+
+.xstudio-shell .xstudio-object-tree-row .xstudio-object-tree-chevron:hover,
+.xstudio-shell .xstudio-object-tree-row .xstudio-object-tree-drag-handle:hover,
+.xstudio-shell .xstudio-object-tree-row .xstudio-object-tree-label:hover,
+.xstudio-shell .xstudio-object-tree-row .xstudio-object-tree-quick-action:hover,
+.xstudio-shell .xstudio-object-tree-row .xstudio-object-tree-visibility-action:hover,
+.xstudio-portlet .xstudio-object-tree-row .xstudio-object-tree-chevron:hover,
+.xstudio-portlet .xstudio-object-tree-row .xstudio-object-tree-drag-handle:hover,
+.xstudio-portlet .xstudio-object-tree-row .xstudio-object-tree-label:hover,
+.xstudio-portlet .xstudio-object-tree-row .xstudio-object-tree-quick-action:hover,
+.xstudio-portlet .xstudio-object-tree-row .xstudio-object-tree-visibility-action:hover {
+    background: transparent;
+    color: inherit;
+}
+
+.xstudio-object-tree-visibility-action.xstudio-object-tree-visibility-hidden {
+    opacity: 1;
+    color: #f2b84b;
+}
+
+.xstudio-shell .xstudio-object-tree-row .xstudio-object-tree-visibility-action.xstudio-object-tree-visibility-hidden,
+.xstudio-portlet .xstudio-object-tree-row .xstudio-object-tree-visibility-action.xstudio-object-tree-visibility-hidden {
+    color: #f2b84b;
+}
+
+.xstudio-object-tree-visibility-disabled {
+    cursor: default;
+    opacity: 0.35;
+}
+
+.xstudio-object-tree-quick-action-disabled {
+    cursor: default;
+}
+
+.xstudio-object-tree-row:hover .xstudio-object-tree-quick-action-disabled,
+.xstudio-object-tree-row:focus-within .xstudio-object-tree-quick-action-disabled,
+.xstudio-object-tree-row-selected .xstudio-object-tree-quick-action-disabled {
+    opacity: 0.35;
+}
+
+.xstudio-object-tree-visibility-disabled:hover,
+.xstudio-object-tree-quick-action-disabled:hover,
+.xstudio-object-tree-drag-handle-disabled:hover,
+.xstudio-object-tree-chevron-disabled:hover,
+.xstudio-object-tree-chevron-spacer:hover {
+    background: transparent;
+}
+
+.xstudio-object-tree-row:hover {
+    background: color-mix(in srgb, var(--xstudio-accent) 8%, transparent);
+}
+
+.xstudio-object-tree-row-drag-source {
+    opacity: .58;
+}
+
+.xstudio-object-tree-row-drop-before::before,
+.xstudio-object-tree-row-drop-after::before {
+    content: "";
+    position: absolute;
+    left: calc(2px + var(--xstudio-tree-indent, 0px));
+    right: var(--xstudio-object-tree-action-gutter);
+    height: 2px;
+    border-radius: 999px;
+    background: var(--xstudio-accent);
+    pointer-events: none;
+    z-index: 4;
+}
+
+.xstudio-object-tree-row-drop-before::before {
+    top: 0;
+}
+
+.xstudio-object-tree-row-drop-after::before {
+    bottom: 0;
+}
+
+.xstudio-object-tree-row-drop-inside {
+    background: color-mix(in srgb, var(--xstudio-accent) 18%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--xstudio-accent) 76%, transparent);
+}
+
+.xstudio-object-tree-row-drop-invalid {
+    background: color-mix(in srgb, #ff5f57 18%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, #ff5f57 72%, transparent);
+}
+
+.xstudio-app-explorer-row-current,
+.xstudio-app-explorer-row-current:hover {
+    background: color-mix(in srgb, var(--xstudio-accent) 15%, transparent);
+    color: var(--xstudio-accent);
+    box-shadow: inset 2px 0 0 var(--xstudio-accent);
+}
+
+.xstudio-app-explorer-row-selected:not(.xstudio-app-explorer-row-current),
+.xstudio-app-explorer-row-selected:not(.xstudio-app-explorer-row-current):hover {
+    background: color-mix(in srgb, var(--xstudio-accent) 10%, transparent);
+    color: var(--xstudio-accent);
+}
+
+.xstudio-app-explorer-section-row .xstudio-object-tree-label-primary {
+    color: var(--xstudio-text);
+    font-weight: 700;
+}
+
+.xstudio-app-explorer-row-current .xstudio-object-tree-label-primary,
+.xstudio-app-explorer-row-selected .xstudio-object-tree-label-primary {
+    color: var(--xstudio-accent);
+}
+
+.xstudio-app-explorer-type-tag {
+    color: var(--xstudio-text-muted);
+}
+
+.xstudio-app-explorer-empty-row {
+    min-height: 20px;
+}
+
+.xstudio-app-explorer-add-view-button {
+    flex: 0 0 auto;
+    min-width: 74px;
+    min-height: 18px;
+    height: 18px;
+    margin-left: 4px;
+    padding: 1px 6px;
+    border: 1px solid color-mix(in srgb, var(--xstudio-border) 70%, transparent);
+    border-radius: var(--xstudio-radius-sm);
+    background: transparent;
+    color: var(--xstudio-text-muted);
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 14px;
+    white-space: nowrap;
+}
+
+.xstudio-app-explorer-add-view-button:hover {
+    background: color-mix(in srgb, var(--xstudio-accent) 12%, transparent);
+    color: var(--xstudio-accent);
+}
+
+.xstudio-app-explorer-add-menu-wrap {
+    position: relative;
+    flex: 0 0 auto;
+    margin-left: 4px;
+}
+
+.xstudio-app-explorer-add-button {
+    min-width: 50px;
+    min-height: 18px;
+    height: 18px;
+    padding: 1px 7px;
+    border: 1px solid color-mix(in srgb, var(--xstudio-accent) 54%, transparent);
+    border-radius: var(--xstudio-radius-sm);
+    background: color-mix(in srgb, var(--xstudio-accent) 10%, transparent);
+    color: var(--xstudio-accent);
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 14px;
+    white-space: nowrap;
+}
+
+.xstudio-app-explorer-add-button:hover {
+    background: color-mix(in srgb, var(--xstudio-accent) 18%, transparent);
+}
+
+.xstudio-app-explorer-add-menu {
+    position: absolute;
+    top: 22px;
+    right: 0;
+    z-index: 40;
+    box-sizing: border-box;
+    width: 148px;
+    display: none;
+    flex-direction: column;
+    gap: 2px;
+    padding: 5px;
+    border: 1px solid color-mix(in srgb, var(--xstudio-border) 84%, transparent);
+    border-radius: var(--xstudio-radius-sm);
+    background: var(--xstudio-surface);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, .28);
+}
+
+.xstudio-app-explorer-add-menu-open {
+    display: flex;
+}
+
+.xstudio-app-explorer-add-menu-item {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 24px;
+    padding: 4px 7px;
+    border: 0;
+    border-radius: var(--xstudio-radius-sm);
+    background: transparent;
+    color: var(--xstudio-text);
+    font-size: 11px;
+    line-height: 16px;
+    text-align: left;
+}
+
+.xstudio-app-explorer-add-menu-item:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--xstudio-accent) 14%, transparent);
+    color: var(--xstudio-accent);
+}
+
+.xstudio-app-explorer-add-menu-item:disabled {
+    color: var(--xstudio-text-muted);
+    opacity: .58;
+}
+
+.xstudio-app-explorer-row-new {
+    animation: xstudio-data-feature-created 1.8s ease-out;
+}
+
+@keyframes xstudio-data-feature-created {
+    0% {
+        background: color-mix(in srgb, #24c55e 22%, transparent);
+        box-shadow: inset 0 0 0 1px color-mix(in srgb, #24c55e 72%, transparent);
+    }
+
+    100% {
+        box-shadow: inset 0 0 0 0 transparent;
+    }
+}
+
+.xstudio-object-tree-row-ref {
+    color: var(--xstudio-text-muted);
+}
+
+.xstudio-object-tree-row-ref .xstudio-object-tree-label-primary {
+    color: color-mix(in srgb, var(--xstudio-accent) 74%, var(--xstudio-text-muted));
+}
+
+.xstudio-object-tree-row-hidden {
+    color: var(--xstudio-text-muted);
+}
+
+.xstudio-object-tree-row-hidden .xstudio-object-tree-label-primary,
+.xstudio-object-tree-row-hidden .xstudio-object-tree-label-secondary,
+.xstudio-object-tree-row-hidden .xstudio-object-tree-type-tag {
+    color: var(--xstudio-text-muted);
+    opacity: .72;
+}
+
+.xstudio-object-tree-hidden-tag {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+    max-width: 72px;
+    padding: 1px 5px;
+    border: 1px solid color-mix(in srgb, var(--xstudio-border) 82%, transparent);
+    border-radius: var(--xstudio-radius-sm);
+    color: var(--xstudio-text-muted);
+    background: color-mix(in srgb, var(--xstudio-surface-3) 74%, transparent);
+    font-size: 10px;
+    line-height: 14px;
+    font-weight: 800;
+    letter-spacing: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.xstudio-object-tree-row-selected,
+.xstudio-object-tree-row-selected:hover {
+    background: color-mix(in srgb, var(--xstudio-accent) 15%, transparent);
+    color: var(--xstudio-accent);
+    box-shadow: inset 2px 0 0 var(--xstudio-accent);
+}
+
+.xstudio-object-tree-row-reveal {
+    animation: xstudio-object-tree-reveal 1.2s ease-out;
+}
+
+@keyframes xstudio-object-tree-reveal {
+    0% {
+        box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--xstudio-accent) 72%, transparent);
+        background: color-mix(in srgb, var(--xstudio-accent) 24%, transparent);
+    }
+
+    100% {
+        box-shadow: inset 0 0 0 0 transparent;
+    }
+}
+
+.xstudio-object-tree-row-selected .xstudio-object-tree-label-primary {
+    color: var(--xstudio-accent);
+}
+
+.xstudio-object-tree-row-selected .xstudio-object-tree-label-secondary,
+.xstudio-object-tree-row-selected .xstudio-object-tree-type-tag {
+    color: color-mix(in srgb, var(--xstudio-accent) 68%, var(--xstudio-text-muted));
+}
+
+.xstudio-object-tree-placeholder-row {
+    color: var(--xstudio-text-muted);
+    font-style: italic;
+}
+
+.xstudio-selected-object-panel {
+    box-sizing: border-box;
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    overflow: hidden;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+}
+
+.xstudio-selected-object-properties-portlet {
+    flex: 1 1 0;
+    min-height: 0;
+    max-height: none;
+    overflow: hidden;
+}
+
+.xstudio-selected-object-properties-portlet.xstudio-explorer-section-collapsed {
+    flex: 0 0 auto;
+    max-height: none;
+}
+
+.xstudio-selected-object-properties-body {
+    flex: 1 1 0;
+    min-height: 0;
+    gap: 8px;
+    overflow: auto;
+    padding: 8px;
+    scrollbar-gutter: stable;
+}
+
+.xstudio-selected-object-properties-section {
+    box-sizing: border-box;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-top: 8px;
+    border-top: 1px solid color-mix(in srgb, var(--xstudio-border) 58%, transparent);
+}
+
+.xstudio-selected-object-properties-section:first-child {
+    padding-top: 0;
+    border-top: 0;
+}
+
+.xstudio-selected-object-section-title {
+    display: block;
+    min-width: 0;
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 16px;
+    letter-spacing: 0;
+    text-transform: uppercase;
+}
+
+.xstudio-selected-object-editor {
+    box-sizing: border-box;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.xstudio-selected-object-fields-container {
+    box-sizing: border-box;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.xstudio-selected-object-editor-row {
+    box-sizing: border-box;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: 96px minmax(0, 1fr);
+    gap: 8px;
+    align-items: center;
+}
+
+.xstudio-selected-object-editor-row-textarea,
+.xstudio-selected-object-editor-row-json {
+    align-items: start;
+}
+
+.xstudio-selected-object-style-row {
+    grid-template-columns: 96px minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.xstudio-selected-object-editor-label {
+    display: block;
+    min-width: 0;
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    line-height: 16px;
+    letter-spacing: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.xstudio-selected-object-editor-label-required {
+    color: var(--xstudio-text);
+}
+
+.xstudio-selected-object-editor-input {
+    box-sizing: border-box;
+    min-width: 0;
+    width: 100%;
+    min-height: 28px;
+    font-size: 11px;
+}
+
+.xstudio-selected-object-editor-input-textarea,
+.xstudio-selected-object-editor-input-json {
+    min-height: 74px;
+    padding: 7px 8px;
+    line-height: 15px;
+    resize: vertical;
+}
+
+.xstudio-selected-object-editor-input-json {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    min-height: 96px;
+}
+
+.xstudio-selected-object-editor-input-checkbox {
+    width: 16px;
+    min-width: 16px;
+    min-height: 16px;
+    height: 16px;
+    margin: 0;
+    justify-self: start;
+    accent-color: var(--xstudio-accent);
+}
+
+.xstudio-selected-object-editor-input-select {
+    padding-right: 24px;
+}
+
+.xstudio-selected-object-editor-input-readonly {
+    opacity: .74;
+}
+
+.xstudio-selected-object-editor-empty {
+    display: block;
+    min-width: 0;
+    padding: 4px 0;
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    line-height: 16px;
+}
+
+.xstudio-selected-object-interactions-body {
+    gap: 8px;
+}
+
+.xstudio-selected-object-interaction-grid {
+    box-sizing: border-box;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: 96px minmax(0, 1fr);
+    gap: 8px;
+    align-items: center;
+}
+
+.xstudio-selected-object-interaction-value {
+    min-width: 0;
+    color: var(--xstudio-text);
+    font-size: 11px;
+    line-height: 16px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.xstudio-selected-object-interaction-actions {
+    box-sizing: border-box;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr);
+    gap: 8px;
+}
+
+.xstudio-selected-object-interaction-add-button,
+.xstudio-selected-object-interaction-remove-button {
+    width: 100%;
+}
+
+.xstudio-selected-object-interaction-remove-button {
+    border-color: color-mix(in srgb, var(--x-danger) 54%, transparent);
+    color: var(--x-danger);
+}
+
+.xstudio-selected-object-interaction-summary {
+    box-sizing: border-box;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.xstudio-selected-object-interaction-custom-json {
+    width: 100%;
+    resize: vertical;
+}
+
+.xstudio-selected-object-editor-button {
+    min-height: 26px;
+    padding: 3px 6px;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.xstudio-selected-object-editor-actions {
+    box-sizing: border-box;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr);
+    gap: 8px;
+    padding-top: 4px;
+}
+
+.xstudio-selected-object-save-button {
+    border-color: color-mix(in srgb, var(--xstudio-accent) 62%, transparent);
+    background: color-mix(in srgb, var(--xstudio-accent) 14%, transparent);
+    color: var(--xstudio-accent);
+    font-weight: 700;
+}
+
+.xstudio-selected-object-save-button:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--xstudio-accent) 22%, transparent);
+}
+
+.xstudio-selected-object-cancel-button {
+    color: var(--xstudio-text-muted);
+}
+
+.xstudio-selected-object-hierarchy-actions {
+    box-sizing: border-box;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+}
+
+.xstudio-selected-object-move-button {
+    width: 100%;
+}
+
+.xstudio-selected-object-duplicate-button {
+    width: 100%;
+}
+
+.xstudio-selected-object-delete-button {
+    width: 100%;
+    border-color: color-mix(in srgb, var(--x-danger) 72%, transparent);
+    background: color-mix(in srgb, var(--x-danger) 12%, transparent);
+    color: var(--x-danger);
+    font-weight: 700;
+}
+
+.xstudio-selected-object-delete-button:hover:not(:disabled) {
+    border-color: color-mix(in srgb, var(--x-danger) 86%, transparent);
+    background: color-mix(in srgb, var(--x-danger) 20%, transparent);
+    color: var(--x-danger);
+}
+
+.xstudio-selected-object-delete-dialog {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    box-sizing: border-box;
+    padding: 16px;
+    background: rgba(0, 0, 0, .46);
+}
+
+.xstudio-selected-object-delete-card {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    box-sizing: border-box;
+    width: min(320px, calc(100% - 32px));
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px;
+    border: 1px solid color-mix(in srgb, var(--x-danger) 44%, var(--xstudio-border));
+    border-radius: var(--xstudio-radius-md);
+    background: var(--xstudio-surface);
+    color: var(--xstudio-text);
+    box-shadow: 0 18px 44px rgba(0, 0, 0, .34);
+}
+
+.xstudio-selected-object-delete-title {
+    display: block;
+    color: var(--xstudio-text);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 18px;
+    letter-spacing: 0;
+}
+
+.xstudio-selected-object-delete-kicker,
+.xstudio-selected-object-delete-value {
+    display: block;
+    min-width: 0;
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    line-height: 16px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-selected-object-delete-value {
+    color: var(--xstudio-text);
+}
+
+.xstudio-selected-object-delete-name {
+    max-height: 48px;
+    overflow: auto;
+}
+
+.xstudio-selected-object-delete-actions {
+    box-sizing: border-box;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding-top: 6px;
+}
+
+.xstudio-selected-object-delete-confirm {
+    border-color: color-mix(in srgb, var(--x-danger) 68%, transparent);
+    background: color-mix(in srgb, var(--x-danger) 14%, transparent);
+    color: var(--x-danger);
+}
+
+.xstudio-selected-object-delete-confirm:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--x-danger) 20%, transparent);
+}
+
+.xstudio-object-tree-duplicate-card {
+    border-color: color-mix(in srgb, var(--xstudio-accent) 48%, var(--xstudio-border));
+}
+
+.xstudio-object-tree-duplicate-value {
+    max-height: 48px;
+    overflow: auto;
+}
+
+.xstudio-object-tree-duplicate-confirm {
+    border-color: color-mix(in srgb, var(--xstudio-accent) 68%, transparent);
+    background: color-mix(in srgb, var(--xstudio-accent) 14%, transparent);
+    color: var(--xstudio-accent);
+    font-weight: 700;
+}
+
+.xstudio-object-tree-duplicate-confirm:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--xstudio-accent) 22%, transparent);
+}
+
+.xstudio-add-view-card {
+    width: min(360px, calc(100% - 32px));
+    border-color: color-mix(in srgb, var(--xstudio-accent) 48%, var(--xstudio-border));
+}
+
+.xstudio-add-view-form {
+    box-sizing: border-box;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.xstudio-add-view-field {
+    box-sizing: border-box;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: 82px minmax(0, 1fr);
+    gap: 8px;
+    align-items: center;
+}
+
+.xstudio-add-view-label {
+    min-width: 0;
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    line-height: 16px;
+    letter-spacing: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.xstudio-add-view-input {
+    min-height: 26px;
+    padding: 4px 7px;
+    font-size: 11px;
+    line-height: 16px;
+}
+
+.xstudio-add-view-error {
+    min-height: 16px;
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    line-height: 16px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-add-view-error-visible {
+    color: var(--xstudio-accent);
+}
+
+.xstudio-add-view-create {
+    border-color: color-mix(in srgb, var(--xstudio-accent) 68%, transparent);
+    background: color-mix(in srgb, var(--xstudio-accent) 14%, transparent);
+    color: var(--xstudio-accent);
+    font-weight: 700;
+}
+
+.xstudio-add-view-create:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--xstudio-accent) 22%, transparent);
+}
+
+.xstudio-data-feature-panel {
+    box-sizing: border-box;
+    container-type: inline-size;
+    flex: 1 1 0;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 0;
+    overflow-y: auto;
+}
+
+.xstudio-portlet.xstudio-data-feature-panel {
+    flex: 1 1 0;
+    gap: 0;
+    padding: 0;
+    overflow-y: auto;
+}
+
+.xstudio-section.xstudio-data-feature-panel {
+    flex: 1 1 0;
+    gap: 0;
+    padding: 0;
+    overflow-y: auto;
+}
+
+.xstudio-data-feature-body {
+    box-sizing: border-box;
+    flex: 1 1 0;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    color: var(--xstudio-text);
+}
+
+.xstudio-data-feature-workspace-header {
+    flex: none;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 14px 12px;
+    border-bottom: 1px solid color-mix(in srgb, var(--xstudio-border) 78%, transparent);
+    background: color-mix(in srgb, var(--xstudio-surface) 92%, var(--xstudio-surface-2));
+}
+
+.xstudio-data-feature-title-block {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.xstudio-data-feature-title {
+    min-width: 0;
+    color: var(--xstudio-text);
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 18px;
+}
+
+.xstudio-data-feature-dirty {
+    display: none;
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 15px;
+}
+
+.xstudio-data-feature-dirty-visible {
+    display: block;
+}
+
+.xstudio-data-feature-close {
+    flex: 0 0 auto;
+}
+
+.xstudio-data-feature-scroll {
+    box-sizing: border-box;
+    flex: 1 1 0;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 14px 14px 40px;
+}
+
+.xstudio-data-feature-top-grid {
+    box-sizing: border-box;
+    min-width: 0;
+    max-width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.xstudio-data-feature-card {
+    box-sizing: border-box;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px;
+    border: 1px solid color-mix(in srgb, var(--xstudio-border) 70%, transparent);
+    border-radius: var(--xstudio-radius-sm);
+    background: color-mix(in srgb, var(--xstudio-surface-2) 66%, transparent);
+}
+
+.xstudio-data-feature-field {
+    box-sizing: border-box;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.xstudio-data-feature-large-input {
+    min-height: 30px;
+}
+
+.xstudio-data-feature-section-title {
+    display: block;
+    min-width: 0;
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 16px;
+    text-transform: uppercase;
+}
+
+.xstudio-data-feature-field-list {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.xstudio-data-feature-field-head,
+.xstudio-data-feature-field-row {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-areas:
+        "name name name fieldid fieldid fieldid"
+        "type type required required default default"
+        "options options options options actions actions";
+    gap: 8px;
+    align-items: end;
+}
+
+.xstudio-data-feature-field-head {
+    color: var(--xstudio-text-muted);
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 14px;
+}
+
+.xstudio-data-feature-field-head>* {
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: normal;
+}
+
+.xstudio-data-feature-field-head>*:nth-child(1),
+.xstudio-data-feature-field-row>*:nth-child(1) {
+    grid-area: name;
+}
+
+.xstudio-data-feature-field-head>*:nth-child(2),
+.xstudio-data-feature-field-row>*:nth-child(2) {
+    grid-area: fieldid;
+}
+
+.xstudio-data-feature-field-head>*:nth-child(3),
+.xstudio-data-feature-field-row>*:nth-child(3) {
+    grid-area: type;
+}
+
+.xstudio-data-feature-field-head>*:nth-child(4),
+.xstudio-data-feature-field-row>*:nth-child(4) {
+    grid-area: required;
+}
+
+.xstudio-data-feature-field-head>*:nth-child(5),
+.xstudio-data-feature-field-row>*:nth-child(5) {
+    grid-area: default;
+}
+
+.xstudio-data-feature-field-head>*:nth-child(6),
+.xstudio-data-feature-field-row>*:nth-child(6) {
+    grid-area: options;
+}
+
+.xstudio-data-feature-field-head>*:nth-child(7),
+.xstudio-data-feature-field-row>*:nth-child(7) {
+    grid-area: actions;
+}
+
+.xstudio-data-feature-field-row {
+    padding: 8px;
+    border: 1px solid color-mix(in srgb, var(--xstudio-border) 48%, transparent);
+    border-radius: var(--xstudio-radius-sm);
+    background: color-mix(in srgb, var(--xstudio-surface) 70%, transparent);
+}
+
+.xstudio-data-feature-input {
+    box-sizing: border-box;
+    min-width: 0;
+    max-width: 100%;
+    width: 100%;
+    min-height: 30px;
+    padding: 5px 8px;
+    font-size: 11px;
+    line-height: 16px;
+}
+
+.xstudio-data-feature-required-cell,
+.xstudio-data-feature-option {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--xstudio-text);
+    font-size: 11px;
+    line-height: 16px;
+}
+
+.xstudio-data-feature-required-label,
+.xstudio-data-feature-option-label {
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-data-feature-field-actions {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 3px;
+}
+
+.xstudio-data-feature-icon-button {
+    width: 22px;
+    min-width: 22px;
+    height: 22px;
+    min-height: 22px;
+    padding: 0;
+    border: 1px solid color-mix(in srgb, var(--xstudio-border) 70%, transparent);
+    border-radius: var(--xstudio-radius-sm);
+    background: transparent;
+    color: var(--xstudio-text-muted);
+    font-size: 12px;
+    line-height: 18px;
+}
+
+.xstudio-data-feature-icon-button:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--xstudio-accent) 12%, transparent);
+    color: var(--xstudio-accent);
+}
+
+.xstudio-data-feature-remove:hover:not(:disabled) {
+    color: var(--x-danger);
+}
+
+.xstudio-data-feature-add-field {
+    align-self: flex-start;
+    min-width: 92px;
+}
+
+.xstudio-data-feature-options {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 12px;
+}
+
+.xstudio-data-feature-preview {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 128px), 1fr));
+    gap: 8px;
+}
+
+.xstudio-data-feature-preview-section {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.xstudio-data-feature-preview-item,
+.xstudio-data-feature-preview-empty {
+    min-width: 0;
+    color: var(--xstudio-text);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 11px;
+    line-height: 15px;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-data-feature-preview-empty {
+    color: var(--xstudio-text-muted);
+}
+
+.xstudio-data-feature-progress {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+}
+
+.xstudio-data-feature-progress-hidden {
+    display: none;
+}
+
+.xstudio-data-feature-progress-step {
+    min-width: 0;
+    padding: 5px 7px;
+    border: 1px solid color-mix(in srgb, var(--xstudio-border) 68%, transparent);
+    border-radius: var(--xstudio-radius-sm);
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    line-height: 15px;
+}
+
+.xstudio-data-feature-progress-running {
+    color: var(--xstudio-accent);
+    border-color: color-mix(in srgb, var(--xstudio-accent) 50%, transparent);
+    background: color-mix(in srgb, var(--xstudio-accent) 10%, transparent);
+}
+
+.xstudio-data-feature-progress-done {
+    color: #24c55e;
+    border-color: color-mix(in srgb, #24c55e 44%, transparent);
+}
+
+.xstudio-data-feature-progress-failed {
+    color: var(--x-danger);
+    border-color: color-mix(in srgb, var(--x-danger) 58%, transparent);
+}
+
+.xstudio-data-feature-create {
+    min-width: 132px;
+}
+
+.xstudio-data-feature-ask {
+    gap: 8px;
+}
+
+.xstudio-data-feature-ask-input {
+    box-sizing: border-box;
+    min-height: 62px;
+    width: 100%;
+    resize: vertical;
+    border: 1px solid color-mix(in srgb, var(--xstudio-border) 78%, transparent);
+    border-radius: var(--xstudio-radius-sm);
+    background: color-mix(in srgb, var(--xstudio-surface) 86%, transparent);
+    color: var(--xstudio-text);
+    padding: 8px;
+    font-size: 12px;
+    line-height: 17px;
+}
+
+.xstudio-data-feature-ask-button {
+    align-self: flex-start;
+}
+
+.xstudio-data-feature-ask-status {
+    min-height: 16px;
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    line-height: 16px;
+}
+
+.xstudio-data-feature-ask-status-error {
+    color: var(--x-danger);
+}
+
+.xstudio-data-feature-ask-status-warning {
+    color: var(--vx-warning);
+}
+
+.xstudio-data-feature-ask-status-loading {
+    color: var(--xstudio-accent);
+}
+
+.xstudio-data-feature-retry-button {
+    align-self: flex-start;
+}
+
+.xstudio-data-feature-retry-hidden {
+    display: none;
+}
+
+.xstudio-data-feature-ask-debug {
+    min-width: 0;
+    border: 1px solid color-mix(in srgb, var(--xstudio-border) 54%, transparent);
+    border-radius: var(--xstudio-radius-sm);
+    padding: 6px 8px;
+}
+
+.xstudio-data-feature-ask-debug-hidden {
+    display: none;
+}
+
+.xstudio-data-feature-ask-debug-summary {
+    color: var(--xstudio-text-muted);
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 15px;
+}
+
+.xstudio-data-feature-ask-debug-payload {
+    display: block;
+    margin-top: 6px;
+    color: var(--xstudio-text-muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 10px;
+    line-height: 14px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-data-feature-ask-messages {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.xstudio-data-feature-ask-messages-empty {
+    display: none;
+}
+
+.xstudio-data-feature-ask-message {
+    min-width: 0;
+    padding: 5px 7px;
+    border-radius: var(--xstudio-radius-sm);
+    border: 1px solid color-mix(in srgb, var(--xstudio-border) 58%, transparent);
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    line-height: 15px;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-data-feature-ask-message-warning {
+    border-color: color-mix(in srgb, #d6a23a 52%, transparent);
+    color: #d6a23a;
+}
+
+.xstudio-data-feature-review {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+    border: 1px solid color-mix(in srgb, var(--xstudio-accent) 44%, transparent);
+    border-radius: var(--xstudio-radius-sm);
+    background: color-mix(in srgb, var(--xstudio-accent) 8%, transparent);
+}
+
+.xstudio-data-feature-review-hidden {
+    display: none;
+}
+
+.xstudio-data-feature-review-title {
+    color: var(--xstudio-text);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 16px;
+}
+
+.xstudio-data-feature-review-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.xstudio-data-feature-footer {
+    flex: none;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 10px 14px;
+    border-top: 1px solid color-mix(in srgb, var(--xstudio-border) 78%, transparent);
+    background: color-mix(in srgb, var(--xstudio-surface) 94%, var(--xstudio-surface-2));
+}
+
+.xstudio-data-feature-cancel-button {
+    min-width: 82px;
+}
+
+@container (max-width: 380px) {
+    .xstudio-data-feature-top-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .xstudio-data-feature-options {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .xstudio-data-feature-field-head,
+    .xstudio-data-feature-field-row {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas:
+            "name"
+            "fieldid"
+            "type"
+            "required"
+            "default"
+            "options"
+            "actions";
+        align-items: stretch;
+    }
+
+    .xstudio-data-feature-field-actions {
+        justify-content: flex-start;
+    }
+}
+
+@container (min-width: 720px) {
+    .xstudio-data-feature-field-head,
+    .xstudio-data-feature-field-row {
+        grid-template-columns:
+            minmax(120px, 1.2fr)
+            minmax(120px, 1.2fr)
+            minmax(86px, .75fr)
+            minmax(92px, auto)
+            minmax(104px, .85fr)
+            minmax(140px, 1fr)
+            auto;
+        grid-template-areas: "name fieldid type required default options actions";
+    }
+}
+
+.xstudio-object-palette-dialog {
+    color: var(--xstudio-text);
+    overflow: hidden;
+}
+
+.xstudio-object-palette-card {
+    width: min(420px, calc(100% - 32px));
+    max-height: min(70vh, calc(100dvh - 96px));
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border-color: color-mix(in srgb, var(--xstudio-accent) 48%, var(--xstudio-border));
+    overflow-y: auto;
+}
+
+.xstudio-scrollable {
+    scrollbar-width: thin;
+    scrollbar-color: var(--xstudio-scrollbar-thumb) var(--xstudio-scrollbar-track);
+}
+
+.xstudio-scrollable::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+.xstudio-scrollable::-webkit-scrollbar-track {
+    background: var(--xstudio-scrollbar-track);
+}
+
+.xstudio-scrollable::-webkit-scrollbar-thumb {
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background: var(--xstudio-scrollbar-thumb);
+    background-clip: content-box;
+}
+
+.xstudio-scrollable::-webkit-scrollbar-thumb:hover {
+    background: var(--xstudio-scrollbar-thumb-hover);
+    background-clip: content-box;
+}
+
+.xstudio-scrollable::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+.xstudio-object-palette-header {
+    box-sizing: border-box;
+    min-width: 0;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.xstudio-object-palette-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.xstudio-object-palette-close {
+    flex: 0 0 auto;
+    width: 24px;
+    min-width: 24px;
+    height: 24px;
+    min-height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid color-mix(in srgb, var(--xstudio-border) 70%, transparent);
+    border-radius: var(--xstudio-radius-sm);
+    background: transparent;
+    color: var(--xstudio-text-muted);
+    font-size: 16px;
+    line-height: 20px;
+}
+
+.xstudio-object-palette-close:hover,
+.xstudio-object-palette-close:focus-visible {
+    background: color-mix(in srgb, var(--xstudio-accent) 12%, transparent);
+    color: var(--xstudio-accent);
+    outline: none;
+}
+
+.xstudio-object-palette-search {
+    flex: 0 0 auto;
+    min-height: 28px;
+    padding: 5px 8px;
+    font-size: 12px;
+    line-height: 16px;
+}
+
+.xstudio-object-palette-divider {
+    flex: 0 0 auto;
+    height: 1px;
+    background: color-mix(in srgb, var(--xstudio-border) 70%, transparent);
+}
+
+.xstudio-object-palette-results {
+    box-sizing: border-box;
+    min-width: 0;
+    min-height: 0;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding-right: 2px;
+    scrollbar-gutter: stable;
+}
+
+.xstudio-object-palette-category {
+    box-sizing: border-box;
+    min-width: 0;
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.xstudio-object-palette-category-title {
+    display: block;
+    min-width: 0;
+    padding: 2px 0 1px;
+    color: var(--xstudio-accent);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 16px;
+    letter-spacing: 0;
+    text-transform: uppercase;
+}
+
+.xstudio-object-palette-entry {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    min-height: 24px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+    padding: 3px 7px;
+    border: 1px solid transparent;
+    border-radius: var(--xstudio-radius-sm);
+    background: transparent;
+    color: var(--xstudio-text);
+    font-family: inherit;
+    font-size: 12px;
+    line-height: 16px;
+    text-align: left;
+}
+
+.xstudio-object-palette-entry:hover,
+.xstudio-object-palette-entry:focus-visible {
+    border-color: color-mix(in srgb, var(--xstudio-accent) 44%, transparent);
+    background: color-mix(in srgb, var(--xstudio-accent) 12%, transparent);
+    color: var(--xstudio-accent);
+    outline: none;
+}
+
+.xstudio-object-palette-entry-title,
+.xstudio-object-palette-entry-id {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.xstudio-object-palette-entry-title {
+    font-weight: 700;
+}
+
+.xstudio-object-palette-entry-id {
+    color: var(--xstudio-text-muted);
+    font-size: 10px;
+    line-height: 14px;
+}
+
+.xstudio-object-palette-entry:hover .xstudio-object-palette-entry-id,
+.xstudio-object-palette-entry:focus-visible .xstudio-object-palette-entry-id {
+    color: color-mix(in srgb, var(--xstudio-accent) 70%, var(--xstudio-text-muted));
+}
+
+.xstudio-object-palette-empty {
+    display: block;
+    min-width: 0;
+    flex: 0 0 auto;
+    padding: 8px 0;
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    line-height: 16px;
+}
+
+.xstudio-selected-object-raw-editor {
+    box-sizing: border-box;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-top: 8px;
+    border-top: 1px solid color-mix(in srgb, var(--xstudio-border) 58%, transparent);
+}
+
+.xstudio-selected-object-raw-header {
+    box-sizing: border-box;
+    min-width: 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.xstudio-selected-object-raw-body {
+    box-sizing: border-box;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 6px 0 0;
+}
+
+.xstudio-selected-object-raw-actions {
+    min-width: 0;
+    flex: 1 1 100%;
+    display: flex;
+    align-items: center;
+    justify-content: stretch;
+    gap: 6px;
+}
+
+.xstudio-selected-object-raw-actions .xbutton {
+    flex: 1 1 0;
+}
+
+.xstudio-selected-object-json {
+    box-sizing: border-box;
+    width: 100%;
+    height: clamp(110px, 18dvh, 170px);
+    min-height: 100px;
+    max-height: 180px;
+    overflow: auto;
+    margin: 2px 0 0;
+    padding: 8px;
+    border: 1px solid var(--xstudio-border);
+    border-radius: var(--xstudio-radius-md);
+    background: var(--xstudio-surface);
+    color: var(--xstudio-text-muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 11px;
+    line-height: 16px;
+    letter-spacing: 0;
+    white-space: pre-wrap;
+    resize: vertical;
+}
+
+.xstudio-selected-object {
+    outline: 2px solid var(--x-accent);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--x-accent) 18%, transparent);
+}
+
+.xstudio-object-picker-overlay {
+    box-sizing: border-box;
+    position: fixed;
+    z-index: 9999;
+    display: none;
+    pointer-events: none;
+    border: 2px solid var(--vx-accent);
+    background: color-mix(in srgb, var(--vx-accent) 8%, transparent);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--vx-bg) 80%, transparent);
+}
+
+.xstudio-arrange-overlay {
+    box-sizing: border-box;
+    position: fixed;
+    z-index: 10001;
+    display: none;
+    pointer-events: none;
+    border: 2px solid color-mix(in srgb, var(--vx-accent) 76%, var(--vx-border));
+    background: color-mix(in srgb, var(--vx-accent) 7%, transparent);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--vx-bg) 80%, transparent);
+}
+
+.xstudio-arrange-overlay-hover::before {
+    content: "";
+    position: absolute;
+    left: -6px;
+    top: -6px;
+    width: 10px;
+    height: 10px;
+    border: 2px solid var(--vx-accent);
+    border-radius: 50%;
+    background: var(--vx-surface-raised);
+    box-shadow: 0 1px 4px color-mix(in srgb, var(--vx-bg) 72%, transparent);
+}
+
+.xstudio-arrange-overlay-valid {
+    border-color: color-mix(in srgb, var(--x-success) 82%, var(--vx-border));
+    background: color-mix(in srgb, var(--x-success) 9%, transparent);
+}
+
+.xstudio-arrange-overlay-invalid {
+    border-color: color-mix(in srgb, var(--x-danger) 82%, var(--vx-border));
+    background: color-mix(in srgb, var(--x-danger) 8%, transparent);
+}
+
+.xstudio-arrange-indicator {
+    box-sizing: border-box;
+    position: fixed;
+    z-index: 10003;
+    display: none;
+    pointer-events: none;
+    border-radius: 2px;
+    background: var(--vx-accent);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--vx-bg) 78%, transparent);
+}
+
+.xstudio-arrange-indicator-inside {
+    opacity: .85;
+}
+
+.xstudio-arrange-indicator-valid {
+    background: color-mix(in srgb, var(--x-success) 88%, var(--vx-accent));
+}
+
+.xstudio-arrange-indicator-invalid {
+    background: color-mix(in srgb, var(--x-danger) 88%, var(--vx-accent));
+}
+
+.xstudio-object-picker-label {
+    box-sizing: border-box;
+    position: fixed;
+    z-index: 10000;
+    display: none;
+    max-width: min(420px, calc(100vw - 16px));
+    min-height: 18px;
+    padding: 2px 6px;
+    pointer-events: none;
+    border: 1px solid color-mix(in srgb, var(--vx-accent) 72%, var(--vx-border));
+    border-radius: var(--vx-radius-sm);
+    background: var(--vx-surface-raised);
+    color: var(--vx-text-primary);
+    font-family: var(--vx-font-mono);
+    font-size: 11px;
+    line-height: 14px;
+    letter-spacing: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.xstudio-arrange-label {
+    box-sizing: border-box;
+    position: fixed;
+    z-index: 10004;
+    display: none;
+    max-width: min(420px, calc(100vw - 16px));
+    min-height: 18px;
+    padding: 2px 6px;
+    pointer-events: none;
+    border: 1px solid color-mix(in srgb, var(--vx-accent) 72%, var(--vx-border));
+    border-radius: var(--vx-radius-sm);
+    background: var(--vx-surface-raised);
+    color: var(--vx-text-primary);
+    font-family: var(--vx-font-mono);
+    font-size: 11px;
+    line-height: 14px;
+    letter-spacing: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.xstudio-arrange-label-valid {
+    border-color: color-mix(in srgb, var(--x-success) 74%, var(--vx-border));
+}
+
+.xstudio-arrange-label-invalid {
+    border-color: color-mix(in srgb, var(--x-danger) 74%, var(--vx-border));
+    color: color-mix(in srgb, var(--x-danger) 72%, var(--vx-text-primary));
+}
+
+/* =========================================================================
+ * XStudio Terminal Skin
+ * ========================================================================= */
+
+.xstudio-editor {
+    box-sizing: border-box;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+    overflow: auto;
+    background: var(--xstudio-surface);
+    color: var(--xstudio-text);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.xstudio-section {
+    box-sizing: border-box;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
+    border: 1px solid var(--xstudio-border);
+    border-radius: var(--xstudio-radius-md);
+    background: var(--xstudio-surface);
+}
+
+.xstudio-section-title {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--xstudio-accent);
+    font-weight: 700;
+}
+
+.xstudio-portlet-header .xstudio-section-title {
+    margin-bottom: 0;
+}
+
+.xstudio-shell .xfield,
+.xstudio-shell .xfield__control {
+    box-sizing: border-box;
+    min-width: 0;
+}
+
+.xstudio-shell .xfield__label,
+.xstudio-shell .xfield__hint,
+.xstudio-shell .xlabel {
+    color: var(--xstudio-accent);
+}
+
+.xstudio-shell .xfield__hint {
+    color: var(--xstudio-text-muted);
+}
+
+.xstudio-shell .xtextarea,
+.xstudio-shell .xinput,
+.xstudio-shell .xselect,
+.xstudio-shell textarea,
+.xstudio-shell input,
+.xstudio-shell select {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    background: var(--xstudio-surface-2);
+    color: var(--xstudio-text);
+    border: 1px solid var(--xstudio-border);
+    border-radius: var(--xstudio-radius-md);
+    font-family: inherit;
+    font-size: 12px;
+    line-height: 18px;
+    letter-spacing: 0;
+    color-scheme: var(--xstudio-color-scheme);
+}
+
+.xstudio-shell textarea,
+.xstudio-shell input,
+.xstudio-shell select {
+    padding: 8px 10px;
+}
+
+.xstudio-shell textarea,
+.xstudio-shell .xtextarea {
+    resize: vertical;
+}
+
+.xstudio-shell select,
+.xstudio-shell .xselect {
+    min-height: 30px;
+}
+
+.xstudio-shell textarea::placeholder,
+.xstudio-shell input::placeholder {
+    color: var(--xstudio-text-muted);
+    opacity: 1;
+}
+
+.xstudio-shell textarea:focus,
+.xstudio-shell input:focus,
+.xstudio-shell select:focus {
+    outline: 1px solid var(--xstudio-accent);
+    outline-offset: 1px;
+}
+
+.xstudio-editor .xbutton {
+    background: transparent;
+    color: var(--xstudio-accent);
+    border: 1px solid var(--xstudio-border);
+    font-family: inherit;
+}
+
+.xstudio-editor .xbutton:hover {
+    background: color-mix(in srgb, var(--xstudio-accent) 12%, transparent);
+}
+
+.xstudio-runtime-inspector-section textarea {
+    min-height: 180px;
+    white-space: pre;
+}
+
+#xstudio-conversation-section.xstudio-conversation-section {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    max-height: calc(100vh - 52px);
+    max-height: calc(100dvh - 52px);
+    flex: 1 1 0;
+    overflow: hidden;
+}
+
+#xstudio-conversation-header.xstudio-conversation-header {
+    flex: 0 0 auto;
+    min-height: 0;
+}
+
+.xstudio-conversation-active-task-header {
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    line-height: 15px;
+    letter-spacing: 0;
+}
+
+.xstudio-conversation-active-task-header-label {
+    color: inherit;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.xstudio-conversation-active-task-header-title {
+    min-width: 0;
+    color: var(--xstudio-text);
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#xstudio-conversation-section .xstudio-conversation-body {
+    box-sizing: border-box;
+    height: 100%;
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: scroll;
+}
+
+#xstudio-conversation-title.xstudio-conversation-title {
+    flex: 0 0 auto;
+    color: var(--xstudio-text-muted);
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 0;
+}
+
+#xstudio-conversation-selector.xstudio-conversation-selector {
+    flex: 0 0 auto;
+    min-height: 30px;
+}
+
+#xstudio-conversation-messages.xstudio-conversation-messages {
+    box-sizing: border-box;
+    flex: 1 1 0;
+    min-height: 0;
+    max-height: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 10px;
+    border: 1px solid color-mix(in srgb, var(--xstudio-border) 78%, transparent);
+    border-radius: var(--xstudio-radius-md);
+    background: color-mix(in srgb, var(--xstudio-surface-2) 78%, transparent);
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: var(--xstudio-scrollbar-thumb) var(--xstudio-scrollbar-track);
+}
+
+.xstudio-conversation-messages::-webkit-scrollbar {
+    width: 10px;
+}
+
+.xstudio-conversation-messages::-webkit-scrollbar-thumb {
+    border: 2px solid transparent;
+    border-radius: var(--xstudio-radius-md);
+    background: var(--xstudio-scrollbar-thumb);
+    background-clip: content-box;
+}
+
+.xstudio-conversation-empty {
+    margin: auto;
+    color: var(--xstudio-text-muted);
+    font-size: 12px;
+    line-height: 18px;
+    letter-spacing: 0;
+}
+
+.xstudio-conversation-message {
+    box-sizing: border-box;
+    width: fit-content;
+    max-width: min(92%, 100%);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.xstudio-conversation-message-user {
+    align-self: flex-end;
+    align-items: flex-end;
+}
+
+.xstudio-conversation-message-assistant {
+    align-self: flex-start;
+    align-items: flex-start;
+}
+
+.xstudio-conversation-message-system,
+.xstudio-conversation-message-tool {
+    align-self: flex-start;
+    align-items: flex-start;
+}
+
+.xstudio-conversation-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    max-width: 100%;
+    color: var(--xstudio-text-muted);
+    font-size: 10px;
+    line-height: 14px;
+    letter-spacing: 0;
+}
+
+.xstudio-conversation-role {
+    color: inherit;
+    font-weight: 700;
+}
+
+.xstudio-conversation-time {
+    color: inherit;
+}
+
+.xstudio-conversation-bubble {
+    box-sizing: border-box;
+    max-width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--xstudio-border);
+    border-radius: var(--xstudio-radius-md);
+    color: var(--xstudio-text);
+    font-size: 12px;
+    line-height: 18px;
+    letter-spacing: 0;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-conversation-message-user .xstudio-conversation-bubble {
+    border-color: color-mix(in srgb, var(--xstudio-accent) 56%, var(--xstudio-border));
+    background: color-mix(in srgb, var(--xstudio-accent) 16%, var(--xstudio-surface-2));
+}
+
+.xstudio-conversation-message-assistant .xstudio-conversation-bubble {
+    background: var(--xstudio-surface);
+}
+
+.xstudio-conversation-message-system .xstudio-conversation-bubble,
+.xstudio-conversation-message-tool .xstudio-conversation-bubble {
+    border-color: color-mix(in srgb, var(--xstudio-border) 72%, var(--xstudio-accent));
+    background: color-mix(in srgb, var(--xstudio-surface) 76%, var(--xstudio-surface-2));
+    color: var(--xstudio-text-muted);
+}
+
+.xstudio-conversation-message-pending {
+    opacity: 0.82;
+}
+
+.xstudio-conversation-message-analyzing .xstudio-conversation-bubble {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--xstudio-text-muted);
+}
+
+.xstudio-conversation-message-failed .xstudio-conversation-bubble {
+    border-color: color-mix(in srgb, var(--x-danger) 62%, var(--xstudio-border));
+    background: color-mix(in srgb, var(--x-danger) 8%, var(--xstudio-surface));
+    color: color-mix(in srgb, var(--x-danger) 86%, var(--xstudio-text));
+}
+
+.xstudio-conversation-pending {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--xstudio-text-muted);
+}
+
+.xstudio-conversation-pending-label {
+    color: inherit;
+    font-size: 10px;
+    line-height: 14px;
+    letter-spacing: 0;
+}
+
+.xstudio-conversation-spinner {
+    width: 10px;
+    height: 10px;
+    border: 2px solid color-mix(in srgb, var(--xstudio-text-muted) 34%, transparent);
+    border-top-color: var(--xstudio-accent);
+    border-radius: 50%;
+    animation: xstudio-conversation-spin 0.8s linear infinite;
+}
+
+@keyframes xstudio-conversation-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.xstudio-conversation-debug {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    margin-top: 4px;
+    padding-top: 5px;
+    border-top: 1px solid color-mix(in srgb, var(--xstudio-border) 42%, transparent);
+    color: var(--xstudio-text-muted);
+    font-size: 10px;
+    line-height: 14px;
+    letter-spacing: 0;
+    opacity: 0.82;
+}
+
+.xstudio-conversation-debug-summary {
+    cursor: pointer;
+    user-select: none;
+    color: var(--xstudio-text-muted);
+    font-weight: 700;
+    outline: none;
+}
+
+.xstudio-conversation-debug-summary:focus-visible {
+    outline: 2px solid var(--xstudio-focus);
+    outline-offset: 2px;
+}
+
+.xstudio-conversation-debug-summary::marker {
+    content: "";
+}
+
+.xstudio-conversation-debug-summary::-webkit-details-marker {
+    display: none;
+}
+
+.xstudio-conversation-debug-content {
+    box-sizing: border-box;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 4px;
+    padding: 6px;
+    border: 1px solid color-mix(in srgb, var(--xstudio-border) 68%, transparent);
+    border-radius: var(--xstudio-radius-sm);
+    background: color-mix(in srgb, var(--xstudio-surface) 82%, var(--xstudio-surface-2));
+}
+
+.xstudio-conversation-debug-row {
+    display: grid;
+    grid-template-columns: minmax(92px, max-content) minmax(0, 1fr);
+    gap: 6px;
+    min-width: 0;
+}
+
+.xstudio-conversation-debug-row-block {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.xstudio-conversation-debug-label {
+    color: var(--xstudio-text-muted);
+    font-weight: 700;
+}
+
+.xstudio-conversation-debug-value {
+    min-width: 0;
+    color: var(--xstudio-text-muted);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-planning-greeting {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+    border: 1px solid color-mix(in srgb, var(--xstudio-accent) 58%, var(--xstudio-border));
+    border-radius: var(--xstudio-radius-md);
+    background: color-mix(in srgb, var(--xstudio-accent) 8%, var(--xstudio-surface));
+}
+
+.xstudio-planning-greeting-title {
+    color: var(--xstudio-text);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 18px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-planning-greeting-chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.xstudio-planning-greeting-chip {
+    box-sizing: border-box;
+    max-width: 100%;
+    min-height: 28px;
+    padding: 4px 9px;
+    border: 1px solid color-mix(in srgb, var(--xstudio-accent) 50%, var(--xstudio-border));
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--xstudio-accent) 10%, transparent);
+    color: var(--xstudio-text);
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    cursor: pointer;
+}
+
+.xstudio-planning-greeting-chip:hover {
+    border-color: color-mix(in srgb, var(--xstudio-accent) 76%, var(--xstudio-border));
+    background: color-mix(in srgb, var(--xstudio-accent) 16%, transparent);
+}
+
+.xstudio-artifact-request-card {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+    border: 1px solid color-mix(in srgb, var(--xstudio-accent) 64%, var(--xstudio-border));
+    border-radius: var(--xstudio-radius-md);
+    background: color-mix(in srgb, var(--xstudio-accent) 9%, var(--xstudio-surface));
+}
+
+.xstudio-artifact-request-card-compact {
+    gap: 0;
+    padding: 5px 8px;
+}
+
+.xstudio-artifact-request-card-running {
+    border-color: color-mix(in srgb, var(--x-warning) 58%, var(--xstudio-border));
+    background: color-mix(in srgb, var(--x-warning) 8%, var(--xstudio-surface));
+}
+
+.xstudio-artifact-request-card-done {
+    border-color: color-mix(in srgb, var(--x-success) 58%, var(--xstudio-border));
+    background: color-mix(in srgb, var(--x-success) 8%, var(--xstudio-surface));
+}
+
+.xstudio-artifact-request-card-failed {
+    border-color: color-mix(in srgb, var(--x-danger) 62%, var(--xstudio-border));
+    background: color-mix(in srgb, var(--x-danger) 8%, var(--xstudio-surface));
+}
+
+.xstudio-artifact-request-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.xstudio-artifact-request-label {
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 15px;
+    letter-spacing: 0;
+}
+
+.xstudio-artifact-request-title {
+    color: var(--xstudio-text);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 16px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-artifact-request-details-label {
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 15px;
+    letter-spacing: 0;
+}
+
+.xstudio-artifact-request-detail {
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    line-height: 15px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-artifact-request-error {
+    color: color-mix(in srgb, var(--x-danger) 86%, var(--xstudio-text));
+    font-size: 11px;
+    line-height: 15px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-artifact-request-success {
+    color: color-mix(in srgb, var(--x-success) 86%, var(--xstudio-text));
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 15px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-artifact-request-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.xstudio-capability-guidance-card {
+    border-color: color-mix(in srgb, var(--xstudio-accent) 56%, var(--xstudio-border));
+    background: color-mix(in srgb, var(--xstudio-accent) 6%, var(--xstudio-surface));
+}
+
+.xstudio-capability-guidance-content {
+    gap: 8px;
+}
+
+.xstudio-capability-guidance-description {
+    color: var(--xstudio-text-muted);
+    font-size: 12px;
+    line-height: 16px;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-capability-category {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+    padding-top: 8px;
+    border-top: 1px solid color-mix(in srgb, var(--xstudio-border) 72%, transparent);
+}
+
+.xstudio-capability-category-title {
+    color: var(--xstudio-text);
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 800;
+    letter-spacing: 0;
+}
+
+.xstudio-capability-list {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    min-width: 0;
+}
+
+.xstudio-capability {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+    padding: 7px;
+    border: 1px solid color-mix(in srgb, var(--xstudio-border) 84%, transparent);
+    border-radius: var(--xstudio-radius-md);
+    background: color-mix(in srgb, var(--xstudio-surface-2) 72%, transparent);
+}
+
+.xstudio-capability-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+}
+
+.xstudio-capability-title {
+    color: var(--xstudio-text);
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-capability-mode,
+.xstudio-capability-status {
+    padding: 1px 5px;
+    border: 1px solid color-mix(in srgb, var(--xstudio-border) 82%, transparent);
+    border-radius: var(--xstudio-radius-sm);
+    color: var(--xstudio-text-muted);
+    font-size: 10px;
+    line-height: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.xstudio-capability-mode {
+    color: var(--xstudio-text);
+    background: color-mix(in srgb, var(--xstudio-accent) 12%, transparent);
+}
+
+.xstudio-capability-description,
+.xstudio-capability-empty {
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    line-height: 15px;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-capability-examples {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    min-width: 0;
+}
+
+.xstudio-capability-example {
+    max-width: 100%;
+    min-height: 26px;
+    padding: 3px 7px;
+    border: 1px solid color-mix(in srgb, var(--xstudio-accent) 42%, var(--xstudio-border));
+    border-radius: var(--xstudio-radius-sm);
+    background: color-mix(in srgb, var(--xstudio-accent) 8%, transparent);
+    color: var(--xstudio-text);
+    font-size: 11px;
+    line-height: 15px;
+    text-align: left;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-capability-example:hover {
+    border-color: color-mix(in srgb, var(--xstudio-accent) 70%, var(--xstudio-border));
+    background: color-mix(in srgb, var(--xstudio-accent) 16%, transparent);
+}
+
+.xstudio-capability-manual {
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    line-height: 15px;
+}
+
+.xstudio-capability-manual-summary {
+    cursor: pointer;
+    color: var(--xstudio-text-muted);
+    font-weight: 700;
+}
+
+.xstudio-capability-manual-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding-top: 5px;
+}
+
+.xstudio-capability-manual-step {
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    line-height: 15px;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-mutation-plan-card {
+    gap: 7px;
+    border-color: color-mix(in srgb, var(--xstudio-accent) 34%, var(--xstudio-border));
+    background: color-mix(in srgb, var(--xstudio-surface-2) 66%, var(--xstudio-surface));
+}
+
+.xstudio-mutation-plan-card-compact {
+    gap: 8px;
+    padding: 8px;
+}
+
+.xstudio-mutation-plan-compact-content {
+    gap: 3px;
+}
+
+.xstudio-mutation-plan-compact-title {
+    color: color-mix(in srgb, var(--x-success) 86%, var(--xstudio-text));
+}
+
+.xstudio-mutation-plan-compact-count {
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    line-height: 15px;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-mutation-plan-compact-name {
+    color: var(--xstudio-text);
+    font-size: 11px;
+    line-height: 15px;
+    font-weight: 800;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-mutation-plan-ready {
+    border-color: color-mix(in srgb, var(--x-success) 48%, var(--xstudio-border));
+}
+
+.xstudio-mutation-plan-blocked {
+    border-color: color-mix(in srgb, var(--x-warning) 54%, var(--xstudio-border));
+}
+
+.xstudio-mutation-plan-content {
+    gap: 7px;
+}
+
+.xstudio-mutation-plan-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.xstudio-mutation-plan-label {
+    margin-right: auto;
+}
+
+.xstudio-mutation-plan-count,
+.xstudio-mutation-plan-status {
+    padding: 2px 6px;
+    border: 1px solid color-mix(in srgb, var(--xstudio-border) 82%, transparent);
+    border-radius: var(--xstudio-radius-sm);
+    color: var(--xstudio-text);
+    background: color-mix(in srgb, var(--xstudio-accent) 8%, transparent);
+    font-size: 10px;
+    line-height: 14px;
+    font-weight: 800;
+    letter-spacing: 0;
+    white-space: nowrap;
+}
+
+.xstudio-mutation-plan-status {
+    color: var(--xstudio-text-muted);
+    background: transparent;
+}
+
+.xstudio-mutation-plan-count-ready {
+    border-color: color-mix(in srgb, var(--x-success) 48%, var(--xstudio-border));
+    background: color-mix(in srgb, var(--x-success) 8%, transparent);
+}
+
+.xstudio-mutation-plan-count-deterministic {
+    border-color: color-mix(in srgb, var(--xstudio-accent) 42%, var(--xstudio-border));
+    background: color-mix(in srgb, var(--xstudio-accent) 7%, transparent);
+}
+
+.xstudio-mutation-plan-count-generated {
+    border-color: color-mix(in srgb, var(--x-success) 48%, var(--xstudio-border));
+    background: color-mix(in srgb, var(--x-success) 7%, transparent);
+}
+
+.xstudio-mutation-plan-count-generating {
+    border-color: color-mix(in srgb, var(--xstudio-accent) 52%, var(--xstudio-border));
+    background: color-mix(in srgb, var(--xstudio-accent) 9%, transparent);
+}
+
+.xstudio-mutation-plan-count-blocked {
+    border-color: color-mix(in srgb, var(--x-warning) 52%, var(--xstudio-border));
+    background: color-mix(in srgb, var(--x-warning) 8%, transparent);
+}
+
+.xstudio-mutation-plan-count-complete {
+    border-color: color-mix(in srgb, var(--x-success) 52%, var(--xstudio-border));
+    background: color-mix(in srgb, var(--x-success) 10%, transparent);
+}
+
+.xstudio-mutation-plan-title {
+    font-size: 13px;
+    line-height: 17px;
+}
+
+.xstudio-mutation-plan-goal,
+.xstudio-mutation-plan-summary,
+.xstudio-mutation-plan-helper,
+.xstudio-mutation-plan-empty {
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    line-height: 15px;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-mutation-plan-goal {
+    color: var(--xstudio-text);
+    font-weight: 700;
+}
+
+.xstudio-mutation-plan-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+}
+
+.xstudio-mutation-plan-step {
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr);
+    gap: 7px;
+    align-items: start;
+    min-width: 0;
+    padding: 6px;
+    border: 1px solid color-mix(in srgb, var(--xstudio-border) 76%, transparent);
+    border-radius: var(--xstudio-radius-sm);
+    background: color-mix(in srgb, var(--xstudio-surface) 72%, transparent);
+}
+
+.xstudio-mutation-plan-step-ready {
+    border-color: color-mix(in srgb, var(--x-success) 42%, var(--xstudio-border));
+}
+
+.xstudio-mutation-plan-step-generated {
+    background: color-mix(in srgb, var(--x-success) 5%, var(--xstudio-surface));
+}
+
+.xstudio-mutation-plan-step-generating {
+    border-color: color-mix(in srgb, var(--xstudio-accent) 48%, var(--xstudio-border));
+    background: color-mix(in srgb, var(--xstudio-accent) 7%, var(--xstudio-surface));
+}
+
+.xstudio-mutation-plan-step-done {
+    border-color: color-mix(in srgb, var(--x-success) 54%, var(--xstudio-border));
+    background: color-mix(in srgb, var(--x-success) 6%, var(--xstudio-surface));
+}
+
+.xstudio-mutation-plan-step-running {
+    border-color: color-mix(in srgb, var(--xstudio-accent) 58%, var(--xstudio-border));
+    background: color-mix(in srgb, var(--xstudio-accent) 8%, var(--xstudio-surface));
+}
+
+.xstudio-mutation-plan-step-failed {
+    border-color: color-mix(in srgb, var(--x-danger) 62%, var(--xstudio-border));
+    background: color-mix(in srgb, var(--x-danger) 7%, var(--xstudio-surface));
+}
+
+.xstudio-mutation-plan-step-not-run {
+    opacity: 0.72;
+}
+
+.xstudio-mutation-plan-step-unsupported {
+    border-color: color-mix(in srgb, var(--x-warning) 50%, var(--xstudio-border));
+    background: color-mix(in srgb, var(--x-warning) 5%, var(--xstudio-surface));
+}
+
+.xstudio-mutation-plan-step-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border: 1px solid color-mix(in srgb, var(--xstudio-accent) 36%, var(--xstudio-border));
+    border-radius: 50%;
+    color: var(--xstudio-text);
+    background: color-mix(in srgb, var(--xstudio-accent) 10%, transparent);
+    font-size: 10px;
+    line-height: 14px;
+    font-weight: 800;
+}
+
+.xstudio-mutation-plan-step-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.xstudio-mutation-plan-step-title {
+    color: var(--xstudio-text);
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-mutation-plan-step-status {
+    color: var(--xstudio-text-muted);
+    font-size: 10px;
+    line-height: 14px;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-mutation-plan-step-operation,
+.xstudio-mutation-plan-step-artifacts {
+    color: var(--xstudio-text-muted);
+    font-size: 10px;
+    line-height: 14px;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-mutation-plan-step-operation {
+    color: var(--xstudio-text);
+}
+
+.xstudio-mutation-plan-step-ready .xstudio-mutation-plan-step-status {
+    color: color-mix(in srgb, var(--x-success) 78%, var(--xstudio-text));
+}
+
+.xstudio-mutation-plan-step-running .xstudio-mutation-plan-step-status {
+    color: color-mix(in srgb, var(--xstudio-accent) 82%, var(--xstudio-text));
+}
+
+.xstudio-mutation-plan-step-failed .xstudio-mutation-plan-step-status {
+    color: color-mix(in srgb, var(--x-danger) 86%, var(--xstudio-text));
+}
+
+.xstudio-mutation-plan-step-unsupported .xstudio-mutation-plan-step-status {
+    color: color-mix(in srgb, var(--x-warning) 82%, var(--xstudio-text));
+}
+
+.xstudio-mutation-plan-step-reason {
+    color: var(--xstudio-text-muted);
+    font-size: 10px;
+    line-height: 14px;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-mutation-plan-buttons .xstudio-mutation-plan-placeholder {
+    opacity: 0.58;
+    cursor: not-allowed;
+}
+
+.xstudio-crud-field-suggestion-card {
+    border-color: color-mix(in srgb, var(--xstudio-accent) 58%, var(--xstudio-border));
+}
+
+.xstudio-crud-field-suggestion-content {
+    gap: 5px;
+}
+
+.xstudio-crud-field-suggestion-field {
+    padding-left: 2px;
+}
+
+.xstudio-crud-recommendation-card {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    min-width: 0;
+    width: 100%;
+    padding: 9px;
+    border: 1px solid color-mix(in srgb, var(--xstudio-accent) 56%, var(--xstudio-border));
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--xstudio-accent) 7%, var(--xstudio-surface));
+}
+
+.xstudio-crud-recommendation-card-guide {
+    padding: 8px;
+}
+
+.xstudio-crud-recommendation-card-done {
+    border-color: color-mix(in srgb, var(--x-success) 56%, var(--xstudio-border));
+    background: color-mix(in srgb, var(--x-success) 7%, var(--xstudio-surface));
+}
+
+.xstudio-crud-recommendation-card-running {
+    border-color: color-mix(in srgb, var(--xstudio-accent) 74%, var(--xstudio-border));
+}
+
+.xstudio-crud-recommendation-card-failed {
+    border-color: color-mix(in srgb, var(--x-danger) 62%, var(--xstudio-border));
+    background: color-mix(in srgb, var(--x-danger) 7%, var(--xstudio-surface));
+}
+
+.xstudio-crud-recommendation-heading,
+.xstudio-crud-recommendation-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-width: 0;
+}
+
+.xstudio-crud-recommendation-badge,
+.xstudio-crud-recommendation-order {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    min-height: 20px;
+    padding: 2px 7px;
+    border: 1px solid var(--xstudio-border);
+    border-radius: 999px;
+    color: var(--xstudio-text-muted);
+    background: var(--xstudio-surface-raised);
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 13px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-crud-recommendation-badge-recommended {
+    border-color: color-mix(in srgb, var(--x-success) 54%, var(--xstudio-border));
+    color: color-mix(in srgb, var(--x-success) 80%, var(--xstudio-text));
+    background: color-mix(in srgb, var(--x-success) 12%, var(--xstudio-surface));
+}
+
+.xstudio-crud-recommendation-title {
+    color: var(--xstudio-text);
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 17px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-crud-recommendation-explanation,
+.xstudio-crud-recommendation-entity,
+.xstudio-crud-recommendation-dependency,
+.xstudio-crud-recommendation-artifact,
+.xstudio-crud-recommendation-disabled-reason {
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    line-height: 15px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-crud-recommendation-entity {
+    color: var(--xstudio-text);
+    font-weight: 700;
+}
+
+.xstudio-crud-recommendation-artifacts,
+.xstudio-crud-recommendation-disabled {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.xstudio-crud-recommendation-artifacts-title,
+.xstudio-crud-recommendation-disabled-label {
+    color: var(--xstudio-text);
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 15px;
+    letter-spacing: 0;
+}
+
+.xstudio-crud-recommendation-artifact {
+    padding-left: 8px;
+}
+
+.xstudio-crud-recommendation-artifact::before {
+    content: "";
+    display: inline-block;
+    width: 4px;
+    height: 4px;
+    margin: 0 6px 2px 0;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.7;
+}
+
+.xstudio-crud-recommendation-missing-payload {
+    padding: 6px;
+    border: 1px solid color-mix(in srgb, var(--x-warning) 48%, var(--xstudio-border));
+    border-radius: 5px;
+    background: color-mix(in srgb, var(--x-warning) 7%, var(--xstudio-surface));
+}
+
+.xstudio-crud-recommendation-apply {
+    max-width: 100%;
+    white-space: normal;
+    text-align: left;
+}
+
+.xstudio-crud-recommendation-debug {
+    min-width: 0;
+}
+
+.xstudio-crud-recommendation-debug-summary {
+    cursor: pointer;
+    color: var(--xstudio-text-muted);
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 14px;
+}
+
+.xstudio-crud-recommendation-debug-payload {
+    display: block;
+    max-width: 100%;
+    margin-top: 4px;
+    padding: 6px;
+    border: 1px solid var(--xstudio-border);
+    border-radius: 5px;
+    background: var(--xstudio-surface);
+    color: var(--xstudio-text-muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 10px;
+    line-height: 14px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-project-plan-card {
+    border-color: color-mix(in srgb, var(--xstudio-accent) 58%, var(--xstudio-border));
+    background: color-mix(in srgb, var(--xstudio-accent) 7%, var(--xstudio-surface));
+}
+
+.xstudio-project-plan-card-question {
+    border-color: color-mix(in srgb, var(--xstudio-accent) 72%, var(--xstudio-border));
+}
+
+.xstudio-project-plan-card-complete {
+    border-color: color-mix(in srgb, var(--x-success) 58%, var(--xstudio-border));
+    background: color-mix(in srgb, var(--x-success) 7%, var(--xstudio-surface));
+}
+
+.xstudio-project-plan-card-ready {
+    border-color: color-mix(in srgb, var(--x-success) 48%, var(--xstudio-border));
+}
+
+.xstudio-project-plan-card-planning {
+    border-color: color-mix(in srgb, var(--xstudio-accent) 48%, var(--xstudio-border));
+    background: color-mix(in srgb, var(--xstudio-accent) 6%, var(--xstudio-surface));
+}
+
+.xstudio-project-plan-card-blocked {
+    border-color: color-mix(in srgb, var(--vx-danger, #ef4444) 46%, var(--xstudio-border));
+    background: color-mix(in srgb, var(--vx-danger, #ef4444) 7%, var(--xstudio-surface));
+}
+
+.xstudio-project-plan-content {
+    gap: 8px;
+}
+
+.xstudio-project-plan-overview,
+.xstudio-project-plan-compact-review {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.xstudio-project-plan-overview {
+    padding-top: 1px;
+}
+
+.xstudio-project-plan-title {
+    color: var(--xstudio-text);
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 19px;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-project-plan-description {
+    color: var(--xstudio-text-muted);
+    font-size: 12px;
+    line-height: 17px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-project-plan-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.xstudio-project-plan-metrics,
+.xstudio-project-plan-remaining-decisions {
+    max-width: 100%;
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 15px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-project-plan-remaining-decisions {
+    box-sizing: border-box;
+    max-width: 100%;
+    padding: 1px 7px;
+    border: 1px solid color-mix(in srgb, var(--vx-warning, #f59e0b) 52%, var(--xstudio-border));
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--vx-warning, #f59e0b) 10%, var(--xstudio-surface));
+    color: color-mix(in srgb, var(--vx-warning, #f59e0b) 78%, var(--xstudio-text));
+}
+
+.xstudio-project-plan-compact-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    min-width: 0;
+}
+
+.xstudio-project-plan-group-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+    padding: 1px 0 2px;
+}
+
+.xstudio-project-plan-groups {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    min-width: 0;
+}
+
+.xstudio-project-plan-group-label {
+    box-sizing: border-box;
+    max-width: 100%;
+    padding: 0 0 2px;
+    border-bottom: 2px solid transparent;
+    color: var(--xstudio-text-muted);
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 13px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-project-plan-group-label-active {
+    border-bottom-color: color-mix(in srgb, var(--xstudio-accent) 78%, transparent);
+    color: var(--xstudio-text);
+}
+
+.xstudio-project-plan-group-note {
+    color: color-mix(in srgb, var(--xstudio-text-muted) 86%, transparent);
+    font-size: 10px;
+    line-height: 14px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-project-plan-question-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    min-width: 0;
+}
+
+.xstudio-project-plan-question-group,
+.xstudio-project-plan-progress {
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 15px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-project-plan-progress {
+    color: color-mix(in srgb, var(--xstudio-accent) 78%, var(--xstudio-text));
+}
+
+.xstudio-project-plan-field {
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    line-height: 16px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-project-plan-review {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+    margin-top: 4px;
+    padding-top: 8px;
+    border-top: 1px solid color-mix(in srgb, var(--xstudio-border) 68%, transparent);
+}
+
+.xstudio-project-plan-review-compact {
+    gap: 8px;
+}
+
+.xstudio-project-plan-review-heading,
+.xstudio-project-plan-review-section-header,
+.xstudio-project-plan-decision-main {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.xstudio-project-plan-review-heading,
+.xstudio-project-plan-review-section-header {
+    justify-content: space-between;
+}
+
+.xstudio-project-plan-review-kicker,
+.xstudio-project-plan-review-section-title {
+    color: var(--xstudio-text);
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 15px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-project-plan-badge {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    min-height: 20px;
+    max-width: 100%;
+    padding: 2px 7px;
+    border: 1px solid var(--xstudio-border);
+    border-radius: 999px;
+    background: var(--xstudio-surface-raised);
+    color: var(--xstudio-text-muted);
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 13px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-project-plan-badge-confirmed,
+.xstudio-project-plan-badge-count {
+    border-color: color-mix(in srgb, var(--x-success) 54%, var(--xstudio-border));
+    background: color-mix(in srgb, var(--x-success) 12%, var(--xstudio-surface));
+    color: color-mix(in srgb, var(--x-success) 80%, var(--xstudio-text));
+}
+
+.xstudio-project-plan-badge-inferred,
+.xstudio-project-plan-badge-default,
+.xstudio-project-plan-badge-optional {
+    border-color: color-mix(in srgb, var(--xstudio-accent) 42%, var(--xstudio-border));
+    background: color-mix(in srgb, var(--xstudio-accent) 9%, var(--xstudio-surface));
+    color: color-mix(in srgb, var(--xstudio-accent) 72%, var(--xstudio-text));
+}
+
+.xstudio-project-plan-badge-warning {
+    border-color: color-mix(in srgb, var(--vx-warning, #f59e0b) 62%, var(--xstudio-border));
+    background: color-mix(in srgb, var(--vx-warning, #f59e0b) 12%, var(--xstudio-surface));
+    color: color-mix(in srgb, var(--vx-warning, #f59e0b) 78%, var(--xstudio-text));
+}
+
+.xstudio-project-plan-badge-blocked {
+    border-color: color-mix(in srgb, var(--vx-danger, #ef4444) 58%, var(--xstudio-border));
+    background: color-mix(in srgb, var(--vx-danger, #ef4444) 12%, var(--xstudio-surface));
+    color: color-mix(in srgb, var(--vx-danger, #ef4444) 78%, var(--xstudio-text));
+}
+
+.xstudio-project-plan-review-identity {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 5px;
+    min-width: 0;
+}
+
+.xstudio-project-plan-fact {
+    display: grid;
+    grid-template-columns: minmax(76px, 0.28fr) minmax(0, 1fr);
+    gap: 8px;
+    min-width: 0;
+}
+
+.xstudio-project-plan-fact-label,
+.xstudio-project-plan-decision-source,
+.xstudio-project-plan-review-item-detail,
+.xstudio-project-plan-recommendation-reason {
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    line-height: 16px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-project-plan-fact-label {
+    font-weight: 800;
+}
+
+.xstudio-project-plan-fact-value,
+.xstudio-project-plan-review-item-title,
+.xstudio-project-plan-decision-value,
+.xstudio-project-plan-status-row,
+.xstudio-project-plan-effect-row {
+    color: var(--xstudio-text);
+    font-size: 12px;
+    line-height: 17px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-project-plan-review-grid,
+.xstudio-project-plan-decision-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    min-width: 0;
+}
+
+.xstudio-project-plan-review-section,
+.xstudio-project-plan-decision-section,
+.xstudio-project-plan-status-section,
+.xstudio-project-plan-effects {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+    padding: 8px;
+    border: 1px solid color-mix(in srgb, var(--xstudio-border) 72%, transparent);
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--xstudio-surface-raised) 72%, var(--xstudio-surface));
+}
+
+.xstudio-project-plan-review-item,
+.xstudio-project-plan-decision-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    padding-top: 5px;
+    border-top: 1px solid color-mix(in srgb, var(--xstudio-border) 42%, transparent);
+}
+
+.xstudio-project-plan-review-section-header + .xstudio-project-plan-review-item,
+.xstudio-project-plan-review-section-header + .xstudio-project-plan-decision-row {
+    border-top: 0;
+    padding-top: 0;
+}
+
+.xstudio-project-plan-decision-label {
+    color: var(--xstudio-text);
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 17px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-project-plan-decision-effect {
+    color: color-mix(in srgb, var(--xstudio-accent) 70%, var(--xstudio-text));
+    font-size: 11px;
+    line-height: 16px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-project-plan-status-section-blocked {
+    border-color: color-mix(in srgb, var(--vx-danger, #ef4444) 48%, var(--xstudio-border));
+}
+
+.xstudio-project-plan-status-section-warning,
+.xstudio-project-plan-status-section-optional {
+    border-color: color-mix(in srgb, var(--vx-warning, #f59e0b) 42%, var(--xstudio-border));
+}
+
+.xstudio-project-plan-status-section-planning {
+    border-color: color-mix(in srgb, var(--xstudio-accent) 36%, var(--xstudio-border));
+}
+
+.xstudio-project-plan-state-note,
+.xstudio-project-plan-malformed,
+.xstudio-project-plan-confirm-disabled-reason {
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    line-height: 16px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-project-plan-malformed,
+.xstudio-project-plan-confirm-disabled-reason {
+    color: color-mix(in srgb, var(--vx-danger, #ef4444) 76%, var(--xstudio-text));
+}
+
+.xstudio-project-plan-debug {
+    min-width: 0;
+    margin-top: 6px;
+    padding-top: 7px;
+    border-top: 1px solid color-mix(in srgb, var(--xstudio-border) 48%, transparent);
+    opacity: 0.78;
+}
+
+.xstudio-project-plan-debug-summary {
+    color: var(--xstudio-text-muted);
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 16px;
+    letter-spacing: 0;
+}
+
+.xstudio-project-plan-debug-payload {
+    display: block;
+    max-height: 220px;
+    margin-top: 6px;
+    padding: 8px;
+    border: 1px solid color-mix(in srgb, var(--xstudio-border) 72%, transparent);
+    border-radius: 6px;
+    background: var(--xstudio-surface-sunken);
+    color: var(--xstudio-text-muted);
+    font-family: var(--vx-font-mono, monospace);
+    font-size: 10px;
+    line-height: 15px;
+    letter-spacing: 0;
+    overflow: auto;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-project-plan-suggestion:focus-visible,
+.xstudio-project-plan-send-answer:focus-visible,
+.xstudio-project-plan-buttons .xstudio-intent-action-button:focus-visible,
+.xstudio-project-plan-debug-summary:focus-visible {
+    outline: 2px solid var(--xstudio-focus);
+    outline-offset: 2px;
+}
+
+.xstudio-project-plan-current-question {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    min-width: 0;
+    margin-top: 8px;
+    padding: 9px 10px 9px 12px;
+    border-left: 4px solid var(--xstudio-accent);
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--xstudio-accent) 13%, var(--xstudio-surface));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--xstudio-accent) 18%, transparent);
+}
+
+.xstudio-project-plan-question-title {
+    color: var(--x-text, var(--xstudio-text));
+}
+
+.xstudio-project-plan-question-text {
+    color: var(--x-text, var(--xstudio-text));
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 19px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-project-plan-answer-helper {
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    line-height: 15px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-project-plan-recommendation {
+    color: color-mix(in srgb, var(--xstudio-accent) 76%, var(--xstudio-text));
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 17px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-project-plan-suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    padding-top: 2px;
+}
+
+.xstudio-project-plan-suggestion {
+    box-sizing: border-box;
+    max-width: 100%;
+    min-height: 28px;
+    padding: 4px 9px;
+    border: 1px solid color-mix(in srgb, var(--xstudio-accent) 72%, var(--xstudio-border));
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--xstudio-accent) 16%, var(--xstudio-surface));
+    color: var(--xstudio-text);
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    cursor: pointer;
+}
+
+.xstudio-project-plan-suggestion:hover {
+    border-color: color-mix(in srgb, var(--xstudio-accent) 92%, var(--xstudio-border));
+    background: color-mix(in srgb, var(--xstudio-accent) 24%, var(--xstudio-surface));
+    color: var(--x-text, var(--xstudio-text));
+}
+
+.xstudio-project-plan-suggestion.is-selected,
+.xstudio-project-plan-suggestion-selected {
+    border-color: color-mix(in srgb, var(--x-success) 92%, var(--xstudio-border));
+    background: color-mix(in srgb, var(--x-success) 32%, var(--xstudio-surface));
+    color: var(--xstudio-text);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--x-success) 62%, transparent);
+    font-weight: 700;
+}
+
+.xstudio-project-plan-question-buttons {
+    justify-content: flex-start;
+    padding-top: 2px;
+}
+
+.xstudio-project-plan-buttons > *,
+.xstudio-project-plan-question-buttons > * {
+    max-width: 100%;
+}
+
+.xstudio-project-plan-send-answer {
+    min-height: 28px;
+}
+
+.xstudio-project-plan-preview {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+    margin-top: 4px;
+    padding-top: 7px;
+    border-top: 1px solid color-mix(in srgb, var(--xstudio-border) 68%, transparent);
+    color: var(--xstudio-text-muted);
+    opacity: 0.82;
+}
+
+.xstudio-project-plan-preview-compact {
+    margin-top: 6px;
+}
+
+.xstudio-project-plan-preview-title {
+    color: var(--xstudio-text-muted);
+}
+
+.xstudio-project-plan-complete-label {
+    color: color-mix(in srgb, var(--x-success) 86%, var(--xstudio-text));
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 15px;
+    letter-spacing: 0;
+}
+
+.xstudio-project-plan-section {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    padding-top: 4px;
+    border-top: 1px solid color-mix(in srgb, var(--xstudio-border) 64%, transparent);
+}
+
+.xstudio-project-plan-section-title {
+    margin-bottom: 1px;
+}
+
+.xstudio-project-plan-item,
+.xstudio-project-plan-empty {
+    padding-left: 2px;
+}
+
+.xstudio-project-plan-empty {
+    color: color-mix(in srgb, var(--xstudio-text-muted) 78%, transparent);
+}
+
+.xstudio-project-plan-buttons {
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.xstudio-execution-graph-card {
+    border-color: color-mix(in srgb, var(--xstudio-accent) 58%, var(--xstudio-border));
+    background: color-mix(in srgb, var(--xstudio-accent) 7%, var(--xstudio-surface));
+}
+
+.xstudio-execution-graph-card-compact {
+    gap: 5px;
+}
+
+.xstudio-execution-graph-content {
+    gap: 5px;
+}
+
+.xstudio-execution-graph-summary {
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    line-height: 15px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-execution-graph-nodes-label {
+    margin-top: 2px;
+}
+
+.xstudio-execution-graph-node {
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: 14px minmax(54px, max-content) minmax(0, 1fr);
+    gap: 7px;
+    align-items: baseline;
+    padding-left: calc(var(--xstudio-execution-graph-depth, 0) * 14px);
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    line-height: 16px;
+    letter-spacing: 0;
+    min-width: 0;
+}
+
+.xstudio-execution-graph-node-existing {
+    color: color-mix(in srgb, var(--x-success) 84%, var(--xstudio-text));
+}
+
+.xstudio-execution-graph-node-missing {
+    color: color-mix(in srgb, var(--xstudio-text-muted) 88%, var(--xstudio-text));
+}
+
+.xstudio-execution-graph-node-icon {
+    color: inherit;
+    font-size: 11px;
+    line-height: 16px;
+    letter-spacing: 0;
+}
+
+.xstudio-execution-graph-node-type {
+    color: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 16px;
+    letter-spacing: 0;
+    white-space: nowrap;
+}
+
+.xstudio-execution-graph-node-name {
+    min-width: 0;
+    color: var(--xstudio-text);
+    font-size: 11px;
+    line-height: 16px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-execution-graph-node-missing .xstudio-execution-graph-node-name {
+    color: color-mix(in srgb, var(--xstudio-text-muted) 88%, var(--xstudio-text));
+}
+
+.xstudio-execution-graph-result {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+    gap: 4px 10px;
+    align-items: center;
+}
+
+.xstudio-execution-graph-result-row {
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    line-height: 15px;
+    letter-spacing: 0;
+    white-space: nowrap;
+}
+
+.xstudio-intent-actions {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.xstudio-intent-actions-title {
+    color: var(--xstudio-text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 15px;
+    letter-spacing: 0;
+}
+
+.xstudio-intent-action-card {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+    border: 1px solid color-mix(in srgb, var(--xstudio-border) 78%, var(--xstudio-accent));
+    border-radius: var(--xstudio-radius-md);
+    background: color-mix(in srgb, var(--xstudio-surface) 84%, var(--xstudio-surface-2));
+}
+
+.xstudio-intent-action-card-compact {
+    gap: 0;
+    padding: 5px 8px;
+}
+
+.xstudio-intent-action-card-approved-pending-execution {
+    border-color: color-mix(in srgb, var(--xstudio-accent) 68%, var(--xstudio-border));
+    background: color-mix(in srgb, var(--xstudio-accent) 10%, var(--xstudio-surface));
+}
+
+.xstudio-intent-action-card-running {
+    border-color: color-mix(in srgb, var(--x-warning) 58%, var(--xstudio-border));
+    background: color-mix(in srgb, var(--x-warning) 8%, var(--xstudio-surface));
+}
+
+.xstudio-intent-action-card-done {
+    border-color: color-mix(in srgb, var(--x-success) 58%, var(--xstudio-border));
+    background: color-mix(in srgb, var(--x-success) 8%, var(--xstudio-surface));
+}
+
+.xstudio-intent-action-card-failed {
+    border-color: color-mix(in srgb, var(--x-danger) 62%, var(--xstudio-border));
+    background: color-mix(in srgb, var(--x-danger) 8%, var(--xstudio-surface));
+}
+
+.xstudio-intent-action-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.xstudio-intent-action-title {
+    color: var(--xstudio-text);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 16px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-intent-action-description {
+    color: var(--xstudio-text-muted);
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-intent-action-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    min-width: 0;
+}
+
+.xstudio-intent-action-meta-item {
+    box-sizing: border-box;
+    max-width: 100%;
+    padding: 2px 5px;
+    border: 1px solid color-mix(in srgb, var(--xstudio-border) 68%, transparent);
+    border-radius: var(--xstudio-radius-sm);
+    color: var(--xstudio-text-muted);
+    font-size: 10px;
+    line-height: 14px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-intent-action-error {
+    color: color-mix(in srgb, var(--x-danger) 86%, var(--xstudio-text));
+    font-size: 11px;
+    line-height: 15px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-intent-action-disabled-reason {
+    color: color-mix(in srgb, var(--x-warning) 86%, var(--xstudio-text));
+    font-size: 11px;
+    line-height: 15px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-intent-action-success {
+    color: color-mix(in srgb, var(--x-success) 86%, var(--xstudio-text));
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 15px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-intent-action-report {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+}
+
+.xstudio-intent-action-report-row {
+    box-sizing: border-box;
+    padding: 2px 5px;
+    border: 1px solid color-mix(in srgb, var(--x-success) 42%, var(--xstudio-border));
+    border-radius: var(--xstudio-radius-sm);
+    color: var(--xstudio-text-muted);
+    font-size: 10px;
+    line-height: 14px;
+    letter-spacing: 0;
+}
+
+.xstudio-intent-action-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 6px;
+}
+
+.xstudio-intent-action-button {
+    max-width: 100%;
+    min-height: 26px;
+    padding: 4px 8px;
+    font-size: 11px;
+    line-height: 14px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.xstudio-intent-action-apply {
+    border-color: color-mix(in srgb, var(--xstudio-accent) 58%, var(--xstudio-border));
+    color: var(--xstudio-accent);
+}
+
+.xstudio-intent-action-applied {
+    border-color: color-mix(in srgb, var(--x-success) 64%, var(--xstudio-border));
+    color: color-mix(in srgb, var(--x-success) 82%, var(--xstudio-text));
+}
+
+.xstudio-intent-action-dismiss {
+    color: var(--xstudio-text-muted);
+}
+
+#xstudio-conversation-composer.xstudio-conversation-composer {
+    box-sizing: border-box;
+    flex: 0 0 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.xstudio-conversation-active-task {
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 8px;
+    align-items: center;
+    padding: 7px 8px;
+    border: 1px solid color-mix(in srgb, var(--xstudio-accent) 46%, var(--xstudio-border));
+    border-radius: var(--xstudio-radius-sm);
+    background: color-mix(in srgb, var(--xstudio-accent) 9%, var(--xstudio-surface));
+}
+
+.xstudio-conversation-active-task-hidden {
+    display: none;
+}
+
+.xstudio-conversation-active-task-content {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.xstudio-conversation-active-task-label {
+    color: var(--xstudio-text-muted);
+    font-size: 10px;
+    line-height: 14px;
+    font-weight: 700;
+    letter-spacing: 0;
+}
+
+.xstudio-conversation-active-task-title {
+    min-width: 0;
+    color: var(--xstudio-text);
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 700;
+    letter-spacing: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.xstudio-conversation-active-task-retry,
+.xstudio-conversation-active-task-cancel {
+    min-height: 26px;
+    padding: 3px 8px;
+    white-space: nowrap;
+}
+
+.xstudio-conversation-active-task-retry {
+    color: var(--xstudio-accent);
+}
+
+.xstudio-conversation-active-task-cancel {
+    color: var(--xstudio-text-muted);
+}
+
+.xstudio-conversation-input,
+.xstudio-conversation-section textarea.xstudio-conversation-input {
+    min-height: 86px;
+    max-height: 132px;
+    resize: vertical;
+}
+
+.xstudio-conversation-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+}
+
+.xstudio-conversation-capability-guidance-button {
+    margin-right: auto;
+    color: var(--xstudio-text-muted);
+    border-color: color-mix(in srgb, var(--xstudio-border) 86%, transparent);
+    background: transparent;
+}
+
+.xstudio-conversation-capability-guidance-button:hover {
+    color: var(--xstudio-text);
+    border-color: color-mix(in srgb, var(--xstudio-accent) 48%, var(--xstudio-border));
+    background: color-mix(in srgb, var(--xstudio-accent) 8%, transparent);
+}
+
+.xstudio-json-section textarea,
+.xstudio-generated-modules-section textarea {
+    min-height: 220px;
+    white-space: pre;
+}
+
+.xstudio-generated-modules-section .xstudio-portlet-actions {
+    justify-content: flex-start;
+}
+
+.xstudio-runtime-list,
+.xstudio-status,
+.xstudio-generation-status {
+    color: var(--xstudio-text-muted);
+    font-size: 12px;
+    line-height: 18px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+}
+
+/* =========================================================================
+ * XStudio Readability Tokens
+ * ========================================================================= */
+
+.xstudio-portlet,
+.xstudio-section {
+    gap: var(--xstudio-panel-gap);
+    padding: var(--xstudio-panel-padding);
+}
+
+.xstudio-portlet-body {
+    gap: var(--xstudio-section-gap);
+}
+
+.xstudio-section-title,
+#xstudio-conversation-title.xstudio-conversation-title,
+.xstudio-portlet-header .xstudio-section-title {
+    font-size: var(--xstudio-font-lg);
+    line-height: var(--xstudio-line-height);
+}
+
+.xstudio-topbar-title,
+.xstudio-shell .xbutton,
+.xstudio-apps-button,
+.xstudio-dock-toggle,
+.xstudio-portlet-toggle,
+.xstudio-topbar .toolbar-theme-select,
+.xstudio-edit-mode,
+.xstudio-selected-object-editor-button,
+.xstudio-intent-action-button,
+.xstudio-conversation-active-task-retry,
+.xstudio-conversation-active-task-cancel {
+    font-size: var(--xstudio-font-sm);
+    line-height: var(--xstudio-line-height);
+}
+
+.xstudio-guide-card {
+    gap: var(--xstudio-panel-gap);
+    padding: var(--xstudio-panel-padding);
+}
+
+.xstudio-guide-title {
+    font-size: var(--xstudio-font-lg);
+    line-height: var(--xstudio-line-height);
+}
+
+.xstudio-guide-counts,
+.xstudio-guide-line,
+.xstudio-guide-message,
+.xstudio-guide-unavailable,
+.xstudio-guide-unavailable-detail,
+.xstudio-guide-milestone-progress,
+.xstudio-guide-achievement,
+.xstudio-guide-recommendation-status,
+.xstudio-guide-recommendation-focus,
+.xstudio-guide-recommendation-progress,
+.xstudio-guide-recommendation-reason {
+    font-size: var(--xstudio-font-md);
+    line-height: var(--xstudio-line-height);
+}
+
+.xstudio-guide-body,
+.xstudio-guide-milestone,
+.xstudio-guide-achievements,
+.xstudio-guide-recommendation {
+    gap: var(--xstudio-section-gap);
+}
+
+.xstudio-guide-milestone,
+.xstudio-guide-achievements,
+.xstudio-guide-recommendation {
+    padding-top: var(--xstudio-section-gap);
+}
+
+.xstudio-guide-milestone-label,
+.xstudio-guide-achievements-label,
+.xstudio-guide-recommendation-label,
+.xstudio-conversation-meta,
+.xstudio-conversation-pending-label,
+.xstudio-conversation-debug,
+.xstudio-conversation-debug-content,
+.xstudio-intent-action-meta-item {
+    font-size: var(--xstudio-font-xs);
+    line-height: var(--xstudio-line-height);
+}
+
+.xstudio-guide-milestone-title,
+.xstudio-guide-recommendation-title,
+.xstudio-conversation-active-task-title {
+    font-size: var(--xstudio-font-md);
+    line-height: var(--xstudio-line-height);
+}
+
+.xstudio-guide-milestone-item {
+    padding: 2px 5px;
+    font-size: var(--xstudio-font-sm);
+    line-height: var(--xstudio-line-height);
+}
+
+.xstudio-guide-recommendation-do-it {
+    font-size: var(--xstudio-font-sm);
+    line-height: var(--xstudio-line-height);
+}
+
+.xstudio-guide-recommendation-cancel {
+    font-size: var(--xstudio-font-sm);
+    line-height: var(--xstudio-line-height);
+}
+
+#xstudio-conversation-section .xstudio-conversation-body,
+#xstudio-conversation-messages.xstudio-conversation-messages,
+#xstudio-conversation-composer.xstudio-conversation-composer {
+    gap: var(--xstudio-section-gap);
+}
+
+.xstudio-conversation-empty,
+.xstudio-conversation-bubble,
+.xstudio-conversation-input,
+.xstudio-conversation-section textarea.xstudio-conversation-input {
+    font-size: var(--xstudio-font-md);
+    line-height: var(--xstudio-line-height);
+}
+
+.xstudio-artifact-request-title,
+.xstudio-intent-action-title,
+.xstudio-intent-action-description {
+    font-size: var(--xstudio-font-sm);
+    line-height: var(--xstudio-line-height);
+}
+
+.xstudio-artifact-request-label,
+.xstudio-artifact-request-details-label,
+.xstudio-artifact-request-detail,
+.xstudio-artifact-request-error,
+.xstudio-artifact-request-success,
+.xstudio-execution-graph-summary,
+.xstudio-execution-graph-node,
+.xstudio-execution-graph-node-icon,
+.xstudio-execution-graph-node-type,
+.xstudio-execution-graph-node-name,
+.xstudio-execution-graph-result-row,
+.xstudio-intent-actions-title,
+.xstudio-intent-action-error,
+.xstudio-intent-action-disabled-reason,
+.xstudio-intent-action-success {
+    font-size: var(--xstudio-font-xs);
+    line-height: var(--xstudio-line-height);
+}
+
+.xstudio-left-dock .xstudio-explorer-section-toggle,
+.xstudio-object-tree-search,
+.xstudio-object-tree-row,
+.xstudio-object-tree-placeholder-row,
+.xstudio-object-tree-label,
+.xstudio-object-tree-chevron,
+.xstudio-object-tree-drag-handle,
+.xstudio-object-tree-visibility-action,
+.xstudio-object-tree-quick-action,
+.xstudio-app-explorer-add-view-button {
+    font-size: var(--xstudio-font-sm);
+    line-height: var(--xstudio-line-height);
+}
+
+.xstudio-object-tree-type-tag,
+.xstudio-app-explorer-type-tag {
+    font-size: var(--xstudio-font-xs);
+    line-height: var(--xstudio-line-height);
+}
+
+.xstudio-selected-object-section-title,
+.xstudio-selected-object-editor-label,
+.xstudio-selected-object-editor-input,
+.xstudio-selected-object-editor-empty,
+.xstudio-selected-object-interaction-value,
+.xstudio-selected-object-delete-kicker,
+.xstudio-selected-object-delete-value,
+.xstudio-add-view-label,
+.xstudio-add-view-input,
+.xstudio-add-view-error,
+.xstudio-selected-object-json,
+.xstudio-runtime-list,
+.xstudio-status,
+.xstudio-generation-status {
+    font-size: var(--xstudio-font-sm);
+    line-height: var(--xstudio-line-height);
+}
+
+.xstudio-selected-object-delete-title,
+.xstudio-object-palette-title {
+    font-size: var(--xstudio-font-lg);
+    line-height: var(--xstudio-line-height);
+}
+
+.xstudio-shell .xtextarea,
+.xstudio-shell .xinput,
+.xstudio-shell .xselect,
+.xstudio-shell textarea,
+.xstudio-shell input,
+.xstudio-shell select {
+    font-size: var(--xstudio-font-sm);
+    line-height: var(--xstudio-line-height);
+}
+
+
+.xstudio-shell.xstudio-theme-terminal {
+    --x-bg: #070b08;
+    --x-surface: #0d1510;
+    --x-surface-2: #132018;
+    --x-panel: #0b120e;
+    --x-card: #101a14;
+    --x-toolbar: #0b120e;
+    --x-sidebar: #090f0c;
+    --x-input: #132018;
+    --x-text: #d5e6da;
+    --x-text-muted: #8ba897;
+    --x-primary: #83b88c;
+    --x-accent: #6fa878;
+    --x-border: rgba(111, 168, 120, .24);
+    --x-border-subtle: rgba(111, 168, 120, .16);
+    --x-border-strong: rgba(111, 168, 120, .34);
+    --x-focus: #83b88c;
+    --xstudio-scrollbar-track: transparent;
+    --xstudio-radius-sm: 2px;
+    --xstudio-radius-md: 4px;
+    --xstudio-color-scheme: dark;
+}
+
+.xstudio-shell.xstudio-theme-dark {
+    --x-bg: #0f1115;
+    --x-surface: #16191f;
+    --x-surface-2: #1d222b;
+    --x-panel: #151922;
+    --x-card: #1a2028;
+    --x-toolbar: #131720;
+    --x-sidebar: #12161d;
+    --x-input: #1b2029;
+    --x-text: #f2f5f8;
+    --x-text-muted: #9aa5b1;
+    --x-primary: #55b98f;
+    --x-accent: #55b98f;
+    --x-border: rgba(222, 228, 235, .10);
+    --x-border-subtle: rgba(222, 228, 235, .075);
+    --x-border-strong: rgba(222, 228, 235, .18);
+    --x-focus: #78d6ad;
+    --xstudio-scrollbar-track: transparent;
+    --xstudio-radius-sm: var(--vx-radius-sm);
+    --xstudio-radius-md: var(--vx-radius-md);
+    --xstudio-color-scheme: dark;
+}
+
+.xstudio-shell.xstudio-theme-light {
+    --x-bg: #f3f5f7;
+    --x-surface: #ffffff;
+    --x-surface-2: #f7f9fb;
+    --x-panel: #ffffff;
+    --x-card: #f8fafc;
+    --x-toolbar: #ffffff;
+    --x-sidebar: #f8fafc;
+    --x-input: #ffffff;
+    --x-text: #17202a;
+    --x-text-muted: #64717f;
+    --x-primary: #167a54;
+    --x-accent: #167a54;
+    --x-border: rgba(23, 32, 42, .10);
+    --x-border-subtle: rgba(23, 32, 42, .08);
+    --x-border-strong: rgba(23, 32, 42, .18);
+    --x-focus: #15966a;
+    --xstudio-scrollbar-track: transparent;
+    --xstudio-radius-sm: var(--vx-radius-sm);
+    --xstudio-radius-md: var(--vx-radius-md);
+    --xstudio-color-scheme: light;
+}
+
+/* =========================================================================
+ * Visual Xpell Product Foundation
+ * ========================================================================= */
+
+.xstudio-shell {
+    background: var(--vx-bg);
+    color: var(--vx-text-primary);
+    font-family: var(--vx-font-sans);
+    text-rendering: optimizeLegibility;
+}
+
+.xstudio-topbar {
+    height: 48px;
+    min-height: 48px;
+    gap: var(--vx-space-2);
+    padding: var(--vx-space-2) var(--vx-space-4);
+    border-bottom: 1px solid var(--vx-border-subtle);
+    background: var(--vx-toolbar);
+    box-shadow: var(--vx-shadow-sm);
+}
+
+.xstudio-topbar-title {
+    color: var(--vx-text-primary);
+    font-size: var(--vx-font-size-md);
+    font-weight: 700;
+}
+
+.xstudio-edit-mode,
+.xstudio-shell .xfield__label,
+.xstudio-shell .xlabel,
+.xstudio-section-title,
+.xstudio-portlet-header .xstudio-section-title,
+.xstudio-guide-title,
+.xstudio-object-palette-category-title,
+.xstudio-object-tree-label-primary {
+    color: var(--vx-text-primary);
+}
+
+.xstudio-shell .xfield__hint,
+.xstudio-guide-counts,
+.xstudio-guide-line,
+.xstudio-dock-placeholder,
+.xstudio-object-tree-label-secondary,
+.xstudio-object-tree-type-tag,
+.xstudio-app-explorer-type-tag,
+.xstudio-selected-object-editor-label,
+.xstudio-selected-object-section-title,
+.xstudio-runtime-list,
+.xstudio-status,
+.xstudio-generation-status {
+    color: var(--vx-text-muted);
+}
+
+.xstudio-portlet,
+.xstudio-section {
+    border: 1px solid var(--vx-border-subtle);
+    border-radius: var(--vx-radius-lg);
+    background: var(--vx-surface);
+    box-shadow: none;
+}
+
+.xstudio-selected-object-panel {
+    background: transparent;
+}
+
+.xstudio-portlet-header {
+    min-height: 32px;
+    border-bottom: 1px solid var(--vx-border-subtle);
+}
+
+.xstudio-left-dock .xstudio-explorer-section-header:hover,
+.xstudio-left-dock .xstudio-explorer-section-toggle:hover,
+.xstudio-explorer-section-toggle:hover {
+    background: color-mix(in srgb, var(--vx-text-primary) 5%, transparent);
+    color: var(--vx-text-primary);
+}
+
+.xstudio-left-dock .xstudio-explorer-section-toggle,
+.xstudio-explorer-section-toggle {
+    min-height: var(--vx-control-h-sm);
+    color: var(--vx-text-primary);
+    font-family: var(--vx-font-sans);
+}
+
+.xstudio-left-dock,
+.xstudio-right-dock {
+    background: var(--vx-bg);
+}
+
+.xstudio-left-dock {
+    border-right: 1px solid var(--vx-border-subtle);
+}
+
+.xstudio-right-dock {
+    border-left: 1px solid var(--vx-border-subtle);
+}
+
+.xstudio-canvas {
+    background:
+        linear-gradient(180deg, color-mix(in srgb, var(--vx-bg) 94%, white 6%), var(--vx-bg));
+}
+
+.xstudio-main-container {
+    border-radius: var(--vx-radius-lg);
+}
+
+.xstudio-shell .xbutton,
+.xstudio-apps-button,
+.xstudio-dock-toggle,
+.xstudio-portlet-toggle,
+.xstudio-explorer-section-action,
+.xstudio-app-explorer-add-view-button {
+    min-height: var(--vx-control-h-sm);
+    border: 1px solid var(--vx-border-subtle);
+    border-radius: var(--vx-radius-md);
+    background: color-mix(in srgb, var(--vx-surface-raised) 64%, transparent);
+    color: var(--vx-text-secondary);
+    font-family: var(--vx-font-sans);
+    font-size: var(--vx-font-size-sm);
+    line-height: var(--vx-line-height);
+    letter-spacing: 0;
+    box-shadow: none;
+}
+
+.xstudio-shell .xbutton:hover:not(:disabled),
+.xstudio-apps-button:hover:not(:disabled),
+.xstudio-dock-toggle:hover:not(:disabled),
+.xstudio-portlet-toggle:hover:not(:disabled),
+.xstudio-explorer-section-action:hover:not(:disabled),
+.xstudio-app-explorer-add-view-button:hover:not(:disabled) {
+    border-color: var(--vx-border-strong);
+    background: var(--vx-surface-raised);
+    color: var(--vx-text-primary);
+}
+
+.xstudio-shell .xbutton:focus-visible,
+.xstudio-apps-button:focus-visible,
+.xstudio-dock-toggle:focus-visible,
+.xstudio-object-picker-toggle:focus-visible,
+.xstudio-arrange-toggle:focus-visible,
+.xstudio-portlet-toggle:focus-visible,
+.xstudio-explorer-section-toggle:focus-visible,
+.xstudio-explorer-section-action:focus-visible,
+.xstudio-app-explorer-add-view-button:focus-visible,
+.xstudio-object-tree-label:focus-visible,
+.xstudio-object-tree-chevron:focus-visible,
+.xstudio-object-tree-drag-handle:focus-visible,
+.xstudio-object-tree-quick-action:focus-visible,
+.xstudio-object-tree-visibility-action:focus-visible {
+    outline: 2px solid var(--vx-focus);
+    outline-offset: 2px;
+}
+
+.xstudio-portlet-toggle-active,
+.xstudio-portlet-toggle-active:hover:not(:disabled) {
+    border-color: color-mix(in srgb, var(--vx-accent) 42%, var(--vx-border-subtle)) !important;
+    background: var(--vx-accent-soft) !important;
+    color: var(--vx-text-primary) !important;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--vx-accent) 22%, transparent);
+}
+
+.xstudio-icon-button,
+.xstudio-dock-toggle,
+.xstudio-object-picker-toggle,
+.xstudio-arrange-toggle,
+.xstudio-object-tree-chevron,
+.xstudio-object-tree-quick-action,
+.xstudio-object-tree-visibility-action,
+.xstudio-object-palette-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1;
+    padding-inline: 0;
+}
+
+.xstudio-dock-toggle {
+    width: var(--vx-control-h-sm);
+    min-width: var(--vx-control-h-sm);
+}
+
+.xstudio-shell .xtextarea,
+.xstudio-shell .xinput,
+.xstudio-shell .xselect,
+.xstudio-shell textarea,
+.xstudio-shell input,
+.xstudio-shell select {
+    border: 1px solid var(--vx-border-subtle);
+    border-radius: var(--vx-radius-md);
+    background: var(--vx-input);
+    color: var(--vx-text-primary);
+    font-family: var(--vx-font-sans);
+}
+
+.xstudio-shell textarea:focus,
+.xstudio-shell input:focus,
+.xstudio-shell select:focus {
+    border-color: color-mix(in srgb, var(--vx-focus) 56%, var(--vx-border-strong));
+    outline: 2px solid color-mix(in srgb, var(--vx-focus) 36%, transparent);
+    outline-offset: 1px;
+}
+
+.xstudio-editor {
+    background: var(--vx-surface);
+    color: var(--vx-text-primary);
+    font-family: var(--vx-font-sans);
+}
+
+.xstudio-selected-object-editor-input-json,
+.xstudio-selected-object-json,
+.xstudio-runtime-inspector-section textarea,
+.xstudio-json-section textarea,
+.xstudio-generated-modules-section textarea,
+.xstudio-conversation-debug,
+.xstudio-conversation-debug-content,
+.xstudio-runtime-list {
+    font-family: var(--vx-font-mono);
+}
+
+.xstudio-object-tree-row,
+.xstudio-object-tree-placeholder-row {
+    min-height: var(--vx-row-h-tree);
+    border-radius: var(--vx-radius-md);
+    color: var(--vx-text-secondary);
+}
+
+.xstudio-object-tree-chevron,
+.xstudio-object-tree-visibility-action,
+.xstudio-object-tree-quick-action,
+.xstudio-object-tree-label,
+.xstudio-shell .xstudio-object-tree-row .xstudio-object-tree-chevron,
+.xstudio-shell .xstudio-object-tree-row .xstudio-object-tree-label,
+.xstudio-shell .xstudio-object-tree-row .xstudio-object-tree-quick-action,
+.xstudio-shell .xstudio-object-tree-row .xstudio-object-tree-visibility-action,
+.xstudio-portlet .xstudio-object-tree-row .xstudio-object-tree-chevron,
+.xstudio-portlet .xstudio-object-tree-row .xstudio-object-tree-label,
+.xstudio-portlet .xstudio-object-tree-row .xstudio-object-tree-quick-action,
+.xstudio-portlet .xstudio-object-tree-row .xstudio-object-tree-visibility-action {
+    min-height: var(--vx-row-h-tree);
+}
+
+.xstudio-object-tree-chevron,
+.xstudio-object-tree-visibility-action,
+.xstudio-object-tree-quick-action {
+    width: var(--vx-row-h-tree);
+    min-width: var(--vx-row-h-tree);
+    height: var(--vx-row-h-tree);
+}
+
+.xstudio-object-tree-label {
+    height: var(--vx-row-h-tree);
+    color: inherit;
+}
+
+.xstudio-object-tree-row:hover {
+    background: color-mix(in srgb, var(--vx-text-primary) 5%, transparent);
+    color: var(--vx-text-primary);
+}
+
+.xstudio-object-tree-row-selected,
+.xstudio-object-tree-row-selected:hover,
+.xstudio-app-explorer-row-selected:not(.xstudio-app-explorer-row-current),
+.xstudio-app-explorer-row-selected:not(.xstudio-app-explorer-row-current):hover {
+    background: var(--vx-accent-soft);
+    color: var(--vx-text-primary);
+    box-shadow: inset 2px 0 0 var(--vx-accent);
+}
+
+.xstudio-app-explorer-row-current,
+.xstudio-app-explorer-row-current:hover {
+    background: color-mix(in srgb, var(--vx-accent) 16%, transparent);
+    color: var(--vx-text-primary);
+    box-shadow: inset 2px 0 0 var(--vx-accent);
+}
+
+.xstudio-object-tree-row-selected .xstudio-object-tree-label-primary,
+.xstudio-app-explorer-row-current .xstudio-object-tree-label-primary,
+.xstudio-app-explorer-row-selected .xstudio-object-tree-label-primary {
+    color: var(--vx-text-primary);
+}
+
+.xstudio-object-tree-row-selected .xstudio-object-tree-label-secondary,
+.xstudio-object-tree-row-selected .xstudio-object-tree-type-tag {
+    color: var(--vx-text-muted);
+}
+
+.xstudio-selected-object-save-button,
+.xstudio-add-view-create,
+.xstudio-object-tree-duplicate-confirm,
+.xstudio-conversation-send-button {
+    border-color: color-mix(in srgb, var(--vx-accent) 52%, var(--vx-border-subtle));
+    background: var(--vx-accent-soft);
+    color: var(--vx-text-primary);
+    font-weight: 700;
+}
+
+.xstudio-selected-object-delete-button,
+.xstudio-selected-object-delete-confirm {
+    border-color: color-mix(in srgb, var(--vx-danger) 52%, var(--vx-border-subtle));
+    background: var(--vx-danger-soft);
+    color: var(--vx-danger);
+    font-weight: 700;
+}
+
+.xstudio-object-tree-visibility-action.xstudio-object-tree-visibility-hidden,
+.xstudio-shell .xstudio-object-tree-row .xstudio-object-tree-visibility-action.xstudio-object-tree-visibility-hidden,
+.xstudio-portlet .xstudio-object-tree-row .xstudio-object-tree-visibility-action.xstudio-object-tree-visibility-hidden {
+    color: var(--vx-warning);
+}
+
+.xstudio-edit-mode,
+.xstudio-object-tree-type-tag,
+.xstudio-app-explorer-type-tag {
+    border-color: transparent;
+    background: color-mix(in srgb, var(--vx-text-primary) 6%, transparent);
+    color: var(--vx-text-muted);
+}
+
+
+/* Studio scrollbars */
+
+.xstudio-left-dock,
+.xstudio-right-dock,
+.xstudio-canvas,
+.xstudio-portlet,
+.xstudio-portlet-body,
+.xstudio-app-explorer-body,
+.xstudio-app-explorer-results,
+.xstudio-object-tree,
+.xstudio-object-tree-body,
+.xstudio-object-tree-results,
+.xstudio-object-palette-results,
+.xstudio-selected-object-panel,
+.xstudio-selected-object-properties-body,
+.xstudio-selected-object-raw-body,
+.xstudio-selected-object-json,
+.xstudio-conversation-section,
+.xstudio-conversation-body,
+.xstudio-conversation-messages,
+.xstudio-runtime-inspector,
+.xstudio-json-section,
+.xstudio-generated-modules-section {
+    scrollbar-width: thin;
+    scrollbar-color: var(--xstudio-scrollbar-thumb) var(--xstudio-scrollbar-track);
+}
+
+.xstudio-left-dock::-webkit-scrollbar,
+.xstudio-right-dock::-webkit-scrollbar,
+.xstudio-canvas::-webkit-scrollbar,
+.xstudio-portlet::-webkit-scrollbar,
+.xstudio-portlet-body::-webkit-scrollbar,
+.xstudio-app-explorer-body::-webkit-scrollbar,
+.xstudio-app-explorer-results::-webkit-scrollbar,
+.xstudio-object-tree::-webkit-scrollbar,
+.xstudio-object-tree-body::-webkit-scrollbar,
+.xstudio-object-tree-results::-webkit-scrollbar,
+.xstudio-object-palette-results::-webkit-scrollbar,
+.xstudio-selected-object-panel::-webkit-scrollbar,
+.xstudio-selected-object-properties-body::-webkit-scrollbar,
+.xstudio-selected-object-raw-body::-webkit-scrollbar,
+.xstudio-selected-object-json::-webkit-scrollbar,
+.xstudio-conversation-section::-webkit-scrollbar,
+.xstudio-conversation-body::-webkit-scrollbar,
+.xstudio-conversation-messages::-webkit-scrollbar,
+.xstudio-runtime-inspector::-webkit-scrollbar,
+.xstudio-json-section::-webkit-scrollbar,
+.xstudio-generated-modules-section::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+.xstudio-left-dock::-webkit-scrollbar-track,
+.xstudio-right-dock::-webkit-scrollbar-track,
+.xstudio-canvas::-webkit-scrollbar-track,
+.xstudio-portlet::-webkit-scrollbar-track,
+.xstudio-portlet-body::-webkit-scrollbar-track,
+.xstudio-app-explorer-body::-webkit-scrollbar-track,
+.xstudio-app-explorer-results::-webkit-scrollbar-track,
+.xstudio-object-tree::-webkit-scrollbar-track,
+.xstudio-object-tree-body::-webkit-scrollbar-track,
+.xstudio-object-tree-results::-webkit-scrollbar-track,
+.xstudio-object-palette-results::-webkit-scrollbar-track,
+.xstudio-selected-object-panel::-webkit-scrollbar-track,
+.xstudio-selected-object-properties-body::-webkit-scrollbar-track,
+.xstudio-selected-object-raw-body::-webkit-scrollbar-track,
+.xstudio-selected-object-json::-webkit-scrollbar-track,
+.xstudio-conversation-section::-webkit-scrollbar-track,
+.xstudio-conversation-body::-webkit-scrollbar-track,
+.xstudio-conversation-messages::-webkit-scrollbar-track,
+.xstudio-runtime-inspector::-webkit-scrollbar-track,
+.xstudio-json-section::-webkit-scrollbar-track,
+.xstudio-generated-modules-section::-webkit-scrollbar-track {
+    background: var(--xstudio-scrollbar-track);
+}
+
+.xstudio-left-dock::-webkit-scrollbar-thumb,
+.xstudio-right-dock::-webkit-scrollbar-thumb,
+.xstudio-canvas::-webkit-scrollbar-thumb,
+.xstudio-portlet::-webkit-scrollbar-thumb,
+.xstudio-portlet-body::-webkit-scrollbar-thumb,
+.xstudio-app-explorer-body::-webkit-scrollbar-thumb,
+.xstudio-app-explorer-results::-webkit-scrollbar-thumb,
+.xstudio-object-tree::-webkit-scrollbar-thumb,
+.xstudio-object-tree-body::-webkit-scrollbar-thumb,
+.xstudio-object-tree-results::-webkit-scrollbar-thumb,
+.xstudio-object-palette-results::-webkit-scrollbar-thumb,
+.xstudio-selected-object-panel::-webkit-scrollbar-thumb,
+.xstudio-selected-object-properties-body::-webkit-scrollbar-thumb,
+.xstudio-selected-object-raw-body::-webkit-scrollbar-thumb,
+.xstudio-selected-object-json::-webkit-scrollbar-thumb,
+.xstudio-conversation-section::-webkit-scrollbar-thumb,
+.xstudio-conversation-body::-webkit-scrollbar-thumb,
+.xstudio-conversation-messages::-webkit-scrollbar-thumb,
+.xstudio-runtime-inspector::-webkit-scrollbar-thumb,
+.xstudio-json-section::-webkit-scrollbar-thumb,
+.xstudio-generated-modules-section::-webkit-scrollbar-thumb {
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background: var(--xstudio-scrollbar-thumb);
+    background-clip: content-box;
+}
+
+.xstudio-left-dock::-webkit-scrollbar-thumb:hover,
+.xstudio-right-dock::-webkit-scrollbar-thumb:hover,
+.xstudio-canvas::-webkit-scrollbar-thumb:hover,
+.xstudio-portlet::-webkit-scrollbar-thumb:hover,
+.xstudio-portlet-body::-webkit-scrollbar-thumb:hover,
+.xstudio-app-explorer-body::-webkit-scrollbar-thumb:hover,
+.xstudio-app-explorer-results::-webkit-scrollbar-thumb:hover,
+.xstudio-object-tree::-webkit-scrollbar-thumb:hover,
+.xstudio-object-tree-body::-webkit-scrollbar-thumb:hover,
+.xstudio-object-tree-results::-webkit-scrollbar-thumb:hover,
+.xstudio-object-palette-results::-webkit-scrollbar-thumb:hover,
+.xstudio-selected-object-panel::-webkit-scrollbar-thumb:hover,
+.xstudio-selected-object-properties-body::-webkit-scrollbar-thumb:hover,
+.xstudio-selected-object-raw-body::-webkit-scrollbar-thumb:hover,
+.xstudio-selected-object-json::-webkit-scrollbar-thumb:hover,
+.xstudio-conversation-section::-webkit-scrollbar-thumb:hover,
+.xstudio-conversation-body::-webkit-scrollbar-thumb:hover,
+.xstudio-conversation-messages::-webkit-scrollbar-thumb:hover,
+.xstudio-runtime-inspector::-webkit-scrollbar-thumb:hover,
+.xstudio-json-section::-webkit-scrollbar-thumb:hover,
+.xstudio-generated-modules-section::-webkit-scrollbar-thumb:hover {
+    background: var(--xstudio-scrollbar-thumb-hover);
+    background-clip: content-box;
+}
+
+.xstudio-left-dock::-webkit-scrollbar-corner,
+.xstudio-right-dock::-webkit-scrollbar-corner,
+.xstudio-canvas::-webkit-scrollbar-corner,
+.xstudio-portlet::-webkit-scrollbar-corner,
+.xstudio-portlet-body::-webkit-scrollbar-corner,
+.xstudio-app-explorer-body::-webkit-scrollbar-corner,
+.xstudio-app-explorer-results::-webkit-scrollbar-corner,
+.xstudio-object-tree::-webkit-scrollbar-corner,
+.xstudio-object-tree-body::-webkit-scrollbar-corner,
+.xstudio-object-tree-results::-webkit-scrollbar-corner,
+.xstudio-object-palette-results::-webkit-scrollbar-corner,
+.xstudio-selected-object-panel::-webkit-scrollbar-corner,
+.xstudio-selected-object-properties-body::-webkit-scrollbar-corner,
+.xstudio-selected-object-raw-body::-webkit-scrollbar-corner,
+.xstudio-selected-object-json::-webkit-scrollbar-corner,
+.xstudio-conversation-section::-webkit-scrollbar-corner,
+.xstudio-conversation-body::-webkit-scrollbar-corner,
+.xstudio-conversation-messages::-webkit-scrollbar-corner,
+.xstudio-runtime-inspector::-webkit-scrollbar-corner,
+.xstudio-json-section::-webkit-scrollbar-corner,
+.xstudio-generated-modules-section::-webkit-scrollbar-corner {
+    background: transparent;
+}

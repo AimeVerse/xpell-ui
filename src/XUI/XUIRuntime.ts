@@ -9,6 +9,7 @@ import { XDBClientModule } from "../XDB/XDBModule";
 import { XAuth } from "../XAuth/XAuthClient";
 import {XStudioModule} from "../XStudio/XStudioModule";
 import {_xai} from "../XAI/XAIClient";
+import { _project_memory } from "../XProjectMemory/ProjectMemoryClient";
 
 /* -------------------------------------------------------------------------- */
 
@@ -20,6 +21,7 @@ export type XUIRuntimeOptions = {
   _load_entity_client?: boolean;
   _load_studio?: boolean;
   _load_xai_client?: boolean;
+  _load_project_memory_client?: boolean;
 };
 
 export type XUIRuntimeAppOptions = XVMClientOptions & {
@@ -49,7 +51,8 @@ export class XUIRuntime {
       _load_auth_client: load_auth_client = true,
       _load_entity_client: load_entity_client = true,
       _load_studio: load_studio = true,
-      _load_xai_client: load_xai_client = true
+      _load_xai_client: load_xai_client = true,
+      _load_project_memory_client: load_project_memory_client = true
     } = opts;
 
     await _x.loadModuleAsync(XUI);
@@ -79,6 +82,10 @@ export class XUIRuntime {
       await _x.loadModuleAsync(_xai);
     }
 
+    if (load_project_memory_client) {
+      await _x.loadModuleAsync(_project_memory);
+    }
+
     if (auto_start) {
       _x.start();
     }
@@ -97,6 +104,8 @@ export class XUIRuntime {
     /* -------------------------------------------------------------- */
 
     await this.loadModules(opts._runtime);
+    const { registerXVMViewSupport } = await import("../XVM/XVMView");
+    await registerXVMViewSupport();
 
     if (Array.isArray(opts._modules)) {
 

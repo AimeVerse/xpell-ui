@@ -1,4 +1,4 @@
-import { _xd, _xlog } from "@xpell/core";
+import { _x, _xd, _xlog } from "@xpell/core";
 
 import { _xem } from "../XEM/XEventManager";
 import Wormholes from "../Wormholes/Wormholes";
@@ -20,6 +20,7 @@ const DEFAULT_CONTAINER_ID = "region-main";
 const EVT_XVM_UPDATE = "xvm:update";
 const EVT_XVM_VIEW_RENDERED = "xvm:view-rendered";
 const EVT_XVM_CONNECTION = "xvm:connection-change";
+const EVT_XVM_SERVER_SUBSCRIPTION_READY = "xvm:server-subscription-ready";
 
 type ServerXVMApp = {
   _app_id: string;
@@ -139,6 +140,7 @@ export class XVMClient {
   _edit_mode = true;
   _xstudio: XStudioModule;
   _pending_structured_view_edits: PendingStructuredViewEdit[] = [];
+  _load_server_app_token = 0;
 
   constructor(opts: XVMClientOptions) {
     this._app_id = opts._app_id;
@@ -172,6 +174,7 @@ export class XVMClient {
         source: "xvm-client"
       }
     );
+    this._set_server_xvm_subscription_ready(false, "constructor");
     this._xstudio = new XStudioModule(this);
     _xem.fire("xvm:view-resolver-ready", {
       resolver: (view_id: string) => this.get_view(view_id)
@@ -377,7 +380,16 @@ export class XVMClient {
   _set_connection_status(status: XVMClientConnectionChange["_status"], source?: string) {
     const connected = status === "connected";
     this._connected = connected;
-    if (!connected) this._subscribed = false;
+    if (!connected) {
+      this._subscribed = false;
+      this._set_server_xvm_subscription_ready(false, source ?? "connection");
+    }
+    if (connected) {
+      _x.ready("wormhole");
+    } else {
+      _x.notReady("wormhole");
+    }
+    _xlog.log(`${LOG} readiness wormhole=${connected}`);
     const payload: XVMClientConnectionChange = {
       _status: status,
       _connected: connected,
@@ -387,6 +399,67 @@ export class XVMClient {
     };
     if (this._on_connection_change) this._on_connection_change(payload);
     _xem.fire(EVT_XVM_CONNECTION, payload);
+  }
+
+  _server_xvm_subscription_ready_key(app_id = this._app_id, env = this._env) {
+    return `system.ready.server-xvm.${env}.${app_id}.subscribed`;
+  }
+
+  _set_server_xvm_subscription_ready(
+    ready: boolean,
+    source: string,
+    app_id = this._app_id,
+    env = this._env,
+  ) {
+    const key = this._server_xvm_subscription_ready_key(app_id, env);
+    if (ready) {
+      _x.ready(key);
+    } else {
+      _x.notReady(key);
+    }
+    _xlog.log(`${LOG} readiness requirement ${ready ? "satisfied" : "cleared"}`, {
+      _requirement: key,
+      _ready: ready,
+      _app_id: app_id,
+      _env: env,
+      _source: source,
+    });
+    _xem.fire(EVT_XVM_SERVER_SUBSCRIPTION_READY, {
+      _requirement: key,
+      _ready: ready,
+      _app_id: app_id,
+      _env: env,
+      _source: source,
+    });
+  }
+
+  _on_mount_command_count(view: any): number {
+    const on_mount = view?._on_mount;
+    if (Array.isArray(on_mount)) return on_mount.length;
+    if (is_obj(on_mount) && Array.isArray(on_mount._commands)) return on_mount._commands.length;
+    return on_mount === undefined || on_mount === null ? 0 : 1;
+  }
+
+  _apply_view_lifecycle_fields(live_obj: any, view: Record<string, any>) {
+    for (const key of ["_requires", "_on_mount", "_on", "_once", "_persist_generated"]) {
+      if (Object.prototype.hasOwnProperty.call(view, key)) {
+        live_obj[key] = (view as any)[key];
+      }
+    }
+  }
+
+  async _run_view_mount_lifecycle(live_obj: any, view: Record<string, any>, reason: string) {
+    const command_count = this._on_mount_command_count(view);
+    this._log("view mount started", {
+      _view_id: view?._id ?? live_obj?._id,
+      _reason: reason,
+      _on_mount_command_count: command_count,
+      _requires: Array.isArray(view?._requires) ? view._requires : [],
+    });
+    if (!live_obj || typeof live_obj.onMount !== "function") return;
+    live_obj._mount_handler_ran = false;
+    live_obj._mounted = false;
+    await live_obj.onMount();
   }
 
   _sync_cache_state() {
@@ -482,18 +555,304 @@ export class XVMClient {
     return view_ids.filter((v) => typeof v === "string" && v.trim().length > 0).map((v) => String(v));
   }
 
+  _view_id_in_scope(view_id: string, view_ids: string[]) {
+    return view_ids.length === 0 || view_ids.includes(view_id);
+  }
+
+  _clone_runtime_value(value: any): any {
+    if (Array.isArray(value)) return value.map((item) => this._clone_runtime_value(item));
+    if (!is_obj(value)) return value;
+
+    const out: Record<string, any> = {};
+    for (const [key, child] of Object.entries(value)) {
+      out[key] = this._clone_runtime_value(child);
+    }
+    return out;
+  }
+
+  _runtime_text(value: any) {
+    return typeof value === "string" ? value.trim() : "";
+  }
+
+  _runtime_text_key(value: any) {
+    return this._runtime_text(value).toLowerCase().replace(/\s+/g, " ");
+  }
+
+  _runtime_humanize_id(value: any) {
+    const raw = this._runtime_text(value);
+    if (!raw) return "";
+    return raw
+      .replace(/^view[-_:]/i, "")
+      .replace(/[-_]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .replace(/\b\w/g, (match) => match.toUpperCase());
+  }
+
+  _runtime_collapse_duplicate_label(text: string) {
+    const words = text.trim().split(/\s+/).filter(Boolean);
+    if (words.length < 2 || words.length % 2 !== 0 || words.length > 6) return text;
+
+    const midpoint = words.length / 2;
+    const first = words.slice(0, midpoint);
+    const second = words.slice(midpoint);
+    const same = first.every((word, index) =>
+      word.toLowerCase() === String(second[index] ?? "").toLowerCase()
+    );
+
+    return same ? first.join(" ") : text;
+  }
+
+  _runtime_clean_visible_text(value: any) {
+    const raw = typeof value === "string" ? value : "";
+    if (!raw) return raw;
+
+    const cleaned = this._runtime_collapse_duplicate_label(raw.trim())
+      .replace(/\bsemantic operations\b/gi, "actions")
+      .replace(/\bsemantic operation\b/gi, "action")
+      .replace(/\bflows\b/gi, "actions")
+      .replace(/\bflow\b/gi, "action")
+      .replace(/\bartifact request\b/gi, "build request")
+      .replace(/\bAI-generated\b/gi, "Generated")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    return cleaned || raw;
+  }
+
+  _runtime_node_visible_text(node: Record<string, any>) {
+    const parts: string[] = [];
+    for (const key of ["_text", "text", "title", "aria-label"]) {
+      const value = node[key];
+      if (typeof value === "string" && value.trim()) parts.push(value.trim());
+    }
+    return parts.join(" ").toLowerCase();
+  }
+
+  _runtime_node_identity_text(node: Record<string, any>) {
+    return [
+      node._id,
+      node.id,
+      node.class,
+      node._class,
+      node._role,
+      node.role,
+      node._semantic_type,
+      node.semantic_type,
+    ]
+      .filter((value) => typeof value === "string" && value.trim())
+      .join(" ")
+      .toLowerCase();
+  }
+
+  _runtime_node_is_internal_artifact(node: Record<string, any>) {
+    const visible = this._runtime_node_visible_text(node);
+    const identity = this._runtime_node_identity_text(node);
+    const combined = `${identity} ${visible}`;
+
+    if (!combined.trim()) return false;
+    if (/\b(debug|inspector|planning|project-plan|plan-review|semantic-generation|semantic-traits|artifact-id|artifact-ids)\b/.test(identity)) return true;
+    if (/\bconfirmed structure\b/.test(visible)) return true;
+    if (/\bplanned behaviors?\b/.test(visible)) return true;
+    if (/\bsemantic generation details?\b/.test(visible)) return true;
+    if (/\bsemantic traits?\b/.test(visible)) return true;
+    if (/\bartifact ids?\s*:/.test(visible)) return true;
+    if (/\b(proposed|internal)\s+actions?\b/.test(visible)) return true;
+    if (/\b(proposed|internal)\s+flows?\b/.test(visible)) return true;
+    if (/\bmilestone descriptions?\b/.test(visible)) return true;
+    if (/\bmilestones?\b/.test(visible) && /\b(plan|planning|semantic|artifact|flow|internal)\b/.test(combined)) return true;
+    if (/\b_xvibe\b|\bxvibe-generated-operation\b|\b_semantic\b|\b_artifact\b|\b_flow\b/.test(visible)) return true;
+
+    return false;
+  }
+
+  _runtime_dedupe_field_labels(children: any[]) {
+    const result = children.map((child) => this._clone_runtime_value(child));
+    let previous_label = "";
+
+    for (const child of result) {
+      if (!is_obj(child)) {
+        previous_label = "";
+        continue;
+      }
+
+      const child_type = this._runtime_text_key(child._type);
+      const visible_text = this._runtime_text(child._text);
+
+      if (child_type === "label" && visible_text) {
+        previous_label = this._runtime_text_key(visible_text);
+        continue;
+      }
+
+      if (previous_label && ["input", "text", "password", "textarea", "select"].includes(child_type)) {
+        for (const key of ["placeholder", "_text", "value"]) {
+          if (this._runtime_text_key(child[key]) === previous_label) {
+            if (key === "placeholder") {
+              delete child[key];
+            } else {
+              child[key] = "";
+            }
+          }
+        }
+      }
+
+      previous_label = "";
+    }
+
+    return result;
+  }
+
+  _runtime_should_sanitize_views() {
+    if (this._debug) return false;
+    const app_id = this._runtime_text(this._app?._app_id || this._app_id);
+    return app_id !== "vibe-system";
+  }
+
+  _runtime_view_title(view_id: string, view: Record<string, any>) {
+    for (const key of ["_title", "title", "_label", "label", "_name", "name"]) {
+      const value = this._runtime_text(view[key]);
+      if (value) return this._runtime_clean_visible_text(value);
+    }
+
+    return this._runtime_humanize_id(view_id || view._id || this._app_id) || "App";
+  }
+
+  _runtime_is_list_or_tracker(title: string, view_id: string) {
+    const key = `${title} ${view_id} ${this._app_id}`.toLowerCase();
+    return /\b(list|tracker|items|shopping|todo|tasks?)\b/.test(key);
+  }
+
+  _runtime_primary_flow_id() {
+    const flow_ids = Array.from(this._flows.keys());
+    return flow_ids.find((flow_id) => /\b(add|create|new)[-_:\w]*\b/i.test(flow_id)) ?? "";
+  }
+
+  _runtime_child_texts(children: any[]) {
+    return children
+      .filter((child) => is_obj(child) && typeof child._text === "string")
+      .map((child) => this._runtime_text_key(child._text));
+  }
+
+  _runtime_children_need_empty_state(children: any[], title: string) {
+    if (children.length === 0) return true;
+    const title_key = this._runtime_text_key(title);
+    if (!title_key) return false;
+
+    const meaningful = children.filter((child) => {
+      if (!is_obj(child)) return false;
+      const type = this._runtime_text_key(child._type);
+      if (["button", "input", "text", "password", "textarea", "select", "table", "list"].includes(type)) return true;
+      const text = this._runtime_text_key(child._text);
+      return text && text !== title_key;
+    });
+
+    return meaningful.length === 0;
+  }
+
+  _runtime_empty_state_children(view_id: string, view: Record<string, any>, existing_children: any[]) {
+    const title = this._runtime_view_title(view_id, view);
+    const title_key = this._runtime_text_key(title);
+    const text_keys = this._runtime_child_texts(existing_children);
+    const has_title = title_key && text_keys.includes(title_key);
+    const is_list = this._runtime_is_list_or_tracker(title, view_id);
+    const flow_id = this._runtime_primary_flow_id();
+
+    const empty_children: any[] = [
+      ...(has_title
+        ? []
+        : [{
+          _type: "label",
+          _id: `${view_id || "runtime"}-empty-title`,
+          class: "runtime-app-title",
+          _text: title,
+        }]),
+      {
+        _type: "label",
+        _id: `${view_id || "runtime"}-empty-message`,
+        class: "runtime-app-empty-message",
+        _text: is_list ? "No items yet" : "Nothing here yet",
+      },
+      {
+        _type: "button",
+        _id: `${view_id || "runtime"}-empty-primary-action`,
+        class: "runtime-app-primary-action",
+        _text: is_list ? "Add Item" : "Add",
+        ...(flow_id ? { _flow: flow_id } : {}),
+      },
+    ];
+
+    return [...existing_children, ...empty_children];
+  }
+
+  _sanitize_runtime_node(node: any): any {
+    if (Array.isArray(node)) {
+      return node
+        .map((child) => this._sanitize_runtime_node(child))
+        .filter((child) => child !== null && child !== undefined);
+    }
+
+    if (!is_obj(node)) return this._clone_runtime_value(node);
+
+    const next = this._clone_runtime_value(node);
+    for (const key of ["_text", "text", "title", "aria-label", "placeholder"]) {
+      if (typeof next[key] === "string") {
+        next[key] = this._runtime_clean_visible_text(next[key]);
+      }
+    }
+
+    if (this._runtime_node_is_internal_artifact(next)) return null;
+
+    if (Array.isArray(next._children)) {
+      const children = this._sanitize_runtime_node(next._children);
+      next._children = this._runtime_dedupe_field_labels(Array.isArray(children) ? children : []);
+    }
+
+    return next;
+  }
+
+  _runtime_view_for_render(view_id: string, view: Record<string, any>) {
+    const raw_view = typeof (view as any)._id === "string" ? view : { ...view, _id: view_id };
+    if (!this._runtime_should_sanitize_views()) return raw_view;
+
+    const sanitized = this._sanitize_runtime_node(raw_view);
+    const runtime_view = is_obj(sanitized)
+      ? sanitized as Record<string, any>
+      : {
+        _type: "view",
+        _id: view_id,
+        _children: [],
+      };
+
+    const children = Array.isArray(runtime_view._children) ? runtime_view._children : [];
+    if (this._runtime_children_need_empty_state(children, this._runtime_view_title(view_id, runtime_view))) {
+      runtime_view._children = this._runtime_empty_state_children(view_id, runtime_view, children);
+    }
+
+    return runtime_view;
+  }
+
   _pick_entry_view_id(app: ServerXVMApp | null, view_ids: string[]) {
     const from_meta =
       is_obj(app?._meta) && typeof (app!._meta as any)._entry_view_id === "string"
-        ? String((app!._meta as any)._entry_view_id)
+        ? String((app!._meta as any)._entry_view_id).trim()
         : "";
-    if (from_meta) return from_meta;
+    if (from_meta && this._view_id_in_scope(from_meta, view_ids)) return from_meta;
 
     const from_start =
       is_obj(app?._config?._start) && typeof (app!._config!._start as any)._view_id === "string"
-        ? String((app!._config!._start as any)._view_id)
+        ? String((app!._config!._start as any)._view_id).trim()
         : "";
-    if (from_start) return from_start;
+    if (from_start && this._view_id_in_scope(from_start, view_ids)) return from_start;
+
+    if (from_meta || from_start) {
+      this._log("entry view candidate rejected outside app scope", {
+        _app_id: app?._app_id,
+        _env: app?._env,
+        _meta_entry_view_id: from_meta,
+        _start_view_id: from_start,
+        _view_ids: view_ids,
+      });
+    }
 
     return view_ids[0] ?? "";
   }
@@ -509,6 +868,7 @@ export class XVMClient {
   }
 
   _set_app_scope(app_id: string, env: string, edit?: boolean) {
+    this._set_server_xvm_subscription_ready(false, "app-scope-change");
     this._app_id = app_id;
     this._env = env;
     this._edit_mode = this._resolve_edit_mode(app_id, edit);
@@ -517,6 +877,7 @@ export class XVMClient {
 
     _xd.set(_XD_KEYS.XVM_APP_ID, app_id, { source: "xvm-client" });
     _xd.set(_XD_KEYS.XVM_ENV, env, { source: "xvm-client" });
+    this._set_server_xvm_subscription_ready(false, "app-scope-change");
   }
 
   _reset_app_state_for_switch() {
@@ -531,6 +892,7 @@ export class XVMClient {
     this._app_mounted = false;
     this._has_rendered_view = false;
     this._subscribed = false;
+    this._set_server_xvm_subscription_ready(false, "reset-app-state");
     this._xstudio.clear_active_generation();
   }
 
@@ -550,6 +912,11 @@ export class XVMClient {
       _current_env: previous_env,
       _error: to_err(err),
     });
+  }
+
+  _assert_current_load_server_app(token: number, app_id: string, env: string) {
+    if (token === this._load_server_app_token) return;
+    throw new Error(`Superseded app switch ignored: ${app_id}/${env}`);
   }
 
   async _send_cmd(_op: string, _params: Record<string, any>) {
@@ -679,15 +1046,23 @@ export class XVMClient {
     if (!this._app) throw new Error("Server app metadata missing");
 
     const config = is_obj(this._app._config) ? this._app._config : {};
-    const views = Object.fromEntries(this._views_cache.entries());
+    const views = Object.fromEntries(
+      Array.from(this._views_cache.entries()).map(([view_id, view_json]) => [
+        view_id,
+        this._runtime_view_for_render(view_id, view_json),
+      ])
+    );
+    const view_ids = Object.keys(views);
+    const entry_view_id = this._pick_entry_view_id(this._app, view_ids);
+
+    if (!entry_view_id || !views[entry_view_id]) {
+      throw new Error(`Server app entry view is not hydrated: ${entry_view_id || "[missing]"}`);
+    }
 
     const fallback_view_id =
-      (is_obj(config._router) &&
-        typeof config._router._fallback_view_id === "string" &&
-        config._router._fallback_view_id) ||
-      this._fallback_view_id ||
-      this._current_view_id ||
-      Object.keys(views)[0];
+      this._fallback_view_id && views[this._fallback_view_id]
+        ? this._fallback_view_id
+        : entry_view_id;
 
     const region =
       (is_obj(config._router) &&
@@ -731,18 +1106,23 @@ export class XVMClient {
 
       _views: views,
 
-      _router: is_obj((config as any)._router)
-        ? (config as any)._router
-        : {
-          _region: region,
-          _fallback_view_id: fallback_view_id,
-        },
+      _router: {
+        ...(is_obj((config as any)._router) ? (config as any)._router : {}),
+        _region: (is_obj((config as any)._router) && typeof (config as any)._router._region === "string" && (config as any)._router._region)
+          ? (config as any)._router._region
+          : region,
+        _fallback_view_id: fallback_view_id,
+      },
 
-      _start: is_obj((config as any)._start)
-        ? (config as any)._start
-        : {
-          _view_id: fallback_view_id,
-          _region: region,
+      _start: {
+        ...(is_obj((config as any)._start) ? (config as any)._start : {}),
+        _view_id: entry_view_id,
+        _region:
+          is_obj((config as any)._start) &&
+            typeof (config as any)._start._region === "string" &&
+            (config as any)._start._region
+            ? (config as any)._start._region
+            : region,
       },
     };
 
@@ -760,7 +1140,7 @@ export class XVMClient {
     if (entries.length === 0) return;
     for (const [view_id, view_json] of entries) {
       if (!is_obj(view_json)) continue;
-      const raw_view = typeof (view_json as any)._id === "string" ? view_json : { ...view_json, _id: view_id };
+      const raw_view = this._runtime_view_for_render(view_id, view_json);
       (XVM as any).registerRawView(raw_view);
     }
     this._app_needs_refresh = false;
@@ -907,14 +1287,11 @@ export class XVMClient {
         _reason: target._reason,
       });
 
-    const updated_view =
-      typeof upd._view._id === "string" ? upd._view : { ...upd._view, _id: upd._view_id };
+    const updated_view = this._runtime_view_for_render(upd._view_id, upd._view);
     (XVM as any).registerRawView?.(updated_view);
     if (target._active_view_id !== upd._view_id) {
       const active_raw_view =
-        typeof active_view._id === "string"
-          ? active_view
-          : { ...active_view, _id: target._active_view_id };
+        this._runtime_view_for_render(target._active_view_id, active_view);
       (XVM as any).registerRawView?.(active_raw_view);
     }
 
@@ -1090,6 +1467,12 @@ export class XVMClient {
     }
 
     const region = this._resolve_region();
+    this._log("view mount started", {
+      _view_id: view_id,
+      _reason: "render-view",
+      _on_mount_command_count: this._on_mount_command_count(this.get_view(view_id)),
+      _requires: Array.isArray(this.get_view(view_id)?._requires) ? this.get_view(view_id)?._requires : [],
+    });
     try {
       await this._navigate_view(view_id, region);
     } catch (err) {
@@ -1293,8 +1676,11 @@ export class XVMClient {
             _version: next_version || this._current_version,
           });
 
-          live_obj.update(upd._view);
-          (XVM as any).registerRawView?.(upd._view);
+          const runtime_view = this._runtime_view_for_render(upd._view_id, upd._view);
+          this._apply_view_lifecycle_fields(live_obj, runtime_view);
+          live_obj.update(runtime_view);
+          await this._run_view_mount_lifecycle(live_obj, runtime_view, "live-update");
+          (XVM as any).registerRawView?.(runtime_view);
           this._app_needs_refresh = false;
           this._current_view_id = upd._view_id;
           this._app_view_id = upd._view_id;
@@ -1318,7 +1704,7 @@ export class XVMClient {
           _view_id: upd._view_id,
           _version: next_version || this._current_version,
         });
-        (XVM as any).registerRawView?.(upd._view);
+        (XVM as any).registerRawView?.(this._runtime_view_for_render(upd._view_id, upd._view));
         this._app_needs_refresh = true;
         await this.render_view(upd._view_id);
         return {
@@ -1370,6 +1756,10 @@ export class XVMClient {
   }
 
   async bootstrap() {
+    const { registerXVMViewSupport } = await import("./XVMView");
+    await registerXVMViewSupport({
+      resolver: (view_id: string) => this.get_view(view_id)
+    });
     this._bind_events();
     const used_cache = await this._render_cached_boot_view();
 
@@ -1418,6 +1808,7 @@ export class XVMClient {
 
       await this._send_cmd("subscribe", { _app_id: this._app_id, _env: this._env });
       this._subscribed = true;
+      this._set_server_xvm_subscription_ready(true, "subscribe");
       this._set_connection_status("connected", "subscribe");
       this._log(
         `boot complete cache=${used_cache ? "yes" : "no"} server_version=${app_apply._version || 0} current=${this._current_version} entry='${entry}'`
@@ -1468,6 +1859,7 @@ export class XVMClient {
     const target_edit_mode = this._resolve_edit_mode(target_app_id, opts._edit);
     const previous_app_id = this._app_id;
     const previous_env = this._env;
+    const load_token = ++this._load_server_app_token;
     let stage = "requested";
 
     this._log("load_server_app requested", {
@@ -1486,6 +1878,7 @@ export class XVMClient {
         _include_views: false,
         _include_flows: true,
       }) as ServerGetAppRes;
+      this._assert_current_load_server_app(load_token, target_app_id, target_env);
 
       if (!is_obj(out) || !is_obj(out._app)) {
         throw new Error("Invalid get-app response");
@@ -1528,6 +1921,7 @@ export class XVMClient {
       const ordered_view_ids = this._ordered_view_ids(entry, app_apply._view_ids);
       for (const view_id of ordered_view_ids) {
         await this._fetch_view_from_server(view_id, "load-server-app");
+        this._assert_current_load_server_app(load_token, target_app_id, target_env);
       }
       this._log("load_server_app hydrated views", {
         _app_id: target_app_id,
@@ -1537,10 +1931,12 @@ export class XVMClient {
       });
 
       stage = "reset-runtime";
+      this._assert_current_load_server_app(load_token, target_app_id, target_env);
       (XVM as any).resetAppRuntime?.();
 
       stage = "mount";
       await this._mount_runtime_app();
+      this._assert_current_load_server_app(load_token, target_app_id, target_env);
       this._log("load_server_app mounted", {
         _app_id: target_app_id,
         _env: target_env,
@@ -1550,10 +1946,12 @@ export class XVMClient {
 
       stage = "render";
       await this.render_view(entry);
+      this._assert_current_load_server_app(load_token, target_app_id, target_env);
 
       stage = "subscribe";
       await this._send_cmd("subscribe", { _app_id: target_app_id, _env: target_env });
       this._subscribed = true;
+      this._set_server_xvm_subscription_ready(true, "load-server-app");
       this._set_connection_status("connected", "load-server-app");
       this._log("load_server_app subscribed", {
         _app_id: target_app_id,
